@@ -1,0 +1,6 @@
+{
+  "name": "MIND//BREAK: Kinetic Rebels",
+  "description": "2D Psychic Beat 'em Up and Strider-style acrobatic action game across 8 urban shounen manga stages for Android & Web.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
