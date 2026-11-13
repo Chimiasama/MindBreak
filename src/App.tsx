@@ -186,6 +186,13 @@ export default function App() {
 
   useEffect(() => {
     engineRef.current?.setPaused(backConfirmation || gameState !== 'PLAYING');
+    const flow = gameState === 'TITLE_MENU' ? 'menu' : gameState === 'GAME_OVER' ? 'game_over' : gameState === 'CAMPAIGN_VICTORY' ? 'victory' : null;
+    if (!flow || backConfirmation) return;
+    const begin = () => { if (!document.hidden) sound.playFlow(flow); };
+    // An initial menu waits for a gesture; later flow screens can use the unlocked context.
+    if (sound.isUnlocked()) begin();
+    window.addEventListener('pointerup', begin); window.addEventListener('keydown', begin);
+    return () => { window.removeEventListener('pointerup', begin); window.removeEventListener('keydown', begin); };
   }, [gameState, backConfirmation]);
 
   useEffect(() => {
@@ -228,6 +235,7 @@ export default function App() {
       engineRef.current?.triggerFinalGameOver();
       return;
     }
+    sound.playCue(continueTimer <= 3 ? 'continue_urgent' : 'continue_tick');
     const id = window.setTimeout(() => {
       setContinueTimer((t) => t - 1);
     }, 1000);
@@ -715,7 +723,7 @@ export default function App() {
                       <button
                         key={id}
                         type="button"
-                        onClick={() => setSelectedChar(id)}
+                        onClick={() => { sound.init(); sound.playCue('confirm'); setSelectedChar(id); }}
                         className={`flex flex-col justify-between rounded-xl border p-4 text-left transition ${
                           active
                             ? 'border-pink-500 bg-slate-900/95 shadow-lg'
@@ -830,7 +838,7 @@ export default function App() {
                     <button
                       key={st.id}
                       type="button"
-                      onClick={() => setSelectedStageId(st.id)}
+                      onClick={() => { sound.init(); sound.playCue('confirm'); setSelectedStageId(st.id); }}
                       className={`flex flex-col justify-between rounded-xl border p-3.5 text-left transition ${
                         isSelected
                           ? 'border-cyan-400 bg-slate-900 shadow-md'

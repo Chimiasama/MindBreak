@@ -68,3 +68,5 @@ Combos e controles de áudio: [docs/COMBOS_E_AUDIO.md](docs/COMBOS_E_AUDIO.md) d
 Primeiros temas originais: [distrito/Cipher, prévias para ouvir e parâmetros](docs/TRILHA_DISTRITO_E_CIPHER.md). Para renderizar e baixar WAV localmente, abrir `/tools/music-studio.html` com o servidor de desenvolvimento.
 
 Estrutura exploratória revisada: [padrão de fases, mapas e validação](docs/PADRAO_DE_FASES.md). Os 23 setores fora do trem exigem alas elevadas e retorno antes de liberar saída/confronto; CIMA examina painéis.
+
+Áudio ampliado: [19 partituras, efeitos e prévias para ouvir](docs/TRILHA_E_EFEITOS.md). O estúdio local permite exportar música e efeitos em WAV; o jogo mantém síntese local/offline e volumes independentes.

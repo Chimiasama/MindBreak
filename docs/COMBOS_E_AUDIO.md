@@ -62,3 +62,5 @@ Chromium horizontal 915×412 com Web Audio real: sliders persistem após recarga
 TypeScript, builds web/assets Android e sync aprovados. Não há certificação auditiva em aparelho, medição de latência no DualShock 4 nem garantia de loop final sem estalos. Nenhuma Action ou APK.
 
 Atualização do incremento 17: o capítulo 1 agora usa partituras novas de distrito/Cipher com contextos e transição no compasso; os demais protótipos permanecem. O scheduler conserva também o contexto do primeiro passo pendente. Síntese tem rampas iniciais e cache de ruído. Ver [TRILHA_DISTRITO_E_CIPHER.md](TRILHA_DISTRITO_E_CIPHER.md).
+
+Incremento 19: temas contextuais cobrem os oito capítulos/chefes e três fluxos; efeitos passam a ter cooldown/prioridade, reserva de fontes e sinais distintos de exploração. O grito do combo normal fica no finalizador. Catálogo, prévias e regras atuais em [TRILHA_E_EFEITOS.md](TRILHA_E_EFEITOS.md).

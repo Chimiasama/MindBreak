@@ -68,7 +68,7 @@ test('music, effects and synthesized voice route to separate buses, with bounded
   assert.ok(ctx.sources[0].targets[0].targets.includes(s.buses.music));
   sound.sfxJump(); assert.ok(ctx.sources.at(-1)!.targets[0].targets.includes(s.buses.sfx));
   sound.playVoiceShout('maya'); assert.ok([...s.nodes.values()].includes('voice'));
-  for (let i = 0; i < 100; i++) sound.sfxShoot(); assert.equal(s.nodes.size, 48);
+  for (let i = 0; i < 100; i++) { ctx.currentTime += 0.1; sound.sfxShoot(); } assert.equal(s.nodes.size, 48);
   sound.suspend(); assert.equal(s.nodes.size, 0); assert.equal(ctx.state, 'suspended'); assert.equal(timers.size, 0);
   sound.startMusic('electro_funk'); assert.equal(ctx.state, 'running'); sound.stopMusic();
 });
@@ -103,4 +103,21 @@ test('pending score, second-phase intensity and musical position survive pause w
   sound.startMusic('electro_funk', { ...scene, phase: 2 }); assert.equal(sound.getMusicStatus().score, 'cipher');
   for (let i = 0; i < 18; i++) { ctx.currentTime = s.nextNoteAt - 0.05; poll(); }
   assert.equal(sound.getMusicStatus().scene!.phase, 2); assert.equal(timers.size, 1); sound.stopMusic();
+});
+
+test('cue cooldowns limit bursts, low-priority sounds reserve headroom and important cues can displace them',()=>{
+ const{sound,s,ctx}=fixture();assert.equal(sound.playCue('denied'),true);const count=ctx.sources.length;
+ assert.equal(sound.playCue('denied'),false);assert.equal(ctx.sources.length,count);ctx.currentTime=1;assert.equal(sound.playCue('denied'),true);
+ for(let i=0;i<80;i++){ctx.currentTime+=0.2;sound.playCue('footstep');}assert.equal(s.nodes.size,40);
+ for(let i=0;i<20;i++){ctx.currentTime+=0.2;sound.sfxShoot();}assert.equal(s.nodes.size,48);
+ const before=ctx.sources.length;ctx.currentTime+=1;sound.playCue('unlock');assert.ok(ctx.sources.length>before);assert.equal(s.nodes.size,48);assert.ok(ctx.sources.some(n=>n.stopped));
+ sound.suspend();assert.equal(s.nodes.size,0);assert.equal(s.priorities.size,0);
+});
+test('menu playback is idempotent, stage entry leaves it immediately and background never restores queued SFX',()=>{
+ const{sound,s,ctx}=fixture();sound.playFlow('menu');const step=s.step;assert.equal(sound.getMusicStatus().score,'menu');
+ sound.playFlow('menu');assert.equal(s.step,step);assert.equal(timers.size,1);
+ sound.startMusic('electro_funk',{chapter:1,sector:'1A',boss:false,phase:1,tension:false});assert.equal(sound.getMusicStatus().score,'district');
+ sound.playCue('unlock');sound.suspend();assert.equal(s.nodes.size,0);const old=ctx.sources.length;
+ sound.playFlow('game_over');assert.equal(sound.getMusicStatus().score,'game_over');assert.ok(ctx.sources.length>old);assert.equal(timers.size,1);
+ sound.playFlow('victory');assert.equal(sound.getMusicStatus().score,'victory');sound.stopMusic();
 });

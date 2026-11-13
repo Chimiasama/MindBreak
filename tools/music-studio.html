@@ -1,23 +1,25 @@
 <!doctype html>
 <html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MindBreak — prévias da trilha</title>
-<style>body{background:#0b1020;color:#e2e8f0;font:18px system-ui;max-width:760px;margin:40px auto;padding:20px}button,a{padding:12px;margin:8px;display:inline-block}a[hidden]{display:none}audio{width:100%}section{border:1px solid #475569;padding:20px;margin-top:24px}</style>
-<h1>Prévias da trilha</h1><p>Ferramenta de autoria local. Renderiza uma volta completa usando as partituras do jogo, sem downloads externos. Use npm run dev para abrir esta página.</p>
-<section><button data-score="district">Renderizar distrito</button><button data-score="cipher">Renderizar Cipher</button><button data-score="cipher" data-phase="2">Renderizar Cipher · fase 2</button>
-<p id="status" role="status">Escolha uma partitura.</p><audio controls></audio><a id="download" hidden>Baixar WAV</a></section>
+<title>MindBreak — estúdio de audição</title>
+<style>body{background:#0b1020;color:#e2e8f0;font:17px system-ui;max-width:800px;margin:28px auto;padding:16px}button,select{padding:12px;margin:8px 8px 8px 0;max-width:100%;font:inherit}label{display:block;margin:12px 0}a{padding:12px;display:inline-block}a[hidden]{display:none}audio{width:100%}section{border:1px solid #475569;padding:18px;margin:20px 0}button{cursor:pointer}input{margin:8px}</style>
+<h1>Estúdio de audição</h1><p>Partituras e efeitos locais do jogo. Renderize uma prévia, ouça e baixe WAV. Abra esta página com o servidor de desenvolvimento.</p>
+<section><h2>Trilha</h2><label>Partitura <select id="score"></select></label><label>Setor <select id="sector"><option>A</option><option selected>B</option><option>C</option><option>D</option></select></label>
+<label><input id="phase" type="checkbox">Chefe em fase 2</label><label><input id="tension" type="checkbox">Tensão de arena</label><button id="render-score">Renderizar trilha</button></section>
+<section><h2>Efeitos</h2><label>Sinal <select id="cue"></select></label><button id="render-cue">Renderizar efeito</button><button id="render-bank">Renderizar catálogo de efeitos</button></section>
+<section><p id="status" role="status">Escolha uma partitura ou efeito.</p><audio controls></audio><a id="download" hidden>Baixar WAV</a></section>
 <script type="module">
-import { renderMusicPreview, encodePreviewWav } from '/src/game/musicPreview.ts';
-let previous;
-for(const button of document.querySelectorAll('button')) button.addEventListener('click',async()=>{
-  for(const b of document.querySelectorAll('button')) b.disabled=true;
-  const status=document.querySelector('#status');status.textContent='Renderizando…';
-  try{
-    const id=button.dataset.score, phase=Number(button.dataset.phase||1);
-    const buffer=await renderMusicPreview(id,{chapter:1,sector:id==='cipher'?'1D':'1B',boss:id==='cipher',phase,tension:false});
-    if(previous)URL.revokeObjectURL(previous);
-    previous=URL.createObjectURL(new Blob([encodePreviewWav(buffer)],{type:'audio/wav'}));
-    document.querySelector('audio').src=previous;const link=document.querySelector('#download');link.href=previous;link.download=`${id}-fase-${phase}.wav`;link.hidden=false;
-    status.textContent=`${id} · ${buffer.duration.toFixed(2)} segundos. Use o player para ouvir.`;
-  }catch(error){status.textContent=String(error);}finally{for(const b of document.querySelectorAll('button'))b.disabled=false;}
-});
+import { SCORES } from '/src/game/music.ts';
+import { SOUND_CUES } from '/src/game/soundEffects.ts';
+import { renderMusicPreview, renderEffectsPreview, encodePreviewWav } from '/src/game/musicPreview.ts';
+const score=document.querySelector('#score'),cue=document.querySelector('#cue');
+for(const[id,m]of Object.entries(SCORES)){const o=document.createElement('option');o.value=id;o.textContent=`${m.chapter?`Fase ${m.chapter} · `:''}${m.title} · ${m.bpm} BPM`;score.append(o);}
+for(const id of Object.keys(SOUND_CUES)){const o=document.createElement('option');o.value=id;o.textContent=id;cue.append(o);}
+function fields(){const m=SCORES[score.value];document.querySelector('#phase').disabled=m.kind!=='boss';document.querySelector('#sector').disabled=m.kind==='flow';document.querySelector('#tension').disabled=m.kind==='flow';}
+score.addEventListener('change',fields);fields();let previous;
+async function render(job,name){for(const b of document.querySelectorAll('button'))b.disabled=true;const status=document.querySelector('#status');status.textContent='Renderizando…';
+try{const buffer=await job();if(previous)URL.revokeObjectURL(previous);previous=URL.createObjectURL(new Blob([encodePreviewWav(buffer)],{type:'audio/wav'}));document.querySelector('audio').src=previous;const link=document.querySelector('#download');link.href=previous;link.download=`${name}.wav`;link.hidden=false;status.textContent=`${name} · ${buffer.duration.toFixed(2)} segundos. Use o player para ouvir.`;}
+catch(error){status.textContent=String(error);}finally{for(const b of document.querySelectorAll('button'))b.disabled=false;}}
+document.querySelector('#render-score').addEventListener('click',()=>{const id=score.value,m=SCORES[id],phase=document.querySelector('#phase').checked?2:1;render(()=>renderMusicPreview(id,{chapter:m.chapter,sector:`${m.chapter}${document.querySelector('#sector').value}`,boss:m.kind==='boss',phase,tension:document.querySelector('#tension').checked,flow:m.kind==='flow'?id:undefined}),`${id}-fase-${phase}`);});
+document.querySelector('#render-cue').addEventListener('click',()=>render(()=>renderEffectsPreview([cue.value]),cue.value));
+document.querySelector('#render-bank').addEventListener('click',()=>render(()=>renderEffectsPreview(Object.keys(SOUND_CUES)),'efeitos'));
 </script></html>

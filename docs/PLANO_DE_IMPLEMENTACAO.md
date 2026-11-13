@@ -23,7 +23,7 @@ Data inicial: 13/11/2026. Documento de trabalho: atualizar os estados e registra
 
 - **0.1.0.13 — Saves durante desenvolvimento:** por orientação expressa do usuário, compatibilidade e preservação de saves entre versões não são requisitos nesta fase. Só ele instala o app e testa com instalação limpa. Alterações de mapas, modelos e formato podem invalidar saves sem migração; não investir em adaptadores, recuperação entre versões ou avisos de incompatibilidade a cada entrega. Reavaliar somente quando o usuário solicitar. Manter o salvamento funcional na versão corrente e a validação de dados para evitar falhas do app.
 
-- **0.1.0.14 — Revisão de exploração, prioridade atual:** por teste do usuário, a maior parte dos setores permitia passar reto. Pausar novas músicas e exigir caminhos elevados, verificação de lugares, mudança de direção e retorno; o trem pode ser mais linear. Não tratar plataformas opcionais ou portas bidirecionais como prova suficiente de exploração. Padrão e revisão em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md).
+- **0.1.0.14 — Revisão de exploração, entregue no incremento 18:** por teste do usuário, a maior parte dos setores permitia passar reto. Pausar novas músicas e exigir caminhos elevados, verificação de lugares, mudança de direção e retorno; o trem pode ser mais linear. Não tratar plataformas opcionais ou portas bidirecionais como prova suficiente de exploração. Padrão e revisão em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md). No incremento 19, o usuário autorizou retomar a produção sonora; o aceite físico permanece pendente em paralelo.
 
 ### 0.2 Forma de implantar cada incremento
 
@@ -52,6 +52,8 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 **Incremento 17:** primeiro par de temas composto e integrado: distrito/Cipher, variações e transições no compasso, prévias Ogg e ferramenta de exportação WAV. 338 testes, renderização offline e Chromium aprovados; ainda falta escuta em aparelho. [TRILHA_DISTRITO_E_CIPHER.md](TRILHA_DISTRITO_E_CIPHER.md). Próximo bloco: estender a composição aos capítulos 2–8 e seus chefes, mantendo os ajustes/aceites de combate e de áudio físico pendentes. Não antecipar multiplayer/migração nem gerar APK sem pedido.
 
 **Incremento 18 — prioridade alterada pelo usuário:** composição adicional pausada. Revisados os 23 setores fora do trem: alas elevadas, guarda de painel, sinal/retorno, portão persistente e saída superior/confronto condicionado. Seis depósitos laterais e apoios adicionais; checkpoints/idas/retornos revalidados. 378 testes, incluindo 156 percursos de exploração/retorno/depósito dos três heróis, e Chromium aprovados. Padrão, mapas e limites em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md). Avaliação de acessos/dificuldade no celular e diversidade de mecanismos precedem retomar as demais músicas.
+
+**Incremento 19 — áudio retomado por pedido do usuário:** catálogo de 19 partituras (oito fases/oito chefes/três fluxos) e 30 sinais, com prioridades e integração aos controles/portões do incremento 18. São 28 prévias Ogg para ouvir, estúdio e exportador reproduzível. 385 testes, renderização de samples e Chromium aprovados. [TRILHA_E_EFEITOS.md](TRILHA_E_EFEITOS.md). Estrutura exploratória conservada; próximos aceites incluem mixagem/latência no Android, ambiências/legados e, depois, arte conforme o plano.
 
 ## Fase 1 — Base de física, colisão e movimentação
 
@@ -156,7 +158,7 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 - **3.4.0.3:** seis depósitos laterais acessíveis sem acionar o circuito. O voo pode facilitar deslocamento, mas não substituir inspeções. Não obrigar limpar cada inimigo comum.
 - **3.4.0.4:** progresso persistente por tentativa, inclusive depois de morte/retorno/carregamento; validar comandos, dependências, guardas e portões. Nenhuma migração entre versões requerida.
 - **3.4.0.5:** substituir a aceitação de corredor por navegação física dos três heróis: 69 idas com objetivos, 69 retornos e 18 depósitos; sem voo, dano, teleporte ou assistência móvel. Trem conserva regressões próprias. Ensaios de combate separados.
-- **3.4.0.6 — Próximo aceite:** testar em aparelho com inimigos/móveis ativos; avaliar leitura do HUD, acessos, repetição do circuito, guardas deslocados e ritmo. Diversificar os mecanismos ambientais por tema e só então retomar a expansão musical. Fonte/diagramas em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md).
+- **3.4.0.6 — Próximo aceite:** testar em aparelho com inimigos/móveis ativos; avaliar leitura do HUD, acessos, repetição do circuito, guardas deslocados e ritmo. Diversificar os mecanismos ambientais por tema. O usuário autorizou retomar áudio no incremento 19, sem encerrar os aceites físicos de estrutura. Fonte/diagramas em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md).
 
 ## Fase 4 — Oito fases, 26 subfases
 
@@ -240,9 +242,9 @@ Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; A
 
 ### 6.2 Conteúdo musical — PENDENTE
 
-- **6.2.0.1 — Parcial no incremento 17:** distrito de 16 compassos e Cipher de oito, variações por setor/tensão/fase 2, BPM/tonalidade/instrumentos e mudança no compasso documentados. Motivo comum entre fase/chefe; demais sete capítulos e motivos próprios de todos os heróis pendentes. Fonte em `music.ts`, contrato em [TRILHA_DISTRITO_E_CIPHER.md](TRILHA_DISTRITO_E_CIPHER.md).
-- **6.2.0.2 — Primeiro par implementado no incremento 17; aceite auditivo físico pendente:** distrito/Cipher integrados ao motor, prévias exportadas e ferramenta de audição WAV. Chromium e análise de samples aprovados; validar volume/repetição/emenda no Android. Depois produzir os demais sete temas/chefes e as músicas de vitória, game over e menu.
-- **6.2.0.3:** renovar passos, golpes, impactos, parry/reflexão, perigos, poderes e notificações; limitar vozes simultâneas e evitar clipping.
+- **6.2.0.1 — Catálogo sintetizado implementado no incremento 19; acabamento/motivos dos heróis pendentes:** oito temas de fase, oito chefes e menu/game over/vitória; progressões, ganchos, ritmos e timbres próprios, variações de setor/tensão/fase 2 e transição no compasso. Metadados e prévias em [TRILHA_E_EFEITOS.md](TRILHA_E_EFEITOS.md).
+- **6.2.0.2 — Composições integradas; aceite auditivo físico pendente:** par distrito/Cipher do incremento 17 e demais sete pares/fluxos do incremento 19. Estúdio com exportação WAV e 28 Ogg de documentação; menu espera gesto, pausa/background preservam regras. Fanfarra legada de fase permanece. Validar volume/repetição/emenda no Android.
+- **6.2.0.3 — Parcial no incremento 19:** catálogo de 30 sinais para movimento, combo, impactos, tiros, exploração, alertas, poderes e interface; cooldowns, limite de 48 fontes e prioridades/reserva. Voz normal reduzida ao finalizador. Ambiências, revisão dos efeitos legados e gravação/dublagem continuam pendentes; mixagem sob carga ainda exige aparelho.
 - **6.2.0.4 — Aceite:** loops sem estalo perceptível, sem drift sob carga normal, volumes independentes, interrupções corretas, origem dos recursos documentada e avaliação auditiva no aparelho. Dublagem/gravação profissional fica como produção própria, sem prometer ferramenta indisponível.
 
 ## Fase 7 — Arte, animação e cenários

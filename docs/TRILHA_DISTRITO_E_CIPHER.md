@@ -68,3 +68,5 @@ Chromium horizontal: distrito ao iniciar, gatilho real de Cipher com cenário pr
 Renderizações OfflineAudioContext: distrito com pico absoluto 0,1593/RMS 0,01376; Cipher 1 com pico 0,1391/RMS 0,01366; Cipher 2 com pico 0,1391/RMS 0,01453. Todos os samples eram finitos, com sinal e sem clipping. São medidas das prévias com ganhos padrão, não certificação de volume percebido, latência, emenda perfeita sob carga ou qualidade auditiva no Android físico.
 
 TypeScript, builds web/assets Android e sync aprovados. Nenhuma Action acionada nem APK gerado. Pendente: escuta no celular/DualShock 4, ajuste de mixagem/repetição, demais sete temas e chefes, transições mais elaboradas e renovação dos efeitos conforme o plano.
+
+Incremento 19: o catálogo foi ampliado aos oito capítulos/chefes e fluxos. O estúdio agora usa seletores para as 19 partituras e os efeitos; as prévias e instruções atuais estão em [TRILHA_E_EFEITOS.md](TRILHA_E_EFEITOS.md).

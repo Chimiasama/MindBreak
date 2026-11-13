@@ -1,16 +1,28 @@
-import { MusicScene, ScoreId, SCORES, scoreNotes } from './music';
-/** Authoring-only audition. Same score, oscillator envelopes, noise seed and mixer defaults as live playback. */
-export async function renderMusicPreview(id: ScoreId, scene: MusicScene): Promise<AudioBuffer> {
+import { MusicScene, ScoreId, SCORES, scoreNotes, MusicNote } from './music';
+import { SOUND_CUES, SoundCue } from './soundEffects';
+/** Authoring-only auditions; no preview renderer is imported by the app. */
+export function renderMusicPreview(id: ScoreId, scene: MusicScene): Promise<AudioBuffer> {
   const score = SCORES[id], unit = 60 / score.bpm / 4;
-  const ctx = new OfflineAudioContext(1, Math.ceil(score.steps * unit * 44100), 44100);
-  const master = ctx.createGain(); master.gain.value = 0.7 * 0.75;
+  const events = Array.from({length:score.steps},(_,step)=>scoreNotes(id,step,scene).map(note=>({at:step*unit+(note.delay??0),note}))).flat();
+  return renderTimeline(events,score.steps*unit,0.7*0.75);
+}
+export function renderEffectsPreview(cues: SoundCue[]): Promise<AudioBuffer> {
+  const events: {at:number;note:MusicNote}[]=[];let cursor=0.02;
+  for(const cue of cues){const definition=SOUND_CUES[cue];
+    for(const e of definition.events) events.push({at:cursor+e.delay,note:{instrument:e.noise?'snare':'lead',frequency:e.frequency??0,wave:e.wave??'sine',duration:e.duration,volume:e.volume,endFrequency:e.endFrequency}});
+    cursor+=Math.max(...definition.events.map(e=>e.delay+e.duration))+0.25;
+  }
+  return renderTimeline(events,cursor+0.15,0.7);
+}
+async function renderTimeline(events:{at:number;note:MusicNote}[],duration:number,level:number):Promise<AudioBuffer> {
+  const ctx = new OfflineAudioContext(1, Math.ceil(duration * 44100), 44100);
+  const master = ctx.createGain(); master.gain.value = level;
   const limiter = ctx.createDynamicsCompressor();
   limiter.threshold.value = -8; limiter.knee.value = 8; limiter.ratio.value = 12;
   limiter.attack.value = 0.003; limiter.release.value = 0.15;
   master.connect(limiter); limiter.connect(ctx.destination);
   const noises = new Map<number, AudioBuffer>();
-  for (let step = 0; step < score.steps; step++) for (const note of scoreNotes(id, step, scene)) {
-    const at = step * unit;
+  for (const {at,note} of events) {
     const gain = ctx.createGain(); gain.connect(master);
     if (note.instrument === 'hat' || note.instrument === 'snare') {
       const count = Math.floor(ctx.sampleRate * note.duration);

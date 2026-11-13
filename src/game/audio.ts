@@ -1,3 +1,5 @@
+import { SOUND_CUES, SoundCue } from './soundEffects';
+import type { FlowScore } from './music';
 import { MusicScene, scoreFor, scoreNotes, sceneKey, SCORES } from './music';
 import { CharacterId, MusicGenre } from './types';
 import { AudioBus, AudioVolumes, AUDIO_SETTINGS_KEY, readAudioPreferences } from './audioPreferences';
@@ -13,6 +15,8 @@ export class SoundEngine {
   private buses: Partial<Record<AudioBus, GainNode>> = {};
   private volumes: AudioVolumes;
   private nodes = new Map<AudioScheduledSourceNode, AudioBus>();
+  private priorities = new Map<AudioScheduledSourceNode, number>();
+  private lastCue = new Map<SoundCue, number>();
   private nextNoteAt = 0;
   private scheduledSteps: { at: number; step: number; scene: MusicScene | null }[] = [];
   private hasTrack = false;
@@ -50,14 +54,38 @@ export class SoundEngine {
     this.masterGain.gain.setTargetAtTime(this.muted ? 0 : this.volumes.master, this.ctx.currentTime, 0.02);
     for (const bus of ['music', 'sfx', 'voice'] as const) this.buses[bus]?.gain.setTargetAtTime(this.volumes[bus], this.ctx.currentTime, 0.02);
   }
-  private track(node: AudioScheduledSourceNode, gain: GainNode, bus: AudioBus) {
-    this.nodes.set(node, bus);
-    node.onended = () => { this.nodes.delete(node); node.disconnect(); gain.disconnect(); };
+  private reserve(priority: number) {
+    if (priority < 2 && this.nodes.size >= 40) return false;
+    if (this.nodes.size < 48) return true;
+    const victim = [...this.priorities.entries()].sort((a,b)=>a[1]-b[1])[0];
+    if (!victim || victim[1] >= priority) return false;
+    try { victim[0].stop(); } catch { /* already stopped */ }
+    victim[0].disconnect(); this.nodes.delete(victim[0]); this.priorities.delete(victim[0]); return true;
+  }
+  private track(node: AudioScheduledSourceNode, gain: GainNode, bus: AudioBus, priority = 2) {
+    this.nodes.set(node, bus); this.priorities.set(node, priority);
+    node.onended = () => { this.nodes.delete(node); this.priorities.delete(node); node.disconnect(); gain.disconnect(); };
+  }
+  playCue(cue: SoundCue) {
+    if (!this.ctx || this.ctx.state !== 'running') return false;
+    const definition = SOUND_CUES[cue], now = this.ctx.currentTime;
+    if (now - (this.lastCue.get(cue) ?? -Infinity) < definition.cooldown || definition.priority < 2 && this.nodes.size >= 40) return false;
+    this.lastCue.set(cue, now);
+    for (const event of definition.events) {
+      if (event.noise) this.playNoise(event.duration,event.volume,now+event.delay,'sfx',definition.priority);
+      else this.playOsc(event.frequency!,event.wave!,event.duration,event.volume,event.endFrequency,now+event.delay,'sfx',definition.priority);
+    }
+    return true;
+  }
+  isUnlocked() { return this.ctx?.state === 'running'; }
+  playFlow(flow: FlowScore) {
+    if (this.musicScene?.flow === flow && this.bgmTimer !== null && this.isUnlocked()) return;
+    this.startMusic('electro_funk',{ chapter:0, sector:flow, boss:false, phase:1, tension:false, flow });
   }
   private cancelNodes(bus?: AudioBus) {
     for (const [node, channel] of this.nodes) if (!bus || channel === bus) {
       try { node.stop(); } catch { /* already ended */ }
-      node.disconnect(); this.nodes.delete(node);
+      node.disconnect(); this.nodes.delete(node); this.priorities.delete(node);
     }
   }
   suspend() {
@@ -96,7 +124,10 @@ export class SoundEngine {
   }
 
   startMusic(genre: MusicGenre, scene?: MusicScene) {
-    if (scene) this.setMusicScene(scene);
+    if (scene) {
+      this.setMusicScene(scene);
+      if (scene.flow !== this.musicScene?.flow && (scene.flow || this.musicScene?.flow)) this.stopMusic();
+    }
     this.init();
     if (!this.hasTrack || this.currentGenre !== genre) {
       this.stopMusic(); this.currentGenre = genre; this.step = 0; this.hasTrack = true; this.musicScene = this.requestedScene;
@@ -153,8 +184,8 @@ export class SoundEngine {
     const score = scoreFor(this.musicScene);
     if (score && this.musicScene) {
       for (const note of scoreNotes(score, s, this.musicScene)) {
-        if (note.instrument === 'hat' || note.instrument === 'snare') this.playNoise(note.duration, note.volume, at, 'music');
-        else this.playOsc(note.frequency, note.wave, note.duration, note.volume, note.endFrequency, at, 'music');
+        if (note.instrument === 'hat' || note.instrument === 'snare') this.playNoise(note.duration, note.volume, at + (note.delay ?? 0), 'music');
+        else this.playOsc(note.frequency, note.wave, note.duration, note.volume, note.endFrequency, at + (note.delay ?? 0), 'music');
       }
       return;
     }
@@ -229,8 +260,8 @@ export class SoundEngine {
     }
   }
 
-  private playOsc(freq: number, type: OscillatorType, duration: number, vol = 0.14, endFreq?: number, at = this.ctx?.currentTime ?? 0, bus: AudioBus = 'sfx') {
-    if (!this.ctx || !this.masterGain || this.ctx.state !== 'running' || this.nodes.size >= 48) return;
+  private playOsc(freq: number, type: OscillatorType, duration: number, vol = 0.14, endFreq?: number, at = this.ctx?.currentTime ?? 0, bus: AudioBus = 'sfx', priority = 2) {
+    if (!this.ctx || !this.masterGain || this.ctx.state !== 'running' || !this.reserve(priority)) return;
     try {
       const now = at;
       const osc = this.ctx.createOscillator();
@@ -245,7 +276,7 @@ export class SoundEngine {
       gain.gain.exponentialRampToValueAtTime(0.0005, now + duration);
       osc.connect(gain);
       gain.connect(this.buses[bus]!);
-      this.track(osc, gain, bus);
+      this.track(osc, gain, bus, priority);
       osc.start(now);
       osc.stop(now + duration);
     } catch {
@@ -253,8 +284,8 @@ export class SoundEngine {
     }
   }
 
-  private playNoise(duration: number, vol = 0.1, at = this.ctx?.currentTime ?? 0, bus: AudioBus = 'sfx') {
-    if (!this.ctx || !this.masterGain || this.ctx.state !== 'running' || this.nodes.size >= 48) return;
+  private playNoise(duration: number, vol = 0.1, at = this.ctx?.currentTime ?? 0, bus: AudioBus = 'sfx', priority = 2) {
+    if (!this.ctx || !this.masterGain || this.ctx.state !== 'running' || !this.reserve(priority)) return;
     try {
       const sampleCount = Math.floor(this.ctx.sampleRate * duration);
       let buffer = this.noiseBuffers.get(sampleCount);
@@ -274,7 +305,7 @@ export class SoundEngine {
       gain.gain.value = vol;
       src.connect(gain);
       gain.connect(this.buses[bus]!);
-      this.track(src, gain, bus);
+      this.track(src, gain, bus, priority);
       src.start(at);
     } catch {
       // Ignore
@@ -283,7 +314,7 @@ export class SoundEngine {
 
   /** Dual-formant synthesized anime voice shout for Ren (sharp), Maya (ethereal), Leon (guttural) */
   playVoiceShout(charId: CharacterId) {
-    if (!this.ctx || !this.masterGain || this.ctx.state !== 'running' || this.nodes.size >= 48) return;
+    if (!this.ctx || !this.masterGain || this.ctx.state !== 'running' || !this.reserve(3)) return;
     try {
       const now = this.ctx.currentTime;
       const baseFreq = charId === 'ren' ? 280 : charId === 'maya' ? 370 : 145;
@@ -315,7 +346,7 @@ export class SoundEngine {
       f1.connect(gain);
       f2.connect(gain);
       gain.connect(this.buses.voice!);
-      this.track(osc, gain, 'voice');
+      this.track(osc, gain, 'voice', 3);
 
       osc.start(now);
       osc.stop(now + 0.21);
@@ -325,10 +356,10 @@ export class SoundEngine {
   }
 
   sfxJump() {
-    this.playOsc(300, 'triangle', 0.13, 0.16, 540);
+    this.playCue('jump');
   }
   sfxDoubleJump() {
-    this.playOsc(480, 'sine', 0.16, 0.18, 860);
+    this.playCue('double_jump');
   }
   sfxWallKick() {
     this.playOsc(420, 'triangle', 0.14, 0.2, 740);
@@ -342,12 +373,8 @@ export class SoundEngine {
   sfxSlide() {
     this.playOsc(240, 'sawtooth', 0.16, 0.16, 90);
   }
-  sfxSlash() {
-    this.playOsc(760, 'sawtooth', 0.1, 0.18, 220);
-  }
-  sfxHit() {
-    this.playOsc(170, 'square', 0.14, 0.22, 65);
-  }
+  sfxSlash(step = 0) { this.playCue(step === 2 ? 'finisher' : step === 1 ? 'return_cut' : 'cut'); }
+  sfxHit(material: 'body' | 'metal' | 'boss' = 'body') { this.playCue(material === 'metal' ? 'hit_metal' : material === 'boss' ? 'hit_boss' : 'hit_body'); }
   sfxBlock() {
     this.playOsc(210, 'square', 0.12, 0.2, 160);
   }
@@ -356,11 +383,9 @@ export class SoundEngine {
     this.playOsc(580, 'sawtooth', 0.2, 0.24, 140, (this.ctx?.currentTime ?? 0) + 0.07);
   }
   sfxDeflect() {
-    this.playOsc(980, 'sine', 0.11, 0.24, 1540);
+    this.playCue('parry');
   }
-  sfxShoot() {
-    this.playOsc(440, 'square', 0.08, 0.11, 180);
-  }
+  sfxShoot(kind: 'gunner' | 'turret' | 'sniper' | 'boss' = 'gunner') { this.playCue(`${kind}_shot`); }
   sfxHurt() {
     this.playOsc(140, 'sawtooth', 0.22, 0.26, 48);
   }
@@ -373,10 +398,7 @@ export class SoundEngine {
   sfxAssist() {
     this.playOsc(640, 'sine', 0.3, 0.22, 320);
   }
-  sfxOverdrive() {
-    this.playOsc(120, 'sawtooth', 0.6, 0.3, 660);
-    this.playOsc(880, 'square', 0.35, 0.24, 220, (this.ctx?.currentTime ?? 0) + 0.18);
-  }
+  sfxOverdrive(charId: CharacterId = 'ren') { this.playCue(charId === 'maya' ? 'overdrive_maya' : charId === 'leon' ? 'overdrive_leon' : 'overdrive_ren'); }
   sfxPickup() {
     this.playOsc(520, 'sine', 0.15, 0.18, 920);
   }

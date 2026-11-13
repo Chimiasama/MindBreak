@@ -221,6 +221,7 @@ export class GameEngine {
 
   private get keys() { return this.input.keys; }
 
+  private footstepDistance = 0;
   private activated = new Set<string>();
   private attackBuffered = false;
 
@@ -361,6 +362,7 @@ export class GameEngine {
     this.checkpointId = found.entryCheckpoint;
     this.stage = found;
     this.activated = new Set();
+    this.footstepDistance = 0;
     this.characterId = charId;
     const char = CHARACTERS[charId];
 
@@ -591,17 +593,17 @@ export class GameEngine {
     if (!this.canAct()) return false;
     const node = this.stage.exploration?.nodes.find(node => node.id === id);
     if (!node || !overlaps(this.player, node)) return false;
-    if (this.activated.has(id)) { this.showAlert(`${node.label}: ATIVO`, 80); return true; }
+    if (this.activated.has(id)) { sound.playCue('confirm'); this.showAlert(`${node.label}: ATIVO`, 80); return true; }
     if (!node.requires.every(required => this.activated.has(required))) {
-      this.showAlert(`SEM SINAL: examine ${this.nextRouteNode()?.label}`, 120); return true;
+      sound.playCue('denied'); this.showAlert(`SEM SINAL: examine ${this.nextRouteNode()?.label}`, 120); return true;
     }
     const guardOrigin = node.guardIndex === undefined ? null : `${this.stage.substageId}:${node.guardIndex + 1}`;
     if (guardOrigin && this.enemies.some(enemy => enemy.hp > 0 && enemy.spawnId === guardOrigin)) {
-      this.showAlert('POSTO PROTEGIDO: derrote o guarda do painel.', 120); return true;
+      sound.playCue('denied'); this.showAlert('POSTO PROTEGIDO: derrote o guarda do painel.', 120); return true;
     }
     this.activated.add(id);
     if (this.routeComplete()) for (const platform of this.platforms) if (platform.gateId) platform.broken = true;
-    sound.sfxPickup(); this.addMangaFx('ATIVADO!', node.x, node.y - 18, '#22d3ee');
+    sound.playCue(this.routeComplete() ? 'unlock' : 'panel'); this.addMangaFx('ATIVADO!', node.x, node.y - 18, '#22d3ee');
     this.showAlert(this.routeComplete() ? (this.stage.boss ? 'ACESSO AO CONFRONTO LIBERADO.' : 'PASSAGEM LIBERADA — procure a saída superior.') : `SINAL ENVIADO — volte até ${this.nextRouteNode()?.label}`, 160);
     this.emitHud(); this.callbacks.onSaveRequest?.(); return true;
   }
@@ -613,7 +615,7 @@ export class GameEngine {
     const exit = this.stage.exits.find((door) => door.id === exitId);
     if (!exit || !overlaps(this.player, exit)) return false;
     if (exit.x > this.stage.boundsWidth / 2 && !this.routeComplete()) {
-      this.showAlert(`PASSAGEM BLOQUEADA: ${this.nextRouteNode()?.label ?? 'explore o setor'}`, 140); this.emitHud(); return false;
+      sound.playCue('denied'); this.showAlert(`PASSAGEM BLOQUEADA: ${this.nextRouteNode()?.label ?? 'explore o setor'}`, 140); this.emitHud(); return false;
     }
     const target = getSubstage(exit.target);
     const point = target.checkpoints.find((checkpoint) => checkpoint.id === exit.targetCheckpoint);
@@ -647,6 +649,7 @@ export class GameEngine {
       const solids = this.platforms.filter((platform) => !platform.broken && platform.type !== 'acid' && platform.type !== 'laser_gate');
       this.enemies.push(...this.spawns.update(this.player, null, this.tickCount, this.enemies, solids, true));
     }
+    sound.playCue('portal');
     this.emitHud();
     this.callbacks.onSaveRequest?.();
     return true;
@@ -700,7 +703,7 @@ export class GameEngine {
     if (this.gameOverTriggered) return;
     this.gameOverTriggered = true;
     this.paused = true;
-    sound.stopMusic();
+    sound.stopMusic(); sound.playCue('death');
     this.callbacks.onGameOver(this.stage.id, this.player.score);
     if (this.campaignMode) this.callbacks.onSaveRequest?.();
   }
@@ -985,8 +988,8 @@ export class GameEngine {
     const swing = SWINGS[p.comboStep];
     p.slashTimer = swing.totalTicks;
     p.comboWindow = swing.totalTicks + COMBO.linkTicks;
-    sound.sfxSlash();
-    sound.playVoiceShout(this.characterId);
+    sound.sfxSlash(p.comboStep);
+    if (p.comboStep === 2) sound.playVoiceShout(this.characterId);
 
     const dmgMult = p.atkTimer > 0 ? 2 : 1;
     const breakShieldsNow = char.shieldBreaker || p.atkTimer > 0;
@@ -1173,6 +1176,7 @@ export class GameEngine {
     const cx = pr.x + pr.w / 2 - 11;
     const cy = pr.y + pr.h - 24;
     if (pr.dropType === 'none') return;
+    if (pr.dropType === 'secret_a' || pr.dropType === 'secret_b') sound.playCue('secret');
     if (pr.dropType === 'secret_a') {
       // Secret Chest A: 12x WAV + Camuflagem Óptica (GST)
       this.pickups.push({ x: cx - 14, y: cy, w: 22, h: 22, kind: 'wav', amount: 12, vy: -6 });
@@ -1199,7 +1203,7 @@ export class GameEngine {
       this.superCutinTimer = 46;
       this.superLabel = char.overdriveName;
       this.screenShake(24);
-      sound.sfxOverdrive();
+      sound.sfxOverdrive(this.characterId);
       sound.playVoiceShout(this.characterId);
 
       this.dimensionalSlashes = [];
@@ -1349,7 +1353,7 @@ export class GameEngine {
     if (en.ai) { en.ai.state = en.hp <= 0 ? 'dead' : 'stunned'; en.ai.timer = 12; en.telegraph = 0; }
     this.hitstop = Math.max(this.hitstop, hitstopFrames);
     this.screenShake(6);
-    sound.sfxHit();
+    sound.sfxHit(en.type === 'turret' || en.type === 'drone' || en.type === 'heavy_trooper' ? 'metal' : 'body');
     this.addParticle(en.x + en.w / 2, en.y + en.h / 2, CHARACTERS[this.characterId].accentColor, 10, 5);
     this.registerHit(0);
     if (en.hp <= 0) this.addScore(this.spawns.claimDefeatReward(en));
@@ -1360,7 +1364,7 @@ export class GameEngine {
     this.boss.hp -= dmg;
     this.hitstop = Math.max(this.hitstop, 4);
     this.screenShake(8);
-    sound.sfxHit();
+    sound.sfxHit('boss');
     this.addParticle(this.boss.x + this.boss.w / 2, this.boss.y + this.boss.h / 2, this.boss.accentColor, 14, 6);
     this.addMangaFx('CRUSH!', this.boss.x, this.boss.y - 24, '#ff007f');
     this.registerHit(200);
@@ -1753,6 +1757,7 @@ export class GameEngine {
       this.recoverPlayer();
       if (!this.canAct()) return;
     }
+    const wasGrounded = p.grounded, footstepStartX = p.x;
     const wall = moveAgainstSolids(p, p.vx, 'x', solids);
     p.onWall = wall && !p.grounded ? (p.vx > 0 ? 1 : -1) : 0;
     if (wall) p.vx = 0;
@@ -1813,6 +1818,12 @@ export class GameEngine {
         }
       }
     });
+
+    if (!wasGrounded && p.grounded && verticalSpeed > 4.5) sound.playCue('land');
+    if (p.grounded && (this.keys.left || this.keys.right) && !p.isDashing && !p.isSliding) {
+      this.footstepDistance += Math.abs(p.x - footstepStartX);
+      if (this.footstepDistance >= 90) { this.footstepDistance %= 90; sound.playCue('footstep'); }
+    } else this.footstepDistance = 0;
 
     // Debounced Pitfall Recovery (§4.2)
     if (p.y > this.stage.boundsBottom && p.pitfallCooldown <= 0) {
@@ -1892,6 +1903,7 @@ export class GameEngine {
       for (const point of this.stage.checkpoints) {
         if (point.id !== this.checkpointId && p.grounded && Math.hypot(p.x - point.x, p.y - point.y) < 64) {
           this.checkpointId = point.id;
+          sound.playCue('checkpoint');
           this.callbacks.onSaveRequest?.();
           this.showAlert(`PONTO DE APOIO: ${point.label.toUpperCase()}`, 100);
         }
@@ -2163,10 +2175,10 @@ export class GameEngine {
           vx: flying || enemy.type === 'turret' ? dx / length * profile.bulletSpeed : mind.facing * profile.bulletSpeed,
           vy: flying || enemy.type === 'turret' ? dy / length * profile.bulletSpeed : 0,
           shooterId: enemy.id, color: enemy.type === 'sniper' ? '#ff007f' : '#facc15', damage: profile.damage });
-        sound.sfxShoot();
+        sound.sfxShoot(enemy.type === 'turret' ? 'turret' : enemy.type === 'sniper' ? 'sniper' : 'gunner');
       } else if (intent.attack === 'deploy') {
         const turret = this.spawns.deploy(enemy, this.enemies, solids, p, this.tickCount);
-        if (turret) { this.enemies.push(turret); this.addMangaFx('TORRETA!', enemy.x, enemy.y - 22, '#f59e0b'); }
+        if (turret) { sound.playCue('deploy'); this.enemies.push(turret); this.addMangaFx('TORRETA!', enemy.x, enemy.y - 22, '#f59e0b'); }
         if (enemy.deployed) { enemy.facing = p.x >= enemy.x ? -1 : 1; mind.facing = enemy.facing; }
       } else if (intent.attack === 'flank') {
         if (hasSafeFooting(enemy, mind.aimX - enemy.x, this.platforms)) {
@@ -2203,7 +2215,7 @@ export class GameEngine {
     const event = stepBoss(b, p);
     const mind = b.mind!;
     b.orbitalAngle = (b.orbitalAngle ?? 0) + 0.08;
-    if (event.started) this.addMangaFx(BOSS_MOVES[mind.attack].label, b.x, b.y - 28, b.accentColor);
+    if (event.started) { sound.playCue('boss_warning'); this.addMangaFx(BOSS_MOVES[mind.attack].label, b.x, b.y - 28, b.accentColor); }
     if (event.fire) {
       if (isBossCharge(event.fire)) {
         const speed = event.fire === 'draw_cut' ? 15 : event.fire === 'charge' ? 14 : 12;
@@ -2223,7 +2235,7 @@ export class GameEngine {
       }
       const shots = bossShots(b, event.fire);
       this.bullets.push(...shots);
-      if (shots.length) sound.sfxShoot();
+      if (shots.length) sound.sfxShoot('boss');
     }
     const previous = { x: b.x, y: b.y, w: b.w, h: b.h };
     const charging = mind.state === 'active' && isBossCharge(mind.attack);
