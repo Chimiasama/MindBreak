@@ -46,11 +46,13 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
       e.preventDefault();
       onKey(key, false);
     },
+    onLostPointerCapture: () => onKey(key, false),
   });
 
   const bindTap = (action: () => void, releaseJump?: boolean) => ({
     onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
       e.preventDefault();
+      e.currentTarget.setPointerCapture?.(e.pointerId);
       action();
     },
     onPointerUp: (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -61,6 +63,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
       e.preventDefault();
       if (releaseJump) onKey('jumpHeld', false);
     },
+    onLostPointerCapture: () => { if (releaseJump) onKey('jumpHeld', false); },
   });
 
   return (

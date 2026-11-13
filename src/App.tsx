@@ -15,6 +15,8 @@ import { sound } from './game/audio';
 import { CHARACTER_ORDER, CHARACTERS } from './game/characters';
 import { GameEngine } from './game/engine';
 import { STAGES } from './game/stages';
+import { ALLOW_TEST_CHARACTER_SWITCH } from './game/rules';
+import { KeyboardState, KEY_BINDINGS } from './game/input';
 import { CharacterId, GameState, HudSnapshot } from './game/types';
 
 export default function App() {
@@ -88,6 +90,8 @@ export default function App() {
     if (!canvas) return;
 
     const engine = new GameEngine(canvas, {
+      onPauseRequest: () => setGameState((current) =>
+        current === 'PLAYING' ? 'PAUSED' : current === 'PAUSED' ? 'PLAYING' : current),
       onHudUpdate: (snapshot) => {
         setHud(snapshot);
         setContinueChar(snapshot.characterId);
@@ -110,6 +114,25 @@ export default function App() {
     };
   }, [handleContinueCountdown, handleGameOver, handleStageClear]);
 
+  useEffect(() => {
+    engineRef.current?.setPaused(gameState !== 'PLAYING');
+  }, [gameState]);
+
+  useEffect(() => {
+    const suspend = () => {
+      engineRef.current?.clearInput();
+      setGameState((current) => current === 'PLAYING' ? 'PAUSED' : current);
+      engineRef.current?.setPaused(true);
+    };
+    const onVisibility = () => { if (document.hidden) suspend(); };
+    window.addEventListener('blur', suspend);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('blur', suspend);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
+
   // 9-second classic arcade Continue countdown
   useEffect(() => {
     if (gameState !== 'CONTINUE_COUNTDOWN') return;
@@ -125,36 +148,34 @@ export default function App() {
 
   // Keyboard controls when PLAYING
   useEffect(() => {
+    const keyboard = new KeyboardState();
     const onKeyDown = (e: KeyboardEvent) => {
       const engine = engineRef.current;
       if (!engine || gameState !== 'PLAYING') return;
 
-      if (e.code === 'ArrowLeft' || e.code === 'KeyA') engine.setKey('left', true);
-      if (e.code === 'ArrowRight' || e.code === 'KeyD') engine.setKey('right', true);
-      if (e.code === 'ArrowUp' || e.code === 'KeyW') {
-        engine.setKey('up', true);
-      }
+      const binding = keyboard.set(e.code, true);
+      if (binding) engine.setKey(binding.key, binding.pressed);
+      if (KEY_BINDINGS[e.code]) e.preventDefault();
       if (e.code === 'ArrowDown' || e.code === 'KeyS') {
-        engine.setKey('down', true);
         engine.triggerDropDown();
       }
       if (e.code === 'Space' && !e.repeat) {
         e.preventDefault();
-        engine.triggerJump();
+        engine.queueAction('jump');
       }
       if ((e.code === 'KeyJ' || e.code === 'KeyZ') && !e.repeat) {
-        engine.triggerAttack();
+        engine.queueAction('attack');
       }
       if ((e.code === 'KeyK' || e.code === 'KeyX' || e.code === 'ShiftLeft') && !e.repeat) {
-        engine.triggerDashOrSlide();
+        engine.queueAction('dash');
       }
       if ((e.code === 'KeyL' || e.code === 'KeyC') && !e.repeat) {
-        engine.triggerPsy();
+        engine.queueAction('psy');
       }
       if ((e.code === 'KeyU' || e.code === 'KeyV') && !e.repeat) {
-        engine.triggerAssist();
+        engine.queueAction('assist');
       }
-      if (e.code === 'Tab' && !e.repeat) {
+      if (ALLOW_TEST_CHARACTER_SWITCH && e.code === 'Tab' && !e.repeat) {
         e.preventDefault();
         engine.switchCharacter();
       }
@@ -167,11 +188,8 @@ export default function App() {
     const onKeyUp = (e: KeyboardEvent) => {
       const engine = engineRef.current;
       if (!engine) return;
-      if (e.code === 'ArrowLeft' || e.code === 'KeyA') engine.setKey('left', false);
-      if (e.code === 'ArrowRight' || e.code === 'KeyD') engine.setKey('right', false);
-      if (e.code === 'ArrowUp' || e.code === 'KeyW') engine.setKey('up', false);
-      if (e.code === 'ArrowDown' || e.code === 'KeyS') engine.setKey('down', false);
-      if (e.code === 'Space') engine.setKey('jumpHeld', false);
+      const binding = keyboard.set(e.code, false);
+      if (binding) engine.setKey(binding.key, binding.pressed);
     };
 
     window.addEventListener('keydown', onKeyDown);
@@ -292,14 +310,14 @@ export default function App() {
                   <Heart className="h-3.5 w-3.5 fill-pink-500 text-pink-500" />
                   x{hud.lives}
                 </span>
-                <button
+                {ALLOW_TEST_CHARACTER_SWITCH && <button
                   type="button"
                   onClick={() => engineRef.current?.switchCharacter()}
                   className="inline-flex items-center gap-1 rounded border border-slate-700 bg-slate-900/90 px-2 py-0.5 text-[11px] font-semibold text-cyan-300 hover:border-cyan-400 active:scale-95 transition whitespace-nowrap"
                 >
                   <Users className="h-3 w-3" />
-                  Trocar
-                </button>
+                  Trocar (teste)
+                </button>}
               </div>
 
               {/* HP Bar + Numeric readout */}
@@ -436,13 +454,13 @@ export default function App() {
             <TouchControls
               characterId={hud.characterId}
               psyReady={psyReady}
-              onKey={(k, pressed) => engineRef.current?.setKey(k, pressed)}
-              onJump={() => engineRef.current?.triggerJump()}
+              onKey={(k, pressed) => engineRef.current?.setKey(k, pressed, 'touch')}
+              onJump={() => engineRef.current?.queueAction('jump', 'touch')}
               onDropDown={() => engineRef.current?.triggerDropDown()}
-              onAttack={() => engineRef.current?.triggerAttack()}
-              onDash={() => engineRef.current?.triggerDashOrSlide()}
-              onPsy={() => engineRef.current?.triggerPsy()}
-              onAssist={() => engineRef.current?.triggerAssist()}
+              onAttack={() => engineRef.current?.queueAction('attack', 'touch')}
+              onDash={() => engineRef.current?.queueAction('dash', 'touch')}
+              onPsy={() => engineRef.current?.queueAction('psy', 'touch')}
+              onAssist={() => engineRef.current?.queueAction('assist', 'touch')}
             />
           )}
         </>
@@ -482,7 +500,7 @@ export default function App() {
                   <h2 className="font-display text-2xl font-bold text-white">
                     01. Escolha seu Rebelde Psíquico
                   </h2>
-                  <span className="text-xs text-slate-400">Troque a qualquer momento com TAB ou &ldquo;Trocar&rdquo;</span>
+                  <span className="text-xs text-slate-400">{ALLOW_TEST_CHARACTER_SWITCH ? 'Modo de teste: TAB ou Trocar. Na versão final, troca só no continue.' : 'Troca de personagem disponível no continue.'}</span>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   {CHARACTER_ORDER.map((id) => {
@@ -529,12 +547,13 @@ export default function App() {
                     Controles (Toque Android, Teclado ou Gamepad Bluetooth)
                   </div>
                   <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-slate-300 sm:grid-cols-3">
+                    <div><strong>DualShock 4:</strong> ✕ pulo · □ golpe · ○ dash · △ PSY · L1 assist · Options pausa</div>
                     <div><strong>Mover / Escalar:</strong> ◀ ▲ ▶ / A W D</div>
                     <div><strong>Pulo / Wall-Kick / Vault:</strong> PULO / Espaço</div>
                     <div><strong>Rasteira Lança-Ar:</strong> ▼ + DASH (S+K)</div>
                     <div><strong>Corte / Deflect 2X:</strong> GOLPE / J ou Z</div>
                     <div><strong>Telecinese / Overdrive:</strong> PSY / L ou C</div>
-                    <div><strong>Assistente / Trocar:</strong> ASSIST / U ou Tab</div>
+                    <div><strong>Assistente:</strong> ASSIST / U ou V{ALLOW_TEST_CHARACTER_SWITCH && ' · Troca de teste: Tab'}</div>
                   </div>
                 </div>
               </div>

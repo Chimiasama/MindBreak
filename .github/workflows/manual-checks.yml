@@ -1,0 +1,33 @@
+name: Validacao manual
+
+# Intentionally manual. Do not add push, pull_request, schedule or workflow_run.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.4'
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+      - name: Gameplay and exploration regression tests
+        run: npm test
+      - name: TypeScript
+        run: npm run lint
+      - name: Web test build
+        run: npm run build
+      - name: Web final profile build
+        env:
+          VITE_TEST_CHARACTER_SWITCH: 'false'
+        run: npm run build -- --outDir /tmp/mindbreak-release

@@ -1,4 +1,10 @@
 import { sound } from './audio';
+import { FixedStepClock } from './simulation';
+import { GameInput, GameAction, InputKey, InputSource } from './input';
+import { moveAgainstSolids, depenetrate, overlaps, sweepTime } from './collision';
+import { ALLOW_TEST_CHARACTER_SWITCH } from './rules';
+import { MOVEMENT } from './tuning';
+import { SpawnManager } from './spawns';
 import { CHARACTER_ORDER, CHARACTERS } from './characters';
 import { getEnemyPixelSprite, getHeroPixelSprite } from './pixelSprites';
 import { STAGES } from './stages';
@@ -33,6 +39,7 @@ interface Bullet {
 }
 
 interface ThrownEnemy {
+  hitIds: Set<number>;
   x: number;
   y: number;
   w: number;
@@ -79,6 +86,7 @@ interface ScarfNode {
 }
 
 export interface EngineCallbacks {
+  onPauseRequest?: () => void;
   onHudUpdate: (hud: HudSnapshot) => void;
   onStageClear: (stageId: number, score: number) => void;
   onContinueCountdown: (stageId: number, score: number) => void;
@@ -93,7 +101,16 @@ export class GameEngine {
   private callbacks: EngineCallbacks;
 
   private rafId: number | null = null;
-  private paused = false;
+  private paused = true;
+  private clock = new FixedStepClock();
+  private transitionTimers = new Set<ReturnType<typeof setTimeout>>();
+  private wallKickLock = 0;
+  private standingPlatform: Platform | null = null;
+  private input = new GameInput();
+  private jumpBuffer = 0;
+  private coyoteTicks = 0;
+  private slideHitIds = new Set<number>();
+  private spawns = new SpawnManager(STAGES[0]);
   private tickCount = 0;
   private hitstop = 0;
 
@@ -172,13 +189,35 @@ export class GameEngine {
     score: 0,
   };
 
-  private keys = {
-    left: false,
-    right: false,
-    up: false,
-    down: false,
-    jumpHeld: false,
-  };
+  private get keys() { return this.input.keys; }
+
+  clearInput() {
+    this.input.clear();
+    this.jumpBuffer = 0;
+    this.coyoteTicks = 0;
+    this.lastGamepadJump = false;
+    this.lastGamepadAttack = false;
+    this.lastGamepadDash = false;
+    this.lastGamepadPsy = false;
+    this.lastGamepadAssist = false;
+  }
+
+  private cancelTransitions() {
+    this.transitionTimers.forEach((timer) => clearTimeout(timer));
+    this.transitionTimers.clear();
+  }
+
+  private scheduleTransition(callback: () => void, delay: number) {
+    const timer = setTimeout(() => {
+      this.transitionTimers.delete(timer);
+      callback();
+    }, delay);
+    this.transitionTimers.add(timer);
+  }
+
+  private canAct() {
+    return !this.paused && !this.stageClearTriggered && !this.continueTriggered && !this.gameOverTriggered;
+  }
 
   private camera = { x: 0, y: 0 };
   private shakeAmount = 0;
@@ -205,6 +244,8 @@ export class GameEngine {
   private lastGamepadDash = false;
   private lastGamepadPsy = false;
   private lastGamepadAssist = false;
+  private lastGamepadPause = false;
+  private gamepadWasConnected = false;
 
   constructor(canvas: HTMLCanvasElement, callbacks: EngineCallbacks) {
     this.canvas = canvas;
@@ -247,6 +288,11 @@ export class GameEngine {
     preserveLives = 3,
     preserveNextOneUp = 15000
   ) {
+    this.cancelTransitions();
+    this.clearInput();
+    this.clock.reset();
+    this.wallKickLock = 0;
+    this.standingPlatform = null;
     const found = STAGES.find((s) => s.id === stageId) ?? STAGES[0];
     this.stage = found;
     this.characterId = charId;
@@ -267,22 +313,8 @@ export class GameEngine {
       cleared: false,
       active: false,
     }));
-    this.enemies = found.enemies.map((en, idx) => ({
-      ...en,
-      id: idx + 1,
-      vx: 0,
-      vy: 0,
-      airborne: en.type === 'jetpack' || en.type === 'drone',
-      telegraph: 0,
-      patrolMinX: en.x - 120,
-      patrolMaxX: en.x + 120,
-      turnTimer: 0,
-      targetFacing: en.facing,
-      shieldHits: 0,
-      shieldBroken: false,
-      stunTimer: 0,
-      isFlanking: false,
-    }));
+    this.spawns = new SpawnManager(found);
+    this.enemies = this.spawns.initial();
     this.bullets = [];
     this.thrownEnemies = [];
     this.particles = [];
@@ -371,6 +403,9 @@ export class GameEngine {
   }
 
   continueWithCharacter(charId: CharacterId) {
+    this.cancelTransitions();
+    this.clearInput();
+    this.clock.reset();
     this.characterId = charId;
     const profile = CHARACTERS[charId];
     const p = this.player;
@@ -398,6 +433,8 @@ export class GameEngine {
   }
 
   triggerFinalGameOver() {
+    this.cancelTransitions();
+    this.clearInput();
     if (this.gameOverTriggered) return;
     this.gameOverTriggered = true;
     this.paused = true;
@@ -406,6 +443,7 @@ export class GameEngine {
   }
 
   switchCharacter(nextId?: CharacterId) {
+    if (!ALLOW_TEST_CHARACTER_SWITCH || !this.canAct()) return;
     const idx = CHARACTER_ORDER.indexOf(this.characterId);
     const target = nextId ?? CHARACTER_ORDER[(idx + 1) % CHARACTER_ORDER.length];
     if (target === this.characterId) return;
@@ -414,7 +452,7 @@ export class GameEngine {
     this.characterId = target;
     const profile = CHARACTERS[target];
     this.player.maxHp = profile.maxHp;
-    this.player.hp = Math.max(10, Math.round(profile.maxHp * oldRatio));
+    this.player.hp = Math.max(1, Math.floor(profile.maxHp * oldRatio));
     this.player.isFlying = false;
     this.addParticle(this.player.x + 16, this.player.y + 28, profile.accentColor, 14, 6);
     this.addMangaFx(`TAG: ${profile.name.toUpperCase()}!`, this.player.x, this.player.y - 24, profile.accentColor);
@@ -425,6 +463,8 @@ export class GameEngine {
 
   setPaused(pause: boolean) {
     this.paused = pause;
+    this.clock.reset();
+    this.clearInput();
     if (pause) {
       sound.stopMusic();
     } else {
@@ -434,11 +474,15 @@ export class GameEngine {
 
   start() {
     this.stop();
-    const loop = () => {
+    const loop = (timestamp: number) => {
       try {
+        this.pollGamepadPause();
         if (!this.paused) {
-          this.pollGamepad();
-          this.update();
+          this.clock.advance(timestamp, () => {
+            this.pollGamepad();
+            this.update();
+            return !this.paused;
+          });
         }
         this.draw();
       } catch (err) {
@@ -450,6 +494,9 @@ export class GameEngine {
   }
 
   stop() {
+    this.cancelTransitions();
+    this.clearInput();
+    this.clock.reset();
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
@@ -463,8 +510,15 @@ export class GameEngine {
     this.ctx.imageSmoothingEnabled = false;
   }
 
-  setKey(key: 'left' | 'right' | 'up' | 'down' | 'jumpHeld', pressed: boolean) {
-    this.keys[key] = pressed;
+  setKey(key: InputKey, pressed: boolean, source: InputSource = 'keyboard') {
+    if (pressed && !this.canAct()) return;
+    this.input.set(source, key, pressed);
+  }
+
+  queueAction(action: GameAction, source: InputSource = 'keyboard') {
+    if (!this.canAct()) return;
+    if (action === 'jump') this.input.set(source, 'jumpHeld', true);
+    this.input.enqueue(action, source);
   }
 
   private showAlert(msg: string, frames = 110) {
@@ -474,50 +528,73 @@ export class GameEngine {
 
   private pollGamepad() {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-    const pad = pads && pads[0];
-    if (!pad) return;
+    const pad = Array.from(pads ?? []).find((candidate) => candidate?.connected);
+    if (!pad) {
+      this.input.clear('gamepad');
+      this.lastGamepadJump = this.lastGamepadAttack = this.lastGamepadDash = this.lastGamepadPsy = this.lastGamepadAssist = false;
+      return;
+    }
 
     const ax = pad.axes[0] ?? 0;
     const ay = pad.axes[1] ?? 0;
-    this.keys.left = ax < -0.35 || !!pad.buttons[14]?.pressed;
-    this.keys.right = ax > 0.35 || !!pad.buttons[15]?.pressed;
-    this.keys.up = ay < -0.45 || !!pad.buttons[12]?.pressed;
-    this.keys.down = ay > 0.45 || !!pad.buttons[13]?.pressed;
+    this.input.set('gamepad', 'left', ax < -0.35 || !!pad.buttons[14]?.pressed);
+    this.input.set('gamepad', 'right', ax > 0.35 || !!pad.buttons[15]?.pressed);
+    this.input.set('gamepad', 'up', ay < -0.45 || !!pad.buttons[12]?.pressed);
+    this.input.set('gamepad', 'down', ay > 0.45 || !!pad.buttons[13]?.pressed);
 
     const jumpBtn = !!pad.buttons[0]?.pressed;
-    this.keys.jumpHeld = jumpBtn;
-    if (jumpBtn && !this.lastGamepadJump) this.triggerJump();
+    this.input.set('gamepad', 'jumpHeld', jumpBtn);
+    if (jumpBtn && !this.lastGamepadJump) this.queueAction('jump', 'gamepad');
     this.lastGamepadJump = jumpBtn;
 
     const atkBtn = !!pad.buttons[2]?.pressed;
-    if (atkBtn && !this.lastGamepadAttack) this.triggerAttack();
+    if (atkBtn && !this.lastGamepadAttack) this.queueAction('attack', 'gamepad');
     this.lastGamepadAttack = atkBtn;
 
     const dashBtn = !!pad.buttons[1]?.pressed || !!pad.buttons[5]?.pressed;
-    if (dashBtn && !this.lastGamepadDash) this.triggerDashOrSlide();
+    if (dashBtn && !this.lastGamepadDash) this.queueAction('dash', 'gamepad');
     this.lastGamepadDash = dashBtn;
 
     const psyBtn = !!pad.buttons[3]?.pressed;
-    if (psyBtn && !this.lastGamepadPsy) this.triggerPsy();
+    if (psyBtn && !this.lastGamepadPsy) this.queueAction('psy', 'gamepad');
     this.lastGamepadPsy = psyBtn;
 
     const assistBtn = !!pad.buttons[4]?.pressed;
-    if (assistBtn && !this.lastGamepadAssist) this.triggerAssist();
+    if (assistBtn && !this.lastGamepadAssist) this.queueAction('assist', 'gamepad');
     this.lastGamepadAssist = assistBtn;
+  }
+
+  // Read Options/Start even while paused, so the same button can resume gameplay.
+  private pollGamepadPause() {
+    const pad = Array.from(navigator.getGamepads?.() ?? []).find((candidate) => candidate?.connected);
+    const pressed = !!pad?.buttons[9]?.pressed;
+    if (pressed && !this.lastGamepadPause) this.callbacks.onPauseRequest?.();
+    if (!pad && this.gamepadWasConnected && !this.paused) {
+      this.setPaused(true);
+      this.callbacks.onPauseRequest?.();
+    }
+    this.lastGamepadPause = pressed;
+    this.gamepadWasConnected = !!pad;
   }
 
   // =========================================================================
   // PLAYER ACTIONS
   // =========================================================================
-  triggerJump() {
+  triggerJump(source: InputSource = 'keyboard') {
+    if (!this.canAct()) return;
+    this.input.set(source, 'jumpHeld', true);
+    this.jumpBuffer = MOVEMENT.jumpBufferTicks;
+    if (this.tryJump()) this.jumpBuffer = 0;
+  }
+
+  private tryJump(): boolean {
     sound.init();
     const p = this.player;
-    if (p.stunTimer > 0) return;
+    if (p.stunTimer > 0) return false;
 
     const char = CHARACTERS[this.characterId];
     const jumpMult = p.jmpTimer > 0 ? 1.4 : 1;
     const jumpForce = char.jumpForce * jumpMult;
-    this.keys.jumpHeld = true;
 
     // Ceiling Hang -> Vault Over!
     if (p.hangingCeiling && p.hangingPipe) {
@@ -529,7 +606,7 @@ export class GameEngine {
       sound.sfxJump();
       this.addParticle(p.x + p.w / 2, p.y + p.h, this.stage.palette.pipeColor, 8, 4);
       this.addMangaFx('VAULT!', p.x, p.y - 16, this.stage.palette.pipeColor);
-      return;
+      return true;
     }
 
     // Strict Alternating Wall-Kick
@@ -540,28 +617,30 @@ export class GameEngine {
         Math.abs(p.x - p.lastWallX) < 52;
       if (sameWall) {
         this.addMangaFx('TROQUE DE PAREDE!', p.x, p.y - 14, '#facc15');
-        return;
+        return false;
       }
 
       p.lastWallSide = p.onWall;
       p.lastWallX = p.x;
       p.vy = -jumpForce * 0.96;
       p.vx = -p.onWall * (char.speed * 1.45);
+      this.wallKickLock = MOVEMENT.wallKickLockTicks;
       p.facing = (-p.onWall) as 1 | -1;
       p.doubleJump = true;
       sound.sfxWallKick();
       this.addParticle(p.x + (p.onWall === 1 ? p.w : 0), p.y + 20, char.trailColor, 10, 5);
       this.addMangaFx('WALL KICK!', p.x, p.y - 16, char.trailColor);
-      return;
+      return true;
     }
 
-    if (p.grounded) {
+    if (p.grounded || this.coyoteTicks > 0) {
+      this.coyoteTicks = 0;
       p.vy = -jumpForce;
       p.grounded = false;
       p.doubleJump = true;
       sound.sfxJump();
       this.addParticle(p.x + p.w / 2, p.y + p.h, '#cbd5e1', 5, 3);
-      return;
+      return true;
     }
 
     if (p.doubleJump || p.jmpTimer > 0) {
@@ -570,10 +649,13 @@ export class GameEngine {
       sound.sfxDoubleJump();
       this.addParticle(p.x + p.w / 2, p.y + p.h, char.accentColor, 12, 5);
       this.addMangaFx(p.jmpTimer > 0 ? 'AIR STEP!' : 'PSY JUMP!', p.x, p.y - 12, char.accentColor);
+      return true;
     }
+    return false;
   }
 
   triggerDropDown() {
+    if (!this.canAct()) return;
     if (this.player.hangingCeiling) {
       this.player.hangingCeiling = false;
       this.player.hangingPipe = null;
@@ -582,6 +664,7 @@ export class GameEngine {
   }
 
   triggerDashOrSlide() {
+    if (!this.canAct()) return;
     sound.init();
     const p = this.player;
     if (p.stunTimer > 0) return;
@@ -590,6 +673,7 @@ export class GameEngine {
     if (this.keys.down && p.grounded && !p.isSliding) {
       p.isSliding = true;
       p.slideTimer = 22;
+      this.slideHitIds.clear();
       p.vx = p.facing * (char.speed * 2.05);
       sound.sfxSlide();
       this.addMangaFx('SLIDE!', p.x, p.y - 10, char.trailColor);
@@ -609,6 +693,7 @@ export class GameEngine {
   }
 
   triggerAttack() {
+    if (!this.canAct()) return;
     sound.init();
     const p = this.player;
     if (p.slashTimer > 0 || p.stunTimer > 0) return;
@@ -703,7 +788,7 @@ export class GameEngine {
           this.screenShake(11);
           this.addParticle(en.x + en.w / 2, en.y + 24, '#00f0ff', 16, 6);
           this.addMangaFx('GUARD CRUSH!', en.x, en.y - 28, '#facc15');
-          this.registerHit(150);
+          this.registerHit(150, (en.generation ?? 0) === 0);
           return;
         }
 
@@ -767,6 +852,10 @@ export class GameEngine {
         if (!target && this.boss.active && this.boss.triggered) {
           target = this.boss;
         }
+        if (!target) {
+          target = this.enemies.filter((enemy) => enemy.hp > 0).sort((left, right) =>
+            Math.hypot(left.x - b.x, left.y - b.y) - Math.hypot(right.x - b.x, right.y - b.y))[0];
+        }
 
         if (target) {
           const tx = target.x + target.w / 2 - b.x;
@@ -814,6 +903,7 @@ export class GameEngine {
   }
 
   triggerPsy() {
+    if (!this.canAct()) return;
     sound.init();
     const p = this.player;
     if (p.stunTimer > 0) return;
@@ -828,8 +918,6 @@ export class GameEngine {
       sound.sfxOverdrive();
       sound.playVoiceShout(this.characterId);
 
-      const viewW = this.canvas.width / ZOOM;
-      const viewH = this.canvas.height / ZOOM;
       this.dimensionalSlashes = [];
       for (let i = 0; i < 16; i++) {
         this.dimensionalSlashes.push({
@@ -840,10 +928,9 @@ export class GameEngine {
         });
       }
 
-      const viewLeft = this.camera.x - 80;
-      const viewRight = this.camera.x + viewW + 80;
+      // Gameplay radius is independent of phone/window resolution.
       this.enemies.forEach((en) => {
-        if (en.x >= viewLeft && en.x <= viewRight && Math.abs(en.y - p.y) < viewH) {
+        if (Math.hypot(en.x - p.x, en.y - p.y) < 760) {
           this.hitEnemy(en, 110, (en.x > p.x ? 1 : -1) * 10, -12, 6);
         }
       });
@@ -855,7 +942,7 @@ export class GameEngine {
       return;
     }
 
-    if (p.psyEnergy < 28) {
+    if (p.psyEnergy < 25) {
       this.addMangaFx('SEM FOCO!', p.x, p.y - 20, '#ef4444');
       sound.sfxBlock();
       return;
@@ -871,7 +958,7 @@ export class GameEngine {
       }
     });
 
-    if (targetIdx !== -1) {
+    if (targetIdx !== -1 && p.psyEnergy >= 28) {
       p.psyEnergy -= 28;
       const grabbed = this.enemies.splice(targetIdx, 1)[0];
       sound.sfxPsyThrow();
@@ -880,6 +967,7 @@ export class GameEngine {
       this.screenShake(10);
       this.addMangaFx('TELE-THROW!', p.x, p.y - 26, '#a855f7');
       this.thrownEnemies.push({
+        hitIds: new Set<number>(),
         x: p.x + p.facing * 36,
         y: p.y,
         w: grabbed.w,
@@ -909,9 +997,10 @@ export class GameEngine {
   }
 
   triggerAssist() {
+    if (!this.canAct()) return;
     sound.init();
     const p = this.player;
-    if (p.psyEnergy < 32 || this.mayaWell !== null) {
+    if (p.stunTimer > 0 || p.psyEnergy < 32 || this.mayaWell !== null) {
       this.addMangaFx('RECARREGANDO!', p.x, p.y - 20, '#facc15');
       sound.sfxBlock();
       return;
@@ -966,6 +1055,7 @@ export class GameEngine {
   }
 
   private hitEnemy(en: Enemy, dmg: number, kx: number, ky: number, hitstopFrames = 3) {
+    if (en.hp <= 0) return;
     en.hp -= dmg;
     en.vx = kx;
     en.vy = ky;
@@ -974,10 +1064,11 @@ export class GameEngine {
     this.screenShake(6);
     sound.sfxHit();
     this.addParticle(en.x + en.w / 2, en.y + en.h / 2, CHARACTERS[this.characterId].accentColor, 10, 5);
-    this.registerHit(120);
+    this.registerHit(120, (en.generation ?? 0) === 0);
   }
 
   private damageBoss(dmg: number) {
+    if (!this.boss.active || this.stageClearTriggered) return;
     this.boss.hp -= dmg;
     this.hitstop = Math.max(this.hitstop, 4);
     this.screenShake(8);
@@ -1004,13 +1095,14 @@ export class GameEngine {
       this.boss.hp = 0;
       this.boss.active = false;
       this.stageClearTriggered = true;
+      this.setPaused(true);
       this.addScore(2500);
       this.screenShake(22);
       this.addParticle(this.boss.x + this.boss.w / 2, this.boss.y + this.boss.h / 2, '#00f0ff', 36, 9);
       this.addMangaFx('STAGE CLEAR!', this.boss.x, this.boss.y - 40, '#00f0ff');
       sound.sfxStageClear();
       this.emitHud();
-      setTimeout(() => {
+      this.scheduleTransition(() => {
         this.callbacks.onStageClear(this.stage.id, this.player.score);
       }, 1150);
     }
@@ -1019,13 +1111,14 @@ export class GameEngine {
   private damagePlayer(dmg: number, knockX: number, ignoreInvuln = false, isWeakBullet = false) {
     const p = this.player;
     const char = CHARACTERS[this.characterId];
-    if (this.continueTriggered || this.gameOverTriggered) return;
+    if (this.stageClearTriggered || this.continueTriggered || this.gameOverTriggered) return;
     if (p.gstTimer > 0 && !ignoreInvuln) return; // GST optical camouflage invulnerability
     if (!ignoreInvuln && (p.invulnTimer > 0 || p.isDashing)) return;
 
     // Leon Super Armor: absorbs knockback/flinch from weak bullets!
     if (char.superArmor && isWeakBullet) {
       p.hp = Math.max(0, p.hp - Math.round(dmg * 0.7));
+      p.invulnTimer = 42;
       this.addMangaFx('SUPER ARMOR!', p.x, p.y - 18, '#f97316');
       sound.sfxBlock();
     } else {
@@ -1046,29 +1139,27 @@ export class GameEngine {
         p.stunTimer = 0;
         p.vx = 0;
         p.vy = 0;
-        p.x = p.lastGroundX;
-        p.y = p.lastGroundY - p.h - 4;
+        this.recoverPlayer();
         this.addMangaFx('RESPAWN! 3s I-FRAMES', p.x, p.y - 30, '#00f0ff');
         this.showAlert(`VIDAS RESTANTES: ${p.lives}`, 90);
         this.emitHud();
       } else if (!this.continueTriggered) {
         p.lives = 0;
         this.continueTriggered = true;
-        this.paused = true;
-        sound.stopMusic();
+        this.setPaused(true);
         this.emitHud();
-        setTimeout(() => {
+        this.scheduleTransition(() => {
           this.callbacks.onContinueCountdown(this.stage.id, p.score);
         }, 450);
       }
     }
   }
 
-  private registerHit(scorePoints: number) {
+  private registerHit(scorePoints: number, awardScore = true) {
     this.player.comboHits++;
     this.player.comboTimer = 130;
     this.player.psyEnergy = Math.min(this.player.maxPsy, this.player.psyEnergy + 8);
-    this.addScore(scorePoints * Math.max(1, Math.floor(this.player.comboHits / 3)));
+    if (awardScore) this.addScore(scorePoints * Math.max(1, Math.floor(this.player.comboHits / 3)));
   }
 
   private checkAABB(
@@ -1127,6 +1218,18 @@ export class GameEngine {
 
     const p = this.player;
     const char = CHARACTERS[this.characterId];
+    this.coyoteTicks = p.grounded ? MOVEMENT.coyoteTicks : Math.max(0, this.coyoteTicks - 1);
+    for (const { action } of this.input.drain()) {
+      if (action === 'jump') this.jumpBuffer = MOVEMENT.jumpBufferTicks;
+      if (action === 'attack') this.triggerAttack();
+      if (action === 'dash') this.triggerDashOrSlide();
+      if (action === 'psy') this.triggerPsy();
+      if (action === 'assist') this.triggerAssist();
+    }
+    if (this.jumpBuffer > 0) {
+      if (this.tryJump()) this.jumpBuffer = 0;
+      else this.jumpBuffer--;
+    }
 
     if (this.alertTimer > 0) {
       this.alertTimer--;
@@ -1144,9 +1247,16 @@ export class GameEngine {
     // Update moving & crumbling platforms
     this.platforms.forEach((plat) => {
       if (plat.type === 'moving' && plat.originX !== undefined && plat.originY !== undefined) {
+        const previousX = plat.x;
+        const previousY = plat.y;
         const offset = Math.sin(this.tickCount * (plat.moveSpeed ?? 0.03)) * (plat.moveRange ?? 80);
         if (plat.moveAxis === 'x') plat.x = plat.originX + offset;
         else plat.y = plat.originY + offset;
+        if (this.standingPlatform === plat && p.grounded) {
+          const obstacles = this.platforms.filter((other) => other !== plat && !other.broken && other.type !== 'acid' && other.type !== 'laser_gate');
+          moveAgainstSolids(p, plat.x - previousX, 'x', obstacles);
+          moveAgainstSolids(p, plat.y - previousY, 'y', obstacles);
+        }
       }
       if (plat.type === 'crumble' && plat.crumbleTimer && plat.crumbleTimer > 0) {
         plat.crumbleTimer++;
@@ -1230,7 +1340,8 @@ export class GameEngine {
       p.slideTimer--;
       this.enemies.forEach((en) => {
         if (this.checkAABB({ x: p.x, y: p.y + 34, w: p.w + 14, h: 22 }, en)) {
-          if (!en.airborne || en.vy >= 0) {
+          if ((!en.airborne || en.vy >= 0) && !this.slideHitIds.has(en.id)) {
+            this.slideHitIds.add(en.id);
             this.hitEnemy(en, 18, p.facing * 4, -12.5, 4);
             this.addMangaFx('LAUNCH!', en.x, en.y - 24, '#00f0ff');
           }
@@ -1257,8 +1368,10 @@ export class GameEngine {
       p.psyEnergy > 0.6 &&
       p.stunTimer <= 0;
 
+    // Briefly preserve the outward wall-kick impulse instead of overriding it with held input.
+    if (this.wallKickLock > 0) this.wallKickLock--;
     // Horizontal movement
-    if (!p.isDashing && !p.isSliding) {
+    if (!p.isDashing && !p.isSliding && this.wallKickLock === 0) {
       if (p.stunTimer > 0) {
         p.vx *= 0.85;
       } else if (this.keys.left) {
@@ -1299,7 +1412,7 @@ export class GameEngine {
       else if (this.keys.right) p.vx = char.speed * 0.85;
       else p.vx = 0;
     } else if (p.isFlying) {
-      p.psyEnergy = Math.max(0, p.psyEnergy - 0.35);
+      p.psyEnergy = Math.max(0, p.psyEnergy - MOVEMENT.flightDrain);
       if (this.keys.up) p.vy = -char.speed * 0.95;
       else if (this.keys.down) p.vy = char.speed * 0.95;
       else p.vy *= 0.75;
@@ -1313,7 +1426,7 @@ export class GameEngine {
         this.addParticle(p.x + (p.onWall === 1 ? p.w : 0), p.y + 22, char.trailColor, 3, 2);
       }
     } else {
-      let gravity = 0.65 * this.stage.gravityScale;
+      let gravity = MOVEMENT.gravity * this.stage.gravityScale;
       if (p.onWall !== 0 && p.vy > 0) {
         gravity = 0.2;
       }
@@ -1321,31 +1434,35 @@ export class GameEngine {
       if (p.onWall !== 0 && p.vy > 2.4) p.vy = 2.4;
     }
 
+    if (p.isFlying && (this.keys.left || this.keys.right) && (this.keys.up || this.keys.down)) {
+      p.vx /= Math.SQRT2;
+      p.vy /= Math.SQRT2;
+    }
+    p.vy = Math.min(p.vy, MOVEMENT.terminalVelocity);
+
     // Ambush Arena activation & clamping
     const activeArena = this.checkAmbushArenas();
 
-    // Collision X
-    p.x += p.vx;
+    const solids = this.platforms.filter((plat) => !plat.broken && plat.type !== 'acid' && plat.type !== 'laser_gate');
+    if (!depenetrate(p, solids)) {
+      if (p.pitfallCooldown <= 0) {
+        p.pitfallCooldown = 90;
+        this.damagePlayer(25, 0, true);
+      }
+      this.recoverPlayer();
+      if (!this.canAct()) return;
+    }
+    const wall = moveAgainstSolids(p, p.vx, 'x', solids);
+    p.onWall = wall && !p.grounded ? (p.vx > 0 ? 1 : -1) : 0;
+    if (wall) p.vx = 0;
     const minBoundX = activeArena ? activeArena.minX : 10;
     const maxBoundX = activeArena ? activeArena.maxX - p.w : this.stage.boundsWidth - p.w - 10;
     p.x = Math.max(minBoundX, Math.min(maxBoundX, p.x));
-    p.onWall = 0;
-    this.platforms.forEach((plat) => {
-      if (plat.broken || plat.type === 'acid' || plat.type === 'laser_gate') return;
-      if (this.checkAABB(p, plat)) {
-        if (p.vx > 0) {
-          p.x = plat.x - p.w;
-          if (!p.grounded) p.onWall = 1;
-        } else if (p.vx < 0) {
-          p.x = plat.x + plat.w;
-          if (!p.grounded) p.onWall = -1;
-        }
-        p.vx = 0;
-      }
-    });
 
     // Collision Y
-    p.y += p.vy;
+    const verticalSpeed = p.vy;
+    const surface = moveAgainstSolids(p, p.vy, 'y', solids);
+    this.standingPlatform = verticalSpeed > 0 ? surface as Platform | null : null;
     p.grounded = false;
     this.platforms.forEach((plat) => {
       if (plat.broken) return;
@@ -1364,8 +1481,8 @@ export class GameEngine {
         }
         return;
       }
-      if (this.checkAABB(p, plat)) {
-        if (p.vy > 0) {
+      if (surface === plat) {
+        if (verticalSpeed > 0) {
           p.y = plat.y - p.h;
           p.vy = 0;
           p.grounded = true;
@@ -1375,7 +1492,7 @@ export class GameEngine {
 
           // Conveyor belt active push
           if (plat.type === 'conveyor' && plat.conveyorSpeed) {
-            p.x += plat.conveyorSpeed;
+            moveAgainstSolids(p, plat.conveyorSpeed, 'x', solids.filter((other) => other !== plat));
           }
 
           // Safe ground checkpoint (debounced, 50px inward margin from platform edge)
@@ -1389,7 +1506,7 @@ export class GameEngine {
           if (plat.type === 'crumble' && !plat.crumbleTimer) {
             plat.crumbleTimer = 1;
           }
-        } else if (p.vy < 0) {
+        } else if (verticalSpeed < 0) {
           p.y = plat.y + plat.h;
           p.vy = 0;
         }
@@ -1401,11 +1518,7 @@ export class GameEngine {
       p.pitfallCooldown = 90; // 1.5s debounce
       this.damagePlayer(25, 0, true);
       if (p.hp > 0) {
-        p.x = p.lastGroundX;
-        p.y = p.lastGroundY - p.h - 4;
-        p.vx = 0;
-        p.vy = 0;
-        this.addMangaFx('RESGATE!', p.x, p.y - 20, '#38bdf8');
+        this.recoverPlayer();
       }
     }
 
@@ -1465,19 +1578,28 @@ export class GameEngine {
     });
     this.pickups = this.pickups.filter((i) => i.y < 5000);
 
+    // Ordinary exploration spawns re-arm only after substantial absence.
+    this.enemies.push(...this.spawns.update(p, {
+      x: this.camera.x, y: this.camera.y,
+      w: this.canvas.width / ZOOM, h: this.canvas.height / ZOOM,
+    }, this.tickCount, this.enemies, solids));
     // Update Enemies (Cooperative Squad AI)
     this.updateEnemies();
+    if (!this.canAct()) return;
 
     // Update Thrown Enemies
     this.thrownEnemies.forEach((te) => {
+      const previous = { ...te };
       te.x += te.vx;
       this.enemies.forEach((en) => {
-        if (this.checkAABB(te, en)) {
+        if (!te.hitIds.has(en.id) && sweepTime(previous, te.vx, 0, en) !== null) {
+          te.hitIds.add(en.id);
           this.hitEnemy(en, te.damage, te.vx * 0.45, -7, 4);
           this.addMangaFx('STRIKE!', en.x, en.y - 26, '#a855f7');
         }
       });
-      if (this.boss.active && this.boss.triggered && this.checkAABB(te, this.boss)) {
+      if (this.boss.active && this.boss.triggered && !te.hitIds.has(-999) && sweepTime(previous, te.vx, 0, this.boss) !== null) {
+        te.hitIds.add(-999);
         this.damageBoss(te.damage);
       }
     });
@@ -1493,40 +1615,29 @@ export class GameEngine {
       this.updateBoss();
     }
 
-    // Bullets
+    // Swept projectiles are processed in contact order; a non-piercing shot hits once.
     this.bullets.forEach((b) => {
+      const previous = { ...b };
       b.x += b.vx;
       b.y += b.vy;
       if (b.fromPlayer) {
-        this.enemies.forEach((en) => {
-          if (b.hitIds?.has(en.id)) return;
-          if (this.checkAABB(b, en)) {
-            this.hitEnemy(en, b.damage, b.vx > 0 ? 5 : -5, -4, 3);
-            if (b.piercing) {
-              b.hitIds?.add(en.id);
-            } else {
-              b.dead = true;
-            }
-          }
-        });
-        if (this.boss.active && this.boss.triggered && this.checkAABB(b, this.boss)) {
-          if (!b.hitIds?.has(-999)) {
-            this.damageBoss(b.damage);
-            if (b.piercing) {
-              b.hitIds?.add(-999);
-            } else {
-              b.dead = true;
-            }
-          }
+        const targets = [...this.enemies.filter((enemy) => enemy.hp > 0),
+          ...(this.boss.active && this.boss.triggered ? [{ ...this.boss, id: -999 }] : [])];
+        const contacts = targets.map((target) => ({ target, time: sweepTime(previous, b.vx, b.vy, target) }))
+          .filter((hit) => hit.time !== null && !b.hitIds?.has(hit.target.id))
+          .sort((left, right) => left.time! - right.time!);
+        for (const { target } of contacts) {
+          if (b.dead) break;
+          if (target.id === -999) this.damageBoss(b.damage);
+          else this.hitEnemy(target as Enemy, b.damage, b.vx > 0 ? 5 : -5, -4, 3);
+          if (b.piercing) (b.hitIds ??= new Set()).add(target.id);
+          else b.dead = true;
         }
       } else {
-        if (p.gstTimer > 0) return; // GST: bullets pass right through!
-        const playerBox = p.isSliding
-          ? { x: p.x, y: p.y + 34, w: p.w + 12, h: 22 }
-          : p;
-        if (this.checkAABB(b, playerBox)) {
-          const isWeak = b.damage <= 14;
-          this.damagePlayer(b.damage, b.vx > 0 ? 5 : -5, false, isWeak);
+        if (p.gstTimer > 0) return;
+        const playerBox = p.isSliding ? { x: p.x, y: p.y + 34, w: p.w + 12, h: 22 } : p;
+        if (sweepTime(previous, b.vx, b.vy, playerBox) !== null) {
+          this.damagePlayer(b.damage, b.vx > 0 ? 5 : -5, false, b.damage <= 14);
           b.dead = true;
         }
       }
@@ -1573,6 +1684,40 @@ export class GameEngine {
     if (this.tickCount % 4 === 0) {
       this.emitHud();
     }
+  }
+
+  private recoverPlayer() {
+    const p = this.player;
+    const solids = this.platforms.filter((plat) => !plat.broken && plat.type !== 'acid' && plat.type !== 'laser_gate');
+    const candidates = solids.filter((plat) => plat.type === 'solid' || plat.type === 'conveyor')
+      .map((plat) => ({
+        x: Math.max(plat.x + 4, Math.min(plat.x + plat.w - p.w - 4, p.lastGroundX)),
+        y: plat.y - p.h - 1, w: p.w, h: p.h,
+      }))
+      .filter((body) => body.x >= 10 && body.x + body.w <= this.stage.boundsWidth - 10 &&
+        body.y >= this.stage.boundsTop && body.y + body.h < this.stage.boundsBottom &&
+        !solids.some((solid) => overlaps(body, solid)) &&
+        !this.platforms.some((plat) => !plat.broken && (plat.type === 'acid' || plat.type === 'laser_gate') && overlaps(body, plat)))
+      .sort((a, b) => Math.hypot(a.x - p.lastGroundX, a.y + p.h - p.lastGroundY) -
+        Math.hypot(b.x - p.lastGroundX, b.y + p.h - p.lastGroundY));
+    if (!candidates.length) {
+      this.triggerFinalGameOver();
+      return;
+    }
+    p.x = candidates[0].x;
+    p.y = candidates[0].y;
+    p.vx = p.vy = 0;
+    p.lastGroundX = p.x;
+    p.lastGroundY = p.y + p.h + 1;
+    p.hangingCeiling = false;
+    p.hangingPipe = null;
+    p.isFlying = p.isDashing = p.isSliding = false;
+    p.doubleJump = true;
+    p.stunTimer = 0;
+    p.invulnTimer = Math.max(60, p.invulnTimer);
+    this.standingPlatform = null;
+    this.clearInput();
+    this.addMangaFx('RESGATE!', p.x, p.y - 20, '#38bdf8');
   }
 
   private checkAmbushArenas(): AmbushArena | null {
@@ -1645,7 +1790,7 @@ export class GameEngine {
     // Check if player is currently fighting a shield guard frontally (triggers Cyber Hound Flank Attack)
     const activeShieldEngage = this.enemies.find(
       (s) =>
-        s.type === 'mib_shield' &&
+        s.hp > 0 && s.type === 'mib_shield' &&
         !s.shieldBroken &&
         Math.abs(s.x - p.x) < 160 &&
         Math.abs(s.y - p.y) < 70 &&
@@ -1653,6 +1798,7 @@ export class GameEngine {
     );
 
     this.enemies.forEach((en) => {
+      if (en.hp <= 0 || en.y > this.stage.boundsBottom + 300) return;
       if (en.stunTimer && en.stunTimer > 0) {
         en.stunTimer--;
         en.vx *= 0.8;
@@ -1816,7 +1962,7 @@ export class GameEngine {
       }
     });
 
-    this.enemies = this.enemies.filter((en) => en.hp > 0);
+    this.enemies = this.enemies.filter((en) => en.hp > 0 && en.y < this.stage.boundsBottom + 300);
   }
 
   private updateBoss() {

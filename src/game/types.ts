@@ -103,6 +103,8 @@ export type EnemyType =
 
 export interface Enemy {
   id: number;
+  spawnId?: string;
+  generation?: number;
   type: EnemyType;
   x: number;
   y: number;

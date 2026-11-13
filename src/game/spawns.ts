@@ -1,0 +1,85 @@
+import { Body } from './collision';
+import { Enemy, StageDefinition } from './types';
+import { RESPAWN } from './tuning';
+
+interface SpawnRecord {
+  id: string;
+  template: StageDefinition['enemies'][number];
+  activeId: number | null;
+  generation: number;
+  deadAt: number | null;
+  farTicks: number;
+  armed: boolean;
+  repeatable: boolean;
+}
+
+export class SpawnManager {
+  private records: SpawnRecord[];
+  private nextEntityId = 1;
+  private farDistance: number;
+
+  constructor(stage: StageDefinition) {
+    this.farDistance = Math.min(RESPAWN.farDistance, Math.max(900,
+      Math.hypot(stage.boundsWidth, stage.boundsBottom - stage.boundsTop) * 0.5));
+    this.records = stage.enemies.map((template, index) => ({
+      id: `${stage.id}:${index + 1}`,
+      template: { ...template },
+      activeId: null,
+      generation: -1,
+      deadAt: null,
+      farTicks: 0,
+      armed: false,
+      // Mandatory encounters never refill or lock an already cleared arena.
+      repeatable: !(stage.ambushArenas ?? []).some((arena) =>
+        template.x >= arena.minX - 60 && template.x <= arena.maxX + 60),
+    }));
+  }
+
+  private materialize(record: SpawnRecord): Enemy {
+    const en = record.template;
+    record.activeId = this.nextEntityId++;
+    record.generation++;
+    record.deadAt = null;
+    record.armed = false;
+    record.farTicks = 0;
+    return {
+      ...en, id: record.activeId, spawnId: record.id, generation: record.generation,
+      vx: 0, vy: 0, airborne: en.type === 'jetpack' || en.type === 'drone', telegraph: 0,
+      patrolMinX: en.x - 120, patrolMaxX: en.x + 120,
+      turnTimer: 0, targetFacing: en.facing, shieldHits: 0, shieldBroken: false,
+      stunTimer: 0, isFlanking: false,
+    };
+  }
+
+  initial(): Enemy[] {
+    return this.records.filter((record) => record.generation < 0).map((record) => this.materialize(record));
+  }
+
+  update(player: Body, camera: Body, tick: number, alive: Enemy[], solids: Body[]): Enemy[] {
+    const liveIds = new Set(alive.filter((enemy) => enemy.hp > 0).map((enemy) => enemy.id));
+    const spawned: Enemy[] = [];
+    for (const record of this.records) {
+      if (record.activeId !== null && !liveIds.has(record.activeId)) {
+        record.activeId = null;
+        record.deadAt = tick;
+      }
+      if (record.activeId !== null || !record.repeatable || record.deadAt === null) continue;
+      const origin = record.template;
+      const distance = Math.hypot(player.x - origin.x, player.y - origin.y);
+      record.farTicks = distance >= this.farDistance ? record.farTicks + 1 : 0;
+      if (record.farTicks >= RESPAWN.farTicks) record.armed = true;
+      if (!record.armed || tick - record.deadAt < RESPAWN.minimumDeadTicks ||
+          distance > RESPAWN.activationRadius || distance < RESPAWN.playerSafetyRadius ||
+          liveIds.size + spawned.length >= RESPAWN.maxActive) continue;
+      const visible = origin.x < camera.x + camera.w + RESPAWN.cameraMargin &&
+        origin.x + origin.w > camera.x - RESPAWN.cameraMargin &&
+        origin.y < camera.y + camera.h + RESPAWN.cameraMargin &&
+        origin.y + origin.h > camera.y - RESPAWN.cameraMargin;
+      if (visible || alive.some((enemy) => enemy.hp > 0 && origin.x < enemy.x + enemy.w && origin.x + origin.w > enemy.x &&
+        origin.y < enemy.y + enemy.h && origin.y + origin.h > enemy.y) || solids.some((solid) => origin.x < solid.x + solid.w && origin.x + origin.w > solid.x &&
+        origin.y < solid.y + solid.h && origin.y + origin.h > solid.y)) continue;
+      spawned.push(this.materialize(record));
+    }
+    return spawned;
+  }
+}
