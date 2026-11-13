@@ -47,6 +47,8 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 
 **Incremento 16:** sequência de três golpes corrigida, janelas/buffer/recuperação e cobertura corpo a corpo. Infraestrutura sonora com quatro canais/volumes persistentes, scheduler pelo relógio de áudio, retomada de sequência e suspensão em background. 332 testes e Chromium aprovados; detalhes em [COMBOS_E_AUDIO.md](COMBOS_E_AUDIO.md). Próximo bloco autônomo: tema do distrito/chefe (6.2.0.1–2), mantendo pendentes ajustes de especiais/combate e aceites físicos. Não há tema final ou certificação Android/controle concluídos.
 
+**Incremento 17:** primeiro par de temas composto e integrado: distrito/Cipher, variações e transições no compasso, prévias Ogg e ferramenta de exportação WAV. 338 testes, renderização offline e Chromium aprovados; ainda falta escuta em aparelho. [TRILHA_DISTRITO_E_CIPHER.md](TRILHA_DISTRITO_E_CIPHER.md). Próximo bloco: estender a composição aos capítulos 2–8 e seus chefes, mantendo os ajustes/aceites de combate e de áudio físico pendentes. Não antecipar multiplayer/migração nem gerar APK sem pedido.
+
 ## Fase 1 — Base de física, colisão e movimentação
 
 ### 1.1 Tempo de simulação — IMPLEMENTADO
@@ -225,8 +227,8 @@ Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; A
 
 ### 6.2 Conteúdo musical — PENDENTE
 
-- **6.2.0.1:** compor um tema por fase principal com variações por subfase, tensão e chefe; definir BPM, tonalidade, instrumentos, pontos de loop e transições. Reutilizar motivos dos personagens para unidade.
-- **6.2.0.2:** produzir primeiro a trilha do distrito e um chefe; validar volume, repetição e loop no Android. Depois produzir os demais sete temas, vitórias, game over e menu.
+- **6.2.0.1 — Parcial no incremento 17:** distrito de 16 compassos e Cipher de oito, variações por setor/tensão/fase 2, BPM/tonalidade/instrumentos e mudança no compasso documentados. Motivo comum entre fase/chefe; demais sete capítulos e motivos próprios de todos os heróis pendentes. Fonte em `music.ts`, contrato em [TRILHA_DISTRITO_E_CIPHER.md](TRILHA_DISTRITO_E_CIPHER.md).
+- **6.2.0.2 — Primeiro par implementado no incremento 17; aceite auditivo físico pendente:** distrito/Cipher integrados ao motor, prévias exportadas e ferramenta de audição WAV. Chromium e análise de samples aprovados; validar volume/repetição/emenda no Android. Depois produzir os demais sete temas/chefes e as músicas de vitória, game over e menu.
 - **6.2.0.3:** renovar passos, golpes, impactos, parry/reflexão, perigos, poderes e notificações; limitar vozes simultâneas e evitar clipping.
 - **6.2.0.4 — Aceite:** loops sem estalo perceptível, sem drift sob carga normal, volumes independentes, interrupções corretas, origem dos recursos documentada e avaliação auditiva no aparelho. Dublagem/gravação profissional fica como produção própria, sem prometer ferramenta indisponível.
 

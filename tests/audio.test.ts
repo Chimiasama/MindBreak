@@ -6,6 +6,7 @@ class Param {
   value = 0;
   setValueAtTime(v: number) { this.value = v; }
   exponentialRampToValueAtTime(v: number) { this.value = v; }
+  linearRampToValueAtTime(v: number) { this.value = v; }
   setTargetAtTime(v: number) { this.value = v; }
 }
 class Node {
@@ -78,4 +79,28 @@ test('denied/corrupt audio storage falls back and never blocks volume changes', 
   const sound = new SoundEngine(); assert.equal(sound.getVolumes().music, 0); assert.equal(sound.getVolumes().master, 0.7); assert.equal(sound.isMuted(), true);
   Object.defineProperty(window, 'localStorage', { get() { throw Error('denied'); } });
   assert.doesNotThrow(() => sound.setVolume('sfx', 0.2));
+});
+
+test('score transitions wait for a bar, update tempo, and do not create a second scheduler', () => {
+  const { sound, s, ctx } = fixture();
+  const scene = { chapter: 1, sector: '1A', boss: false, phase: 1 as const, tension: false };
+  sound.startMusic('electro_funk', scene); assert.equal(sound.getMusicStatus().score, 'district');
+  sound.setMusicScene({ ...scene, boss: true });
+  for (let i = 0; i < 15; i++) { ctx.currentTime = s.nextNoteAt - 0.05; poll(); }
+  assert.equal(sound.getMusicStatus().score, 'district');
+  ctx.currentTime = s.nextNoteAt - 0.05; poll();
+  assert.equal(sound.getMusicStatus().score, 'cipher'); assert.equal(sound.getMusicStatus().step, 1);
+  assert.equal(timers.size, 1);
+  const next = s.nextNoteAt; ctx.currentTime = next - 0.05; poll();
+  assert.ok(Math.abs(s.nextNoteAt - next - 60 / 136 / 4) < 1e-8); sound.stopMusic();
+});
+
+test('pending score, second-phase intensity and musical position survive pause without duplicate notes', () => {
+  const { sound, s, ctx } = fixture(); const scene = { chapter: 1, sector: '1D', boss: true, phase: 1 as const, tension: false };
+  sound.startMusic('electro_funk', scene); ctx.currentTime = 0.15; poll();
+  const pendingStep = s.scheduledSteps.find((event: any) => event.at >= ctx.currentTime).step;
+  sound.setMusicScene({ ...scene, phase: 2 }); sound.pauseMusic(); assert.equal(s.step, pendingStep);
+  sound.startMusic('electro_funk', { ...scene, phase: 2 }); assert.equal(sound.getMusicStatus().score, 'cipher');
+  for (let i = 0; i < 18; i++) { ctx.currentTime = s.nextNoteAt - 0.05; poll(); }
+  assert.equal(sound.getMusicStatus().scene!.phase, 2); assert.equal(timers.size, 1); sound.stopMusic();
 });

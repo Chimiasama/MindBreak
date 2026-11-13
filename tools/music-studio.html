@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MindBreak — prévias da trilha</title>
+<style>body{background:#0b1020;color:#e2e8f0;font:18px system-ui;max-width:760px;margin:40px auto;padding:20px}button,a{padding:12px;margin:8px;display:inline-block}a[hidden]{display:none}audio{width:100%}section{border:1px solid #475569;padding:20px;margin-top:24px}</style>
+<h1>Prévias da trilha</h1><p>Ferramenta de autoria local. Renderiza uma volta completa usando as partituras do jogo, sem downloads externos. Use npm run dev para abrir esta página.</p>
+<section><button data-score="district">Renderizar distrito</button><button data-score="cipher">Renderizar Cipher</button><button data-score="cipher" data-phase="2">Renderizar Cipher · fase 2</button>
+<p id="status" role="status">Escolha uma partitura.</p><audio controls></audio><a id="download" hidden>Baixar WAV</a></section>
+<script type="module">
+import { renderMusicPreview, encodePreviewWav } from '/src/game/musicPreview.ts';
+let previous;
+for(const button of document.querySelectorAll('button')) button.addEventListener('click',async()=>{
+  for(const b of document.querySelectorAll('button')) b.disabled=true;
+  const status=document.querySelector('#status');status.textContent='Renderizando…';
+  try{
+    const id=button.dataset.score, phase=Number(button.dataset.phase||1);
+    const buffer=await renderMusicPreview(id,{chapter:1,sector:id==='cipher'?'1D':'1B',boss:id==='cipher',phase,tension:false});
+    if(previous)URL.revokeObjectURL(previous);
+    previous=URL.createObjectURL(new Blob([encodePreviewWav(buffer)],{type:'audio/wav'}));
+    document.querySelector('audio').src=previous;const link=document.querySelector('#download');link.href=previous;link.download=`${id}-fase-${phase}.wav`;link.hidden=false;
+    status.textContent=`${id} · ${buffer.duration.toFixed(2)} segundos. Use o player para ouvir.`;
+  }catch(error){status.textContent=String(error);}finally{for(const b of document.querySelectorAll('button'))b.disabled=false;}
+});
+</script></html>

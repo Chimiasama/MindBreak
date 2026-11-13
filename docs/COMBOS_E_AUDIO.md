@@ -60,3 +60,5 @@ Para a próxima etapa 6.2: compor primeiro distrito/chefe, documentando BPM, ton
 Chromium horizontal 915×412 com Web Audio real: sliders persistem após recarga; mute deixa a fase avançar; pausa abre os quatro controles; background suspende o contexto e retomar reativa; sequência preparada no motor confirma índices 0/1/2. Sem erro JavaScript. Instrumentação foi aplicada só às respostas do ensaio, sem adicionar ganchos ao produto.
 
 TypeScript, builds web/assets Android e sync aprovados. Não há certificação auditiva em aparelho, medição de latência no DualShock 4 nem garantia de loop final sem estalos. Nenhuma Action ou APK.
+
+Atualização do incremento 17: o capítulo 1 agora usa partituras novas de distrito/Cipher com contextos e transição no compasso; os demais protótipos permanecem. O scheduler conserva também o contexto do primeiro passo pendente. Síntese tem rampas iniciais e cache de ruído. Ver [TRILHA_DISTRITO_E_CIPHER.md](TRILHA_DISTRITO_E_CIPHER.md).

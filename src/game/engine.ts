@@ -463,7 +463,7 @@ export class GameEngine {
     this.camera = cameraTarget(this.player, this.viewport,
       { top: found.boundsTop, bottom: found.boundsBottom, width: found.boundsWidth });
     this.showAlert(`SETOR ${found.substageId}: ${found.title.toUpperCase()}`, 140);
-    sound.startMusic(found.musicGenre);
+    this.playStageMusic();
     if (emitHud) this.emitHud();
   }
 
@@ -653,7 +653,7 @@ export class GameEngine {
     this.gameOverTriggered = false;
     this.paused = false;
     this.bullets = this.bullets.filter((b) => b.fromPlayer);
-    sound.startMusic(this.stage.musicGenre);
+    this.playStageMusic();
     sound.playVoiceShout(charId);
     this.addMangaFx('CONTINUE!', p.x, p.y - 30, '#00f0ff');
     this.showAlert(`${profile.name.toUpperCase()} ENTROU EM AÇÃO!`, 100);
@@ -691,6 +691,13 @@ export class GameEngine {
     this.emitHud();
   }
 
+  private musicScene() {
+    return { chapter: this.stage.id, sector: this.stage.substageId, boss: this.boss.active && this.boss.triggered,
+      phase: this.boss.phase === 2 ? 2 as const : 1 as const,
+      tension: this.ambushArenas.some((arena) => arena.active && !arena.cleared) };
+  }
+  private playStageMusic() { sound.startMusic(this.stage.musicGenre, this.musicScene()); }
+
   setPaused(pause: boolean) {
     this.paused = pause || this.stageClearTriggered || this.continueTriggered || this.gameOverTriggered;
     this.clock.reset();
@@ -698,7 +705,7 @@ export class GameEngine {
     if (this.paused) {
       sound.pauseMusic();
     } else {
-      sound.startMusic(this.stage.musicGenre);
+      this.playStageMusic();
     }
   }
 
@@ -1889,6 +1896,8 @@ export class GameEngine {
     if (this.boss.active && this.boss.triggered) {
       this.updateBoss();
     }
+
+    if (this.canAct()) sound.setMusicScene(this.musicScene());
 
     // Swept projectiles are processed in contact order; a non-piercing shot hits once.
     this.bullets.forEach((b) => {

@@ -1,3 +1,4 @@
+import { MusicScene, scoreFor, scoreNotes, sceneKey, SCORES } from './music';
 import { CharacterId, MusicGenre } from './types';
 import { AudioBus, AudioVolumes, AUDIO_SETTINGS_KEY, readAudioPreferences } from './audioPreferences';
 
@@ -13,8 +14,20 @@ export class SoundEngine {
   private volumes: AudioVolumes;
   private nodes = new Map<AudioScheduledSourceNode, AudioBus>();
   private nextNoteAt = 0;
-  private scheduledSteps: { at: number; step: number }[] = [];
+  private scheduledSteps: { at: number; step: number; scene: MusicScene | null }[] = [];
   private hasTrack = false;
+  private musicScene: MusicScene | null = null;
+  private requestedScene: MusicScene | null = null;
+  private noiseBuffers = new Map<number, AudioBuffer>();
+
+  setMusicScene(scene: MusicScene) {
+    if (sceneKey(scene) !== sceneKey(this.requestedScene)) this.requestedScene = { ...scene };
+  }
+  getMusicStatus() {
+    const score = scoreFor(this.musicScene);
+    return { score, title: score ? SCORES[score].title : this.currentGenre, step: this.step,
+      scene: this.musicScene ? { ...this.musicScene } : null };
+  }
 
   constructor() {
     let storage: Storage | undefined;
@@ -82,10 +95,11 @@ export class SoundEngine {
     return this.muted;
   }
 
-  startMusic(genre: MusicGenre) {
+  startMusic(genre: MusicGenre, scene?: MusicScene) {
+    if (scene) this.setMusicScene(scene);
     this.init();
     if (!this.hasTrack || this.currentGenre !== genre) {
-      this.stopMusic(); this.currentGenre = genre; this.step = 0; this.hasTrack = true;
+      this.stopMusic(); this.currentGenre = genre; this.step = 0; this.hasTrack = true; this.musicScene = this.requestedScene;
     } else this.pauseMusic();
 
     const tempoMs: Record<MusicGenre, number> = {
@@ -107,9 +121,15 @@ export class SoundEngine {
       // Timer stalls skip silence instead of compressing missed notes into a burst.
       if (this.nextNoteAt < now) this.nextNoteAt = now + 0.02;
       while (this.nextNoteAt < now + 0.1) {
-        this.scheduledSteps.push({ at: this.nextNoteAt, step: this.step });
+        // Scene changes are quantized to a bar; changing sector/tension preserves harmony.
+        if (this.step % 16 === 0 && sceneKey(this.requestedScene) !== sceneKey(this.musicScene)) {
+          if (scoreFor(this.requestedScene) !== scoreFor(this.musicScene)) this.step = 0;
+          this.musicScene = this.requestedScene;
+        }
+        this.scheduledSteps.push({ at: this.nextNoteAt, step: this.step, scene: this.musicScene });
         this.tickBGM(this.nextNoteAt);
-        this.nextNoteAt += tempoMs[this.currentGenre] / 1000;
+        const score = scoreFor(this.musicScene);
+        this.nextNoteAt += score ? 60 / SCORES[score].bpm / 4 : tempoMs[this.currentGenre] / 1000;
       }
     };
     schedule();
@@ -119,7 +139,7 @@ export class SoundEngine {
   pauseMusic() {
     if (this.bgmTimer !== null) { clearInterval(this.bgmTimer); this.bgmTimer = null; }
     const pending = this.scheduledSteps.find((event) => event.at >= (this.ctx?.currentTime ?? 0));
-    if (pending) this.step = pending.step;
+    if (pending) { this.step = pending.step; this.musicScene = pending.scene; }
     this.scheduledSteps = []; this.cancelNodes('music');
   }
 
@@ -130,6 +150,14 @@ export class SoundEngine {
   private tickBGM(at: number) {
     if (!this.ctx || !this.masterGain || this.ctx.state !== 'running') return;
     const s = this.step++;
+    const score = scoreFor(this.musicScene);
+    if (score && this.musicScene) {
+      for (const note of scoreNotes(score, s, this.musicScene)) {
+        if (note.instrument === 'hat' || note.instrument === 'snare') this.playNoise(note.duration, note.volume, at, 'music');
+        else this.playOsc(note.frequency, note.wave, note.duration, note.volume, note.endFrequency, at, 'music');
+      }
+      return;
+    }
 
     const tracks: Record<MusicGenre, { bass: number[]; lead: number[]; wave: OscillatorType; leadWave: OscillatorType }> = {
       electro_funk: {
@@ -212,7 +240,8 @@ export class SoundEngine {
       if (endFreq !== undefined) {
         osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), now + duration);
       }
-      gain.gain.setValueAtTime(vol, now);
+      gain.gain.setValueAtTime(0.0005, now);
+      gain.gain.linearRampToValueAtTime(vol, now + Math.min(0.005, duration / 4));
       gain.gain.exponentialRampToValueAtTime(0.0005, now + duration);
       osc.connect(gain);
       gain.connect(this.buses[bus]!);
@@ -228,10 +257,16 @@ export class SoundEngine {
     if (!this.ctx || !this.masterGain || this.ctx.state !== 'running' || this.nodes.size >= 48) return;
     try {
       const sampleCount = Math.floor(this.ctx.sampleRate * duration);
-      const buffer = this.ctx.createBuffer(1, sampleCount, this.ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < sampleCount; i++) {
-        data[i] = (Math.random() * 2 - 1) * (1 - i / sampleCount);
+      let buffer = this.noiseBuffers.get(sampleCount);
+      if (!buffer) {
+        buffer = this.ctx.createBuffer(1, sampleCount, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        let seed = 713;
+        for (let i = 0; i < sampleCount; i++) {
+          seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+          data[i] = (seed / 0x100000000 * 2 - 1) * Math.min(1, i / (this.ctx.sampleRate * 0.002)) * (1 - i / sampleCount);
+        }
+        this.noiseBuffers.set(sampleCount, buffer);
       }
       const src = this.ctx.createBufferSource();
       src.buffer = buffer;

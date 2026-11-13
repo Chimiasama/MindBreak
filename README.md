@@ -64,3 +64,5 @@ A campanha agora salva automaticamente e pode ser carregada na tela inicial apó
 Torretas industriais de parede/teto e instaladores: comportamento, colisão de tiros e salvamento documentados em [docs/TORRETAS_E_PROJETEIS.md](docs/TORRETAS_E_PROJETEIS.md).
 
 Combos e controles de áudio: [docs/COMBOS_E_AUDIO.md](docs/COMBOS_E_AUDIO.md) descreve os tempos dos três golpes, cobertura, quatro volumes persistentes e scheduler musical.
+
+Primeiros temas originais: [distrito/Cipher, prévias para ouvir e parâmetros](docs/TRILHA_DISTRITO_E_CIPHER.md). Para renderizar e baixar WAV localmente, abrir `/tools/music-studio.html` com o servidor de desenvolvimento.
