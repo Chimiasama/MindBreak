@@ -160,18 +160,20 @@ Os nomes são propostas de produção e podem ser refinados sem alterar o total.
 
 ## Fase 5 — Android de testes e GitHub Actions
 
-### 5.1 Preparar pacote Android — PENDENTE
+Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; APK debug compilado e assinatura verificada localmente. A Action existente agora valida e gera APK somente por solicitação manual, com Ubuntu 26.04, Actions Node 24 e Java 21 explícitos. Detalhes em [ANDROID_APK.md](ANDROID_APK.md). Os itens de comportamento no aparelho de 5.1.0.3, assinatura estável definitiva e o aceite de 5.2.0.6 continuam pendentes. A troca livre de personagem permanece habilitada apenas como ferramenta de testes.
+
+### 5.1 Preparar pacote Android — PARCIAL: APK local validado; ensaio físico pendente
 
 - **5.1.0.1:** instalar versões compatíveis e fixadas de `@capacitor/core`, CLI e Android; criar configuração com `webDir: 'dist'` e appId provisório documentado antes da release. Verificar versões mínimas exigidas de Node/JDK/SDK na implementação, sem escolher combinações incompatíveis por suposição.
 - **5.1.0.2:** gerar projeto Android, versionar código nativo e wrapper Gradle, executar build web e `cap sync android`. Não apontar webDir para a raiz do repositório.
 - **5.1.0.3:** validar assets locais, inicialização do áudio após gesto, back Android, status/navigation bars, safe areas, rotação, background e restauração. No empacotamento, evitar service worker desatualizado substituindo assets internos.
-- **5.1.0.4:** produzir APK debug instalável. Para updates sem reinstalar, preservar assinatura de testes entre builds usando keystore própria em secrets do GitHub; keystore de produção nunca entra no Git.
+- **5.1.0.4:** produzir APK debug instalável. Para updates sem reinstalar, reutilizar a keystore debug pelo cache do GitHub (implementado); adotar keystore própria em secrets para estabilidade garantida posteriormente; keystore de produção nunca entra no Git.
 
-### 5.2 Pipeline de APK — PENDENTE
+### 5.2 Pipeline de APK — IMPLEMENTADO; execução remota e instalação pendentes
 
-- **5.2.0.1:** criar `.github/workflows/android-debug.yml` com `workflow_dispatch` como único gatilho. Não executar por push, pull request ou outro evento. Só acionar a geração após pedido expresso do usuário; nunca disponibilizar secrets a código não confiável.
+- **5.2.0.1:** adaptar `.github/workflows/manual-checks.yml` com `workflow_dispatch` como único gatilho. Não executar por push, pull request ou outro evento. Só acionar a geração após pedido expresso do usuário; nunca disponibilizar secrets a código não confiável.
 - **5.2.0.2:** sequência: checkout → Node/Bun fixados → instalação com lockfile congelado → testes → TypeScript → build web → sync Capacitor → Java/SDK compatíveis → `./gradlew assembleDebug` na pasta android → upload do APK e relatório.
-- **5.2.0.3:** criar artifact `mindbreak-debug-<sha>` com `app-debug.apk`, SHA-256 e identificação do commit. Falha em teste ou Gradle deve falhar o job; upload deve exigir arquivo existente.
+- **5.2.0.3:** criar artifact `MindBreak-APK-debug-<execução>` com `MindBreak-debug.apk`, SHA-256 e identificação do commit. Falha em teste ou Gradle deve falhar o job; upload deve exigir arquivo existente.
 - **5.2.0.4:** usar cache de pacotes/Gradle com chaves dos lockfiles e retenção inicialmente de 14 dias. Fixar versões das actions e dependências de build; ao consolidar CI, fixar actions por SHA revisado.
 - **5.2.0.5:** build de testes mantém troca livre sinalizada; futuro workflow release define `VITE_TEST_CHARACTER_SWITCH=false`. Acrescentar verificação automatizada de que release não expõe a ferramenta.
 - **5.2.0.6 — Aceite:** execução real no GitHub concluída, artifact baixado e APK instalado no aparelho. Workflow escrito/localmente validado não satisfaz sozinho esse aceite.

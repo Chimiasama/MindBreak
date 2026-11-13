@@ -1,6 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import {fileURLToPath} from 'node:url';
 import {defineConfig} from 'vite';
 import {VitePWA} from 'vite-plugin-pwa';
 
@@ -10,6 +10,8 @@ export default defineConfig(() => {
       react(),
       tailwindcss(),
       VitePWA({
+        // Android packages its assets locally; a web service worker must not replace them.
+        disable: process.env.BUILD_TARGET === 'android',
         registerType: 'autoUpdate',
         includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
         manifest: {
@@ -55,7 +57,7 @@ export default defineConfig(() => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': fileURLToPath(new URL('.', import.meta.url)),
       },
     },
     server: {

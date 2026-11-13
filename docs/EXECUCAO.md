@@ -137,3 +137,13 @@ A regra de pontuação foi corrigida antes de avançar conteúdo. A campanha ain
 ### Documentação e próximos itens
 
 O contrato atual está em `CAMPANHA_E_SUBFASES.md`, e o plano marca 4.1 implementada, 4.2 parcial e 4.3 parcial. O próximo bloco é o save versionado com restauração de estado e validação de dados, seguido dos próximos lotes de subfases. Música/arte/Android permanecem nas etapas posteriores. A retomada em memória não deve ser apresentada como persistência após encerrar o navegador.
+
+## Incremento 5 — APK de testes por Action manual
+
+Atendendo ao pedido específico de corrigir a Action, o workflow existente foi convertido em **Construir APK Android (manual)**. Mantém apenas `workflow_dispatch`: valida antes de compilar, verifica assinatura e disponibiliza APK/checksum/commit como artifact por 14 dias. Não foi acionado remotamente nesta entrega.
+
+Capacitor 8.6.2 e projeto Android foram adicionados com Gradle 8.14.3/checksum, AGP 8.13.0, JDK 21 e SDK 36. O alvo Android não inclui service worker; o web preserva PWA. Dependências têm lockfile atualizado. Removida a inclusão do módulo Cordova vazio que gerava aviso `flatDir`. A assinatura debug é reutilizada via cache, com limites documentados; nenhuma chave entra no Git.
+
+Os avisos da execução antiga eram Node 20 das Actions e migração de ubuntu-latest, corrigidos com Actions Node 24 fixadas por SHA e Ubuntu 26.04 explícito. Java 21 foi fixado pela compatibilidade, não por um aviso de Java confirmado.
+
+Validação: 91 testes passaram, TypeScript e build web passaram; APK real compilado localmente (~4,2 MB), assinatura verificada e identificação `com.chimiasama.mindbreak`, mínimo API 24/target 36 conferidos. Nenhuma validação física de celular/controle é declarada. Instruções completas e pendências em [ANDROID_APK.md](ANDROID_APK.md). Uma nova execução manual em main é necessária; repetir a execução antiga preserva o workflow antigo.

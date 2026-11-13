@@ -1,6 +1,6 @@
-name: Validacao manual
+name: Construir APK Android (manual)
 
-# Intentionally manual. Do not add push, pull_request, schedule or workflow_run.
+# Only an explicit Run workflow builds an APK. Never add automatic triggers.
 on:
   workflow_dispatch:
 
@@ -8,26 +8,78 @@ permissions:
   contents: read
 
 jobs:
-  quality:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+  android-apk:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    env:
+      CI_VERSION_CODE: ${{ github.run_number }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6, Node 24
+      - name: Node.js 24
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6, Node 24
         with:
           node-version: '24'
-      - uses: oven-sh/setup-bun@v2
+      - name: Bun 1.4.4
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2, Node 24
         with:
           bun-version: '1.4.4'
+      - name: Java 21 (required by Capacitor 8)
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5, Node 24
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+          cache-dependency-path: |
+            android/**/*.gradle
+            android/gradle/wrapper/gradle-wrapper.properties
+      - name: Reuse test signing key between builds
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5, Node 24
+        with:
+          path: ~/.android/debug.keystore
+          key: ${{ runner.os }}-mindbreak-debug-signing-v1
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
-      - name: Gameplay and exploration regression tests
+      - name: Gameplay, campaign and workflow regression tests
         run: npm test
       - name: TypeScript
         run: npm run lint
-      - name: Web test build
-        run: npm run build
-      - name: Web final profile build
+      - name: Build bundled Android assets
         env:
-          VITE_TEST_CHARACTER_SWITCH: 'false'
-        run: npm run build -- --outDir /tmp/mindbreak-release
+          VITE_TEST_CHARACTER_SWITCH: 'true'
+        run: |
+          npm run build:android
+          test ! -e dist/sw.js
+          test ! -e dist/registerSW.js
+      - name: Sync native Android project
+        run: npm run android:sync
+      - name: Verify preinstalled Android SDK
+        run: |
+          test -d "$ANDROID_HOME/platforms/android-36"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          java -version
+      - name: Build signed debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon --max-workers=2 --stacktrace assembleDebug
+      - name: Verify and package APK
+        run: |
+          set -euo pipefail
+          mkdir -p apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk apk/MindBreak-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose apk/MindBreak-debug.apk
+          (cd apk && sha256sum MindBreak-debug.apk > SHA256SUMS)
+          printf 'Commit: %s\nRun: %s\nPackage: com.chimiasama.mindbreak\nVariant: debug (test tools enabled)\nMinimum Android: 7.0 / API 24\n' "$GITHUB_SHA" "$GITHUB_RUN_NUMBER" > apk/BUILD-INFO.txt
+      - name: Upload installable APK
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6, Node 24
+        with:
+          name: MindBreak-APK-debug-${{ github.run_number }}
+          path: apk/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+          overwrite: true
+      - name: Download instructions
+        run: |
+          printf '%s\n' '## APK pronto para instalar' '' 'Baixe **MindBreak-APK-debug** em **Artifacts** nesta execução, extraia o ZIP e abra **MindBreak-debug.apk** no Android.' '' 'Este é um APK de testes assinado em modo debug, com troca de personagem de teste habilitada. Nenhuma publicação em loja é feita.' >> "$GITHUB_STEP_SUMMARY"

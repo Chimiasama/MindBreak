@@ -1,0 +1,3 @@
+
+# Keep the Windows Gradle launcher CRLF on checkout, normalized in Git.
+android/gradlew.bat text eol=crlf

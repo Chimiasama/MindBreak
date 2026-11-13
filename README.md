@@ -42,9 +42,9 @@ Inimigos de emboscadas obrigatórias não reaparecem; chefes não são repostos.
 
 ## GitHub Actions e Android
 
-**Todos os workflows são exclusivamente manuais.** O workflow `Validacao manual` é acionado apenas por Actions → Run workflow e executa testes, TypeScript e builds web. Não tem gatilho de push ou pull request, não gera APK e não foi acionado automaticamente.
+**Todos os workflows são exclusivamente manuais.** Em Actions, escolha **Construir APK Android (manual)** e clique em **Run workflow**, selecionando `main`. O fluxo valida testes e TypeScript, empacota o jogo com Capacitor e disponibiliza o APK assinado de testes em **Artifacts** por 14 dias.
 
-APK só será gerado mediante pedido expresso. O empacotamento Android/Capacitor e o pipeline manual de APK estão previstos no plano, mas ainda não foram implementados. Actions poderá disponibilizar o APK para baixar; instalação e abertura no celular são manuais. Não é necessário mudar de engine para experimentar Android WebView com Capacitor.
+Baixe `MindBreak-APK-debug-<execução>`, extraia o ZIP e abra `MindBreak-debug.apk` no Android (7.0 ou superior). Não use “Re-run” da execução antiga de validação: ela continua usando a configuração do commit antigo. Nenhuma geração ocorre em push ou pull request. [Guia técnico e instalação](docs/ANDROID_APK.md).
 
 Options/Start é lido mesmo em pausa. O mapeamento padrão do DualShock 4 está descrito no menu; a validação em controle físico e aparelho Android ainda está pendente.
 

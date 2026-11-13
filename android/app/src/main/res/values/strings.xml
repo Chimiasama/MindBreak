@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MIND//BREAK</string>
+    <string name="title_activity_main">MIND//BREAK</string>
+    <string name="package_name">com.chimiasama.mindbreak</string>
+    <string name="custom_url_scheme">com.chimiasama.mindbreak</string>
+</resources>
