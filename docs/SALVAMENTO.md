@@ -59,3 +59,5 @@ Ainda pendentes: comportamento após encerramento forçado do processo Android, 
 No incremento 11, o formato versão 1 passou a aceitar também `Enemy.ai`, mantendo leitura dos saves sem esse campo. Mira e temporizadores são validados; um ataque/preparação salvo retorna em recuperação ao carregar no checkpoint. Ver [IA_E_COMBATE.md](IA_E_COMBATE.md).
 
 No incremento 14, a restauração foi verificada nos 26 setores. A vitória do capítulo 8 restaura diretamente a tela final, sem novo bônus. Os mapas originais das fases 6–8 ficaram incompatíveis com as novas geometrias; dados são retidos, enquanto as fases 1–5 mantêm a identificação anterior.
+
+No incremento 15, origens filhas de instaladores podem permanecer dormentes com geração -1, validadas pelo vínculo autoral. Instalações e flag de fuga persistem, e rajadas não reiniciam ao carregar. Os encontros alteram o conteúdo dos capítulos 4 e 7; saves anteriores desses capítulos ficam retidos como incompatíveis. Demais capítulos permanecem compatíveis. Detalhes em [TORRETAS_E_PROJETEIS.md](TORRETAS_E_PROJETEIS.md).

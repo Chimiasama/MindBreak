@@ -98,6 +98,7 @@ export type EnemyType =
   | 'sniper'
   | 'suit_martial'
   | 'samurai'
+  | 'turret_engineer'
   | 'turret'
   | 'heavy_trooper';
 
@@ -108,11 +109,16 @@ export interface EnemyMind {
   aimX: number;
   aimY: number;
   facing: 1 | -1;
-  action: 'shot' | 'melee' | 'flank';
+  action: 'shot' | 'melee' | 'flank' | 'deploy';
 }
 
 export interface Enemy {
   ai?: EnemyMind;
+  /** Authored mount; attached turrets cannot be launched or pulled. */
+  mount?: 'floor' | 'ceiling' | 'wall-left' | 'wall-right';
+  /** One-based authored engineer origin. Dormant until that engineer installs it. */
+  deployedBy?: number;
+  deployed?: boolean;
   id: number;
   spawnId?: string;
   generation?: number;

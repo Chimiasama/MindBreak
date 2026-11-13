@@ -218,7 +218,7 @@ export function getEnemyPixelSprite(type: EnemyType): HTMLCanvasElement {
     );
   }
   const tieColor = type === 'mutant' ? '#4ade80' : type === 'heavy_trooper' ? '#38bdf8' : '#ef4444';
-  const suitColor = type === 'mutant' ? '#166534' : type === 'heavy_trooper' ? '#334155' : '#09090b';
+  const suitColor = type === 'turret_engineer' ? '#a16207' : type === 'mutant' ? '#166534' : type === 'heavy_trooper' ? '#334155' : '#09090b';
   return bakePixelSprite(
     `enemy_${type}`,
     MIB_ROWS,

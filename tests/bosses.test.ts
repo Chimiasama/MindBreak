@@ -157,3 +157,17 @@ test('closing an overlay cannot unpause a terminal transition before its explici
   engine.loadStage(1, 'ren'); engine.setPaused(false); assert.equal(state.paused, false);
   engine.stop();
 });
+
+test('only the cosmic eye beam rejects reflection; every authored boss shot still stops at terrain', () => {
+  for (const chapter of [1, 2, 3, 4, 5, 6, 7, 8]) {
+    const { engine, state } = fixture(chapter);
+    stepBoss(state.boss, state.player);
+    for (const attack of Object.keys(BOSS_MOVES) as (keyof typeof BOSS_MOVES)[]) {
+      for (const bullet of bossShots(state.boss, attack)) {
+        assert.equal(bullet.reflectable === false, attack === 'eye_beam');
+        assert.notEqual(bullet.passesThroughWalls, true);
+      }
+    }
+    engine.stop();
+  }
+});

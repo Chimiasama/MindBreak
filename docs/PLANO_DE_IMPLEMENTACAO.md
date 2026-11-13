@@ -19,6 +19,8 @@ Data inicial: 13/11/2026. Documento de trabalho: atualizar os estados e registra
 - **0.1.0.10 — Progressão oculta:** não mostrar pontos nem o limiar da próxima vida no HUD ou nas telas de conclusão; manter cálculo e concessão de vidas internos. A descoberta das regras pelo jogador é intencional.
 - **0.1.0.11 — Alternativas futuras:** limite separado por origem de vida (pontos, item encontrado, drop ocasional) foi sugerido como alternativa, não como obrigação. Não adicionar teto ou loteria sem balanceamento próprio; a implementação atual usa apenas a recompensa decrescente.
 
+- **0.1.0.12 — Torretas e projéteis:** incluir torretas de parede/teto nos setores industriais e instalador vulnerável antes de concluir; torreta instalada mais resistente. Bloquear tiros comuns no terreno e declarar separadamente exceções de penetração/reflexão. Implementado no incremento 15; balanceamento físico pendente.
+
 ### 0.2 Forma de implantar cada incremento
 
 - **0.2.0.1:** manter mudanças pequenas por sistema, com testes do comportamento afetado; não misturar novos mapas, física e arte numa única entrega sem validação intermediária.
@@ -105,6 +107,15 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 - **2.3.0.2 — Cooperação/telegrafia e proteção contra stun implementadas no incremento 11; balanceamento pendente:** conservar cooperação guarda/cão/atirador, com sinais legíveis e limites para stun encadeado.
 - **2.3.0.3 — Sequências próprias e gêmeos atingíveis implementados no incremento 13; balanceamento pendente:** individualizar os oito chefes com padrões, telegrafia e contra-ataques próprios; gêmeos devem ter regra clara de dois corpos/vida compartilhada. Arisawa e Vane deixam de usar somente especial genérico.
 - **2.3.0.4 — Aceite:** derrotar cada chefe com todos os personagens sem depender de bugs; fase 2 modifica o padrão com clareza; combates não geram softlock.
+
+### 2.4 Torretas industriais e contratos de projétil — IMPLEMENTADO; aceite físico pendente
+
+- **2.4.0.1:** suportes tipados e validados em paredes/tetos; corpos fora do sólido, sem gravidade/recuo; abertura, mira para o lado exposto, preparação e rajada de três tiros.
+- **2.4.0.2:** instalador com aproximação, preparação interrompível de 90 ticks, instalação única por aparição e fuga com colisão/chão seguro. Morte antes do evento não instala.
+- **2.4.0.3:** ativar filho autoral dormente pelo SpawnManager, com vida 180 contra 90 das fixas e 55 do instalador; bloquear sobreposição/duplicação, conservar origem/recompensas e permitir reposição por novo instalador.
+- **2.4.0.4:** codec aceita dormência somente para filhos previstos, conserva instalação/fuga e impede rajada surpresa ao restaurar. Mapas dos capítulos 4/7 recebem os encontros; saves incompatíveis são retidos.
+- **2.4.0.5:** varredura bloqueia tiros de ambos os lados no primeiro sólido; `piercing` de atores não atravessa paredes; `passesThroughWalls` exige opt-in e nenhum ataque atual o usa. `reflectable: false` no Olho Cósmico, com contorno branco; ainda bloqueado por parede.
+- **2.4.0.6:** 320 testes, TypeScript e smoke Chromium horizontal aprovados; testar dificuldade, sinais e controles em aparelho antes de congelar balanceamento. Contrato e implantação em [TORRETAS_E_PROJETEIS.md](TORRETAS_E_PROJETEIS.md). Seguir depois com ajustes de combate/segredos e áudio, sem ampliar a contagem de setores nem antecipar multiplayer/migração.
 
 ## Fase 3 — Exploração e repopulação de inimigos
 

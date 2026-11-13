@@ -41,3 +41,5 @@ A campanha continua salvando a exploração e reiniciando um chefe incompleto ao
 Esses ensaios não são uma certificação de derrota de cada chefe em uma partida completa, nem de dificuldade/controle físico. Arte, áudio, ajuste de arenas, câmera e legibilidade em aparelho ainda precisam de playtest. A implementação é uma base jogável com números documentados; não é release final.
 
 No incremento 14, o HUD dos gêmeos passou a indicar **VIDA COMPARTILHADA**. Os setores finais 6C/7C/8D integram os padrões de Kusanagi/Vane/Oswald; a prova de vitória/carregamento testa interface e integridade do save, não certifica balanceamento completo.
+
+Incremento 15: o Olho Cósmico de Oswald recebe `reflectable: false` e contorno branco. Ele continua bloqueado por sólidos, como todos os tiros atuais de chefes. Penetração de terreno só pode existir mediante declaração específica e teste; ver [TORRETAS_E_PROJETEIS.md](TORRETAS_E_PROJETEIS.md).

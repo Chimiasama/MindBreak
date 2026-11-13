@@ -318,3 +318,53 @@ test('every one of the 26 sectors can be restored in a fresh engine with its cha
     original.engine.stop();
   }
 });
+
+test('dormant and deployed turrets persist without duplication or loss of reward history', () => {
+  const { engine, state } = fixture(4);
+  const dormant = engine.captureCampaignSave()!;
+  through(engine, state, 'esteiras');
+  let save = checked(engine.captureCampaignSave()!);
+  assert.equal(save.areas.find((a) => a.id === '4B')!.spawns.records.at(-1)!.generation, -1);
+  const engineer = state.enemies.find((enemy: any) => enemy.type === 'turret_engineer');
+  const turret = state.spawns.deploy(engineer, state.enemies, state.platforms, state.player, state.tickCount);
+  assert.ok(turret); state.enemies.push(turret);
+  assert.equal(state.spawns.deploy(engineer, state.enemies, state.platforms, state.player, state.tickCount), null);
+  save = checked(engine.captureCampaignSave()!);
+  const fresh = fixture(4); assert.equal(fresh.engine.restoreCampaignSave(save), 'playing');
+  assert.equal(fresh.state.enemies.filter((e: any) => e.deployedBy).length, 1);
+  assert.equal(fresh.state.enemies.find((e: any) => e.type === 'turret_engineer').deployed, true);
+  state.hitEnemy(turret, 999, 0, 0); state.enemies = state.enemies.filter((e: any) => e.hp > 0);
+  save = checked(engine.captureCampaignSave()!);
+  const record = save.areas.find((a) => a.id === '4B')!.spawns.records.at(-1)!;
+  assert.equal(record.defeats, 1); assert.equal(record.activeId, null);
+  assert.equal(fresh.engine.restoreCampaignSave(save), 'playing');
+  fresh.state.spawns.advanceAway(100000);
+  assert.equal(fresh.state.spawns.update({ x: 1700, y: 604, w: 32, h: 56 }, null, 200000,
+    fresh.state.enemies, fresh.state.platforms, true).some((e: any) => e.deployedBy), false);
+  assert.equal(decodeCampaignSave(JSON.stringify(dormant)).status, 'ready');
+  engine.stop(); fresh.engine.stop();
+});
+
+test('a dormant child cannot forge an active entity, death or defeat history in a save', () => {
+  const { engine, state } = fixture(4); through(engine, state, 'esteiras');
+  const save = checked(engine.captureCampaignSave()!);
+  for (const mutation of [{ activeId: 1 }, { deadAt: 0 }, { defeats: 1 }, { armed: true }]) {
+    const altered = structuredClone(save);
+    Object.assign(altered.areas.find((a) => a.id === '4B')!.spawns.records.at(-1)!, mutation);
+    assert.equal(decodeCampaignSave(JSON.stringify(altered)).status, 'corrupt');
+  }
+  engine.stop();
+});
+
+test('loading mid-burst does not fire the remainder of a turret burst at the checkpoint', () => {
+  const { engine, state } = fixture(4);
+  const turret = state.enemies.find((e: any) => e.mount);
+  turret.ai = { state: 'recover', timer: 49, memory: 90, aimX: 300, aimY: 692, facing: -1, action: 'shot' };
+  const save = checked(engine.captureCampaignSave()!);
+  assert.equal(save.areas[0].enemies.find((e) => e.mount)!.ai!.timer, 42);
+  const fresh = fixture(4); fresh.engine.restoreCampaignSave(save); fresh.engine.setPaused(false);
+  const restored = fresh.state.enemies.find((e: any) => e.mount);
+  fresh.state.enemies = [restored]; Object.assign(fresh.state.player, { x: 650, y: 664 });
+  for (let tick = 0; tick < 40; tick++) fresh.state.updateEnemies();
+  assert.equal(fresh.state.bullets.length, 0); engine.stop(); fresh.engine.stop();
+});

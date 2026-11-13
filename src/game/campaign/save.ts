@@ -119,10 +119,11 @@ function decodeArea(raw: unknown, chapterId: number, worldTick: number): AreaSav
   const records = exactArray(spawnData.records, stage.enemies.length).map((value, index) => {
     const r = object(value);
     if (r.id !== `${stage.substageId}:${index + 1}`) throw new Error('origem desconhecida');
-    const generation = integer(r.generation);
+    const dormant = stage.enemies[index].deployedBy !== undefined && r.generation === -1;
+    const generation = integer(r.generation, dormant ? -1 : 0);
     const activeId = r.activeId === null ? null : integer(r.activeId, 1, nextEntityId - 1);
     const deadAt = r.deadAt === null ? null : integer(r.deadAt, -1e12, tick);
-    if ((activeId === null) === (deadAt === null)) throw new Error('origem inconsistente');
+    if (dormant ? activeId !== null || deadAt !== null || r.armed !== false || r.farTicks !== 0 : (activeId === null) === (deadAt === null)) throw new Error('origem inconsistente');
     return { id: string(r.id), generation, activeId, deadAt, farTicks: integer(r.farTicks),
       armed: boolean(r.armed), defeats: integer(r.defeats, 0, generation + 1) };
   });
@@ -140,14 +141,17 @@ function decodeArea(raw: unknown, chapterId: number, worldTick: number): AreaSav
     if (e.ai !== undefined) {
       const raw = object(e.ai);
       const state = ENEMY_STATES.find((state) => state === raw.state);
-      const action = (['shot', 'melee', 'flank'] as const).find((action) => action === raw.action);
+      const action = (['shot', 'melee', 'flank', 'deploy'] as const).find((action) => action === raw.action);
       if (!state || state === 'dead' || !action || raw.facing !== -1 && raw.facing !== 1) throw new Error('estado de inimigo inválido');
       ai = { state, action, facing: raw.facing, timer: integer(raw.timer, 0, 10000),
         memory: integer(raw.memory, 0, 90), aimX: number(raw.aimX, -1e6, 1e6), aimY: number(raw.aimY, -1e6, 1e6) };
       // Checkpoint restoration never executes an attack prepared for the old player position.
       if (state === 'windup' || state === 'attack') { ai.state = 'recover'; ai.timer = ENEMY_COMBAT[base.type].recovery; }
+      // A restored turret must finish recovery without restarting the old burst.
+      if (base.type === 'turret' && ai.state === 'recover') ai.timer = Math.min(ai.timer, ENEMY_COMBAT.turret.recovery - 12);
     }
     return { ...base, ...(ai ? { ai } : {}), id, spawnId: record.id, generation: record.generation,
+      deployed: base.type === 'turret_engineer' ? boolean(e.deployed ?? false) : false,
       x: number(e.x, -1e6, 1e6), y: number(e.y, -1e6, 1e6),
       hp: number(e.hp, Number.MIN_VALUE, base.maxHp),
       vx: number(e.vx, -10000, 10000), vy: number(e.vy, -10000, 10000),

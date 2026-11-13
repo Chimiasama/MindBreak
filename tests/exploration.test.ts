@@ -105,3 +105,21 @@ test('large viewports preload eligible enemies beyond the old fixed activation r
   const result = manager.update(player(2130), { x: 800, y: 0, w: 1600, h: 900 }, 1000, [], []);
   assert.equal(result.length, 1);
 });
+
+test('engineer respawn may replace a defeated turret, with diminishing reward on the same child origin', async () => {
+  const { getSubstage } = await import('../src/game/campaign');
+  const manager = new SpawnManager(getSubstage('4B'), '4B');
+  let alive = manager.initial();
+  const engineer = alive.find((enemy) => enemy.type === 'turret_engineer')!;
+  const p = { x: 1000, y: 604, w: 32, h: 56 };
+  const turret = manager.deploy(engineer, alive, [], p, 0)!; assert.ok(turret); alive.push(turret);
+  engineer.hp = 0; turret.hp = 0;
+  assert.equal(manager.claimDefeatReward(engineer), 1000); assert.equal(manager.claimDefeatReward(turret), 1000);
+  alive = alive.filter((enemy) => enemy.hp > 0); manager.noteMissing(alive, 1); manager.advanceAway(10000);
+  const returning = manager.update(p, null, 10001, alive, [], true); alive.push(...returning);
+  const replacement = returning.find((enemy) => enemy.type === 'turret_engineer')!;
+  assert.ok(replacement); assert.equal(replacement.deployed, false);
+  const nextTurret = manager.deploy(replacement, alive, [], p, 10001)!; assert.ok(nextTurret);
+  assert.equal(nextTurret.spawnId, turret.spawnId); assert.equal(nextTurret.generation, 1);
+  nextTurret.hp = 0; assert.equal(manager.claimDefeatReward(nextTurret), 500);
+});

@@ -127,3 +127,5 @@ Na torre, a gravidade passa de 1 em 8A para 0,85/0,72/0,65. O nome Elevador Orbi
 Saves dos capítulos 1–5 mantêm sua identificação de conteúdo. Os saves das versões originais de 6–8 são retidos como incompatíveis com as novas geometrias, sem migração silenciosa. Formato continua versão 1. Vitória final/carregamento persistente não repete a recompensa nem ressuscita o chefe.
 
 Chegar a 26 mapas não encerra a produção: dificuldade, rotas de segredo, acessibilidade, arte, áudio e teste físico seguem os aceites do plano. Os ensaios de fluxo final usam derrota disparada em teste para validar diálogos/interface/save; não representam uma campanha inteira vencida em tempo real.
+
+Incremento 15: os encontros industriais de 4A/4B/7A/7B incluem suportes de parede/teto e instaladores. Total atual: 132 inimigos inicialmente ativos e duas origens filhas dormentes; continuam 26 setores, 77 checkpoints e 78 objetos. Ver [TORRETAS_E_PROJETEIS.md](TORRETAS_E_PROJETEIS.md).

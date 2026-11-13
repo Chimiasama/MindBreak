@@ -49,6 +49,8 @@ interface Bullet {
   h: number;
   fromPlayer?: boolean;
   piercing?: boolean;
+  passesThroughWalls?: boolean;
+  reflectable?: boolean;
   isWindBlade?: boolean;
   shooterId?: number;
   hitIds?: Set<number>;
@@ -1063,7 +1065,7 @@ export class GameEngine {
 
     // Deflect Counter: slice enemy bullets & reflect at 2x speed aimed at shooter/nearest target!
     this.bullets.forEach((b) => {
-      if (!b.fromPlayer && this.checkAABB(slashHitbox, b)) {
+      if (!b.fromPlayer && b.reflectable !== false && !b.dead && this.checkAABB(slashHitbox, b)) {
         b.fromPlayer = true;
         const origSpeed = Math.max(6.5, Math.hypot(b.vx, b.vy));
         const targetSpeed = origSpeed * 2;
@@ -1174,7 +1176,7 @@ export class GameEngine {
     let minDist = 240;
     this.enemies.forEach((en, idx) => {
       const dist = Math.hypot(en.x - p.x, en.y - p.y);
-      if (dist < minDist) {
+      if (!en.mount && en.hp > 0 && dist < minDist) {
         minDist = dist;
         targetIdx = idx;
       }
@@ -1281,9 +1283,9 @@ export class GameEngine {
   private hitEnemy(en: Enemy, dmg: number, kx: number, ky: number, hitstopFrames = 3) {
     if (en.hp <= 0) return;
     en.hp -= dmg;
-    en.vx = kx;
-    en.vy = ky;
-    en.airborne = true;
+    en.vx = en.mount ? 0 : kx;
+    en.vy = en.mount ? 0 : ky;
+    en.airborne = !en.mount;
     if (en.ai) { en.ai.state = en.hp <= 0 ? 'dead' : 'stunned'; en.ai.timer = 12; en.telegraph = 0; }
     this.hitstop = Math.max(this.hitstop, hitstopFrames);
     this.screenShake(6);
@@ -1541,7 +1543,7 @@ export class GameEngine {
         const dx = this.mayaWell!.x - en.x;
         const dy = this.mayaWell!.y - en.y;
         const dist = Math.hypot(dx, dy);
-        if (dist < this.mayaWell!.radius && dist > 6) {
+        if (!en.mount && dist < this.mayaWell!.radius && dist > 6) {
           en.vx += (dx / dist) * 2.6;
           en.vy += (dy / dist) * 2.6;
           en.airborne = true;
@@ -1869,7 +1871,7 @@ export class GameEngine {
       const previous = { ...b };
       b.x += b.vx;
       b.y += b.vy;
-      const wallTime = terrainHit(previous, b.vx, b.vy, solids);
+      const wallTime = b.passesThroughWalls === true ? Infinity : terrainHit(previous, b.vx, b.vy, solids);
       if (b.fromPlayer) {
         const targets = [...this.enemies.filter((enemy) => enemy.hp > 0),
           ...(this.boss.active && this.boss.triggered ? bossBodies(this.boss).map((body) => ({ ...body, id: -999 })) : [])];
@@ -2038,23 +2040,28 @@ export class GameEngine {
       const flying = isFlyingEnemy(enemy), home = enemyHome(enemy), profile = ENEMY_COMBAT[enemy.type];
       const stunned = (enemy.stunTimer ?? 0) > 0;
       if (stunned) enemy.stunTimer!--;
-      if (enemy.hp > 0 && enemy.y <= this.stage.boundsBottom + 300 && (!flying || stunned)) {
+      if (enemy.hp > 0 && enemy.y <= this.stage.boundsBottom + 300 && !enemy.mount && (!flying || stunned)) {
         enemy.vx *= stunned ? 0.8 : 1;
         if (!moveGroundEnemy(enemy, solids, this.stage.gravityScale, this.platformDeltas)) enemy.hp = 0;
         enemy.vx *= 0.86;
       }
+      if (enemy.mount) { enemy.vx = 0; enemy.vy = 0; enemy.airborne = false; }
       const distance = Math.hypot(p.x - enemy.x, p.y - enemy.y);
-      const visible = p.gstTimer <= 0 && distance <= GROUND_ENEMY.detectionRadius && canSeeBody(enemy, p, solids);
+      const inMountArc = enemy.mount !== 'ceiling' || p.y + p.h / 2 > enemy.y + enemy.h;
+      const inWallArc = enemy.mount === 'wall-left' ? p.x > enemy.x + enemy.w : enemy.mount === 'wall-right' ? p.x + p.w < enemy.x : true;
+      const visible = inMountArc && inWallArc && p.gstTimer <= 0 && distance <= GROUND_ENEMY.detectionRadius && canSeeBody(enemy, p, solids);
       const landingX = p.x - p.facing * 56;
       const intent = stepEnemyAI(enemy, { player: p, visible, home, stunned,
+        installationX: this.spawns.installationX(enemy),
         coverFire: p.stunTimer > 10,
         canFlank: guardEngaged && Math.abs(landingX - home) <= GROUND_ENEMY.leash &&
           hasSafeFooting(enemy, landingX - enemy.x, this.platforms) });
       if (enemy.hp <= 0 || enemy.y > this.stage.boundsBottom + 300) continue;
       const mind = enemy.ai!;
-      if (mind.state === 'windup' || mind.state === 'attack' || mind.state === 'recover') enemy.facing = mind.facing;
+      if (enemy.type === 'turret_engineer' && enemy.deployed) enemy.facing = mind.facing;
+      else if (mind.state === 'windup' || mind.state === 'attack' || mind.state === 'recover') enemy.facing = mind.facing;
       else if (intent.move !== 0 || mind.state === 'chase' || mind.state === 'alert') {
-        const direction = mind.state === 'chase' || mind.state === 'alert' ? (mind.aimX >= enemy.x + enemy.w / 2 ? 1 : -1) : intent.move > 0 ? 1 : -1;
+        const direction = enemy.type === 'turret_engineer' && intent.move !== 0 ? (intent.move > 0 ? 1 : -1) : mind.state === 'chase' || mind.state === 'alert' ? (mind.aimX >= enemy.x + enemy.w / 2 ? 1 : -1) : intent.move > 0 ? 1 : -1;
         if ((enemy.type === 'mib_shield' || enemy.type === 'heavy_trooper') && !enemy.shieldBroken &&
           enemy.facing !== direction && mind.state !== 'return') {
           enemy.turnTimer = (enemy.turnTimer ?? 36) > 0 ? enemy.turnTimer! - 1 : 36;
@@ -2069,8 +2076,8 @@ export class GameEngine {
         enemy.x += (targetX - enemy.x) * 0.035 + enemy.vx;
         enemy.y += (targetY - enemy.y) * 0.045 + enemy.vy;
         enemy.vx *= 0.85; enemy.vy *= 0.85;
-      } else if (!flying && !enemy.airborne && intent.move !== 0 && enemy.facing === Math.sign(intent.move)) {
-        if (Math.abs(enemy.x + intent.move - home) <= GROUND_ENEMY.leash || mind.state === 'return') {
+      } else if (!flying && !enemy.mount && !enemy.airborne && intent.move !== 0 && enemy.facing === Math.sign(intent.move)) {
+        if (Math.abs(enemy.x + intent.move - home) <= GROUND_ENEMY.leash || mind.state === 'return' && !enemy.deployed) {
           if (hasSafeFooting(enemy, intent.move, this.platforms)) {
             const wall = moveAgainstSolids(enemy, intent.move, 'x', solids);
             if (wall && mind.state === 'patrol') enemy.facing = enemy.facing === 1 ? -1 : 1;
@@ -2081,10 +2088,14 @@ export class GameEngine {
         const x = enemy.x + enemy.w / 2, y = enemy.y + enemy.h / 2;
         const dx = mind.aimX - x, dy = mind.aimY - y, length = Math.max(1, Math.hypot(dx, dy));
         this.bullets.push({ x, y, w: enemy.type === 'sniper' ? 12 : 10, h: 6,
-          vx: flying ? dx / length * profile.bulletSpeed : mind.facing * profile.bulletSpeed,
-          vy: flying ? dy / length * profile.bulletSpeed : 0,
+          vx: flying || enemy.type === 'turret' ? dx / length * profile.bulletSpeed : mind.facing * profile.bulletSpeed,
+          vy: flying || enemy.type === 'turret' ? dy / length * profile.bulletSpeed : 0,
           shooterId: enemy.id, color: enemy.type === 'sniper' ? '#ff007f' : '#facc15', damage: profile.damage });
         sound.sfxShoot();
+      } else if (intent.attack === 'deploy') {
+        const turret = this.spawns.deploy(enemy, this.enemies, solids, p, this.tickCount);
+        if (turret) { this.enemies.push(turret); this.addMangaFx('TORRETA!', enemy.x, enemy.y - 22, '#f59e0b'); }
+        if (enemy.deployed) { enemy.facing = p.x >= enemy.x ? -1 : 1; mind.facing = enemy.facing; }
       } else if (intent.attack === 'flank') {
         if (hasSafeFooting(enemy, mind.aimX - enemy.x, this.platforms)) {
           enemy.vx = mind.facing * 9.5; enemy.vy = -8.5; enemy.airborne = true;
@@ -2411,6 +2422,7 @@ export class GameEngine {
       } else {
         ctx.fillStyle = b.color;
         ctx.fillRect(b.x, b.y, b.w, b.h);
+        if (b.reflectable === false) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(b.x - 2, b.y - 2, b.w + 4, b.h + 4); }
       }
     });
 
@@ -2602,11 +2614,28 @@ export class GameEngine {
     if (en.stealthAlpha) ctx.globalAlpha = en.stealthAlpha;
 
     if (en.type === 'turret') {
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(en.x, en.y + 16, en.w, en.h - 16);
-      ctx.fillStyle = '#ef4444';
-      ctx.fillRect(en.x + (en.facing === 1 ? 16 : -6), en.y + 12, 26, 10);
+      const cx = en.x + en.w / 2, cy = en.y + en.h / 2;
+      ctx.fillStyle = '#1e293b';
+      if (en.mount === 'ceiling') ctx.fillRect(en.x, en.y, en.w, 8);
+      else if (en.mount === 'wall-left') ctx.fillRect(en.x, en.y, 8, en.h);
+      else if (en.mount === 'wall-right') ctx.fillRect(en.x + en.w - 8, en.y, 8, en.h);
+      else ctx.fillRect(en.x, en.y + en.h - 8, en.w, 8);
+      const extension = !en.mount ? 1 : !en.ai || en.ai.state === 'patrol' ? 0 : en.ai.state === 'alert' ? 1 - en.ai.timer / 12 : 1;
+      ctx.fillStyle = en.deployedBy ? '#b45309' : '#475569';
+      ctx.fillRect(en.x + 5, en.y + 8, en.w - 10, en.h - 16);
+      if (extension > 0) {
+        const angle = en.ai ? Math.atan2(en.ai.aimY - cy, en.ai.aimX - cx) : en.mount === 'ceiling' ? Math.PI / 2 : en.facing === 1 ? 0 : Math.PI;
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle);
+        ctx.fillStyle = en.telegraph ? '#fff' : '#ef4444';
+        ctx.fillRect(0, -5, en.w / 2 * extension, 4); ctx.fillRect(0, 2, en.w / 2 * extension, 4); ctx.restore();
+      }
     } else {
+      if (en.type === 'turret_engineer') {
+        ctx.fillStyle = '#f59e0b'; ctx.fillRect(en.x - 4, en.y + 18, 9, 24);
+        if (en.ai?.action === 'deploy' && en.telegraph) {
+          ctx.fillStyle = '#fbbf24'; ctx.fillRect(en.x, en.y + en.h + 3, en.w * (1 - en.ai.timer / 90), 4);
+        }
+      }
       const sprite = getEnemyPixelSprite(en.type);
       ctx.save();
       ctx.translate(en.x + en.w / 2, en.y + en.h / 2);

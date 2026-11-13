@@ -34,7 +34,9 @@ export const FACTORY: SubstageDefinition[] = [
       { id: 3, x: 2230, y: 676, w: 42, h: 44, hp: 25, kind: 'terminal', dropType: 'psy' },
     ],
     enemies: [enemy('mutant', 650, 720, 75), enemy('drone', 930, 720, 45), enemy('mib_gunner', 1180, 720),
-      enemy('mutant', 1720, 720, 80), enemy('mib_shield', 2240, 720, 110)],
+      enemy('turret', 580, 720, 90, { y: 642, w: 32, h: 32, mount: 'wall-left', facing: 1 }),
+      enemy('mib_shield', 2240, 720, 110),
+      enemy('turret', 1100, 720, 90, { y: 538, w: 32, h: 32, mount: 'ceiling' })],
     introDialogue: [
       { speaker: 'MAYA', line: 'Os tanques estão vazando. Há passagens por cima e pontos de apoio entre as linhas.' },
       { speaker: 'LEON', line: 'Atravessem as esteiras até o núcleo. Arisawa está usando o descarte para alimentar o Cyber-T-Rex.' },
@@ -68,7 +70,8 @@ export const FACTORY: SubstageDefinition[] = [
       { id: 3, x: 2360, y: 616, w: 42, h: 44, hp: 25, kind: 'terminal', dropType: 'heal' },
     ],
     enemies: [enemy('drone', 620, 660, 45), enemy('mutant', 1000, 660, 80), enemy('sniper', 1220, 330, 55),
-      enemy('mib_gunner', 1400, 660), enemy('heavy_trooper', 2300, 660, 115)],
+      enemy('turret_engineer', 1340, 660, 55, { shootTimer: 0 }), enemy('heavy_trooper', 2300, 660, 115),
+      enemy('turret', 1400, 660, 180, { y: 620, h: 40, mount: 'floor', deployedBy: 4, shootTimer: 30 })],
   },
   {
     ...chapterBase(4, 700), substageId: '4C', title: 'Núcleo de Descarte', boundsWidth: 3000, goalX: 2740,

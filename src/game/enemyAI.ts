@@ -11,6 +11,7 @@ const shooter = (range: number, windup: number, recovery: number, damage: number
   ({ ranged: true, speed: 0, range, windup, recovery, damage, bulletSpeed });
 export const ENEMY_COMBAT: Record<EnemyType, EnemyCombatProfile> = {
   mib_gunner: shooter(620, 24, 72, 11, 7.2), sniper: shooter(660, 36, 90, 18, 11),
+  turret_engineer: shooter(550, 90, 60, 0, 0),
   turret: shooter(620, 20, 54, 11, 7.2), drone: shooter(620, 24, 70, 12, 6.5), jetpack: shooter(620, 24, 56, 12, 6.5),
   mutant: melee(1.7, 64, 22, 44), mib_shield: melee(1.7, 62, 24, 48, 12),
   cyber_hound: melee(3.8, 64, 18, 36), suit_martial: melee(3.1, 68, 16, 40),
@@ -36,11 +37,12 @@ export interface EnemyContext {
   stunned: boolean;
   canFlank: boolean;
   coverFire: boolean;
+  installationX?: number;
 }
 export interface EnemyIntent {
   move: number;
   targetX: number;
-  attack: 'shot' | 'melee' | 'flank' | null;
+  attack: 'shot' | 'melee' | 'flank' | 'deploy' | null;
   coverWarning: boolean;
 }
 function enter(enemy: Enemy, state: EnemyMind['state'], timer = 0) {
@@ -59,6 +61,12 @@ export function stepEnemyAI(enemy: Enemy, context: EnemyContext): EnemyIntent {
   if (mind.state === 'stunned' && mind.timer > 0) { mind.timer--; return intent; }
   if (enemy.airborne && !flying) { enter(enemy, 'airborne'); return intent; }
   if (mind.state === 'airborne' || mind.state === 'stunned') enter(enemy, 'recover', 12);
+  if (enemy.type === 'turret_engineer' && enemy.deployed) {
+    // Flee along safe ground; no second installation in this incarnation.
+    mind.state = 'return'; mind.facing = enemy.facing;
+    intent.move = enemy.facing * 3.4;
+    return intent;
+  }
   if (Math.abs(enemy.x - context.home) > GROUND_ENEMY.leash && mind.state !== 'return') enter(enemy, 'return');
   if (mind.state === 'return') {
     intent.targetX = context.home;
@@ -77,7 +85,12 @@ export function stepEnemyAI(enemy: Enemy, context: EnemyContext): EnemyIntent {
   if (mind.state === 'windup' && !context.visible) { enter(enemy, 'recover', 18); return intent; }
   if (mind.state === 'attack') { enter(enemy, 'recover', profile.recovery); return intent; }
   if (mind.state === 'recover') {
-    if (mind.timer > 0) { mind.timer--; return intent; }
+    if (mind.timer > 0) {
+      mind.timer--;
+      // Three-round burst, then an uninterrupted recovery window.
+      if (enemy.type === 'turret' && context.visible && (mind.timer === profile.recovery - 6 || mind.timer === profile.recovery - 12)) intent.attack = 'shot';
+      return intent;
+    }
     enter(enemy, 'chase');
     if (context.visible) {
       mind.aimX = context.player.x + context.player.w / 2;
@@ -119,8 +132,12 @@ export function stepEnemyAI(enemy: Enemy, context: EnemyContext): EnemyIntent {
   const inRange = profile.ranged ? Math.hypot(dx, dy) <= profile.range : Math.abs(dx) <= profile.range && Math.abs(dy) < 60;
   const guarded = (enemy.type === 'mib_shield' || enemy.type === 'heavy_trooper') && !enemy.shieldBroken;
   const frontReady = !guarded || (dx >= 0 ? 1 : -1) === enemy.facing;
+  const installationX = context.installationX ?? context.home;
+  if (enemy.type === 'turret_engineer' && Math.abs(enemy.x - installationX) > 12) {
+    intent.move = Math.sign(installationX - enemy.x) * 1.7; return intent;
+  }
   if (context.visible && frontReady && (flank || inRange && enemy[cooldown] === 0)) {
-    mind.action = flank ? 'flank' : profile.ranged ? 'shot' : 'melee';
+    mind.action = enemy.type === 'turret_engineer' ? 'deploy' : flank ? 'flank' : profile.ranged ? 'shot' : 'melee';
     if (flank) mind.aimX = context.player.x - context.player.facing * 56;
     mind.facing = mind.aimX >= enemy.x + enemy.w / 2 ? 1 : -1;
     enter(enemy, 'windup', profile.windup);

@@ -39,7 +39,7 @@ export class SpawnManager {
       armed: false,
       defeats: 0,
       // Mandatory encounters never refill or lock an already cleared arena.
-      repeatable: !(stage.ambushArenas ?? []).some((arena) =>
+      repeatable: template.deployedBy === undefined && !(stage.ambushArenas ?? []).some((arena) =>
         template.x >= arena.minX - 60 && template.x <= arena.maxX + 60),
     }));
   }
@@ -67,7 +67,7 @@ export class SpawnManager {
     record.farTicks = 0;
     return {
       ...en, id: record.activeId, spawnId: record.id, generation: record.generation,
-      vx: 0, vy: 0, airborne: en.type === 'jetpack' || en.type === 'drone', telegraph: 0,
+      deployed: false, vx: 0, vy: 0, airborne: en.type === 'jetpack' || en.type === 'drone', telegraph: 0,
       patrolMinX: en.x - 120, patrolMaxX: en.x + 120,
       turnTimer: 0, targetFacing: en.facing, shieldHits: 0, shieldBroken: false,
       stunTimer: 0, isFlanking: false,
@@ -75,7 +75,33 @@ export class SpawnManager {
   }
 
   initial(): Enemy[] {
-    return this.records.filter((record) => record.generation < 0).map((record) => this.materialize(record));
+    return this.records.filter((record) => record.generation < 0 && record.template.deployedBy === undefined).map((record) => this.materialize(record));
+  }
+
+  installationX(engineer: Enemy): number | undefined {
+    if (engineer.type !== 'turret_engineer') return undefined;
+    const index = this.records.findIndex((record) => record.id === engineer.spawnId);
+    if (index < 0) return undefined;
+    return this.records.find((record) => record.template.deployedBy === index + 1)?.template.x;
+  }
+
+  /** Bounded authored child: one live turret per socket, never an untracked entity. */
+  deploy(engineer: Enemy, alive: Enemy[], solids: Body[], player: Body, tick: number): Enemy | null {
+    if (engineer.hp <= 0 || engineer.deployed || engineer.type !== 'turret_engineer') return null;
+    const parentIndex = this.records.findIndex((record) => record.id === engineer.spawnId);
+    if (parentIndex < 0) return null;
+    const child = this.records.find((record) => record.template.deployedBy === parentIndex + 1);
+    if (!child) return null;
+    this.noteMissing(alive, tick);
+    if (child.activeId !== null) { engineer.deployed = true; return null; }
+    if (alive.filter((enemy) => enemy.hp > 0).length >= RESPAWN.maxActive) return null;
+    const origin = child.template;
+    const overlaps = (body: Body) => origin.x < body.x + body.w && origin.x + origin.w > body.x &&
+      origin.y < body.y + body.h && origin.y + origin.h > body.y;
+    if (Math.abs(engineer.x - origin.x) > 70 || Math.abs(engineer.y + engineer.h - origin.y - origin.h) > 8 ||
+        solids.some(overlaps) || overlaps(player) || alive.some((enemy) => enemy !== engineer && enemy.hp > 0 && overlaps(enemy))) return null;
+    engineer.deployed = true;
+    return this.materialize(child);
   }
 
   /** Count confirmed player defeats per origin, not mere appearances or hits. */

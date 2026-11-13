@@ -544,3 +544,13 @@ test('the orbital elevator scrolls through its ascent and retains checkpoint/gra
   engine.resize(1280, 720); assert.ok(state.camera.y < bottom - 800);
   engine.stop();
 });
+
+test('industrial authoring rejects detached mounts and invalid engineer/turret associations', () => {
+  const detached = structuredClone(SUBSTAGES);
+  const mount = detached.find((a) => a.substageId === '4A')!.enemies.find((e) => e.mount)!;
+  mount.x += 10;
+  assert.ok(validateCampaign(detached).some((e) => e.includes('torreta sem suporte')));
+  const invalid = structuredClone(SUBSTAGES);
+  invalid.find((a) => a.substageId === '4B')!.enemies.at(-1)!.deployedBy = 1;
+  assert.ok(validateCampaign(invalid).some((e) => e.includes('instalação inválida')));
+});

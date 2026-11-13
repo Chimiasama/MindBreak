@@ -75,7 +75,7 @@ export function stepBoss(boss: BossRuntime, player: Body) {
   return result;
 }
 
-export interface BossShot { x: number; y: number; w: number; h: number; vx: number; vy: number; damage: number; color: string; gravity?: number }
+export interface BossShot { x: number; y: number; w: number; h: number; vx: number; vy: number; damage: number; color: string; gravity?: number; reflectable?: boolean; passesThroughWalls?: boolean }
 export function bossShots(boss: BossRuntime, attack: BossAttack): BossShot[] {
   const mind = boss.mind!, phase2 = boss.phase === 2;
   const x = boss.x + boss.w / 2, y = boss.y + boss.h * 0.4;
@@ -102,7 +102,7 @@ export function bossShots(boss: BossRuntime, attack: BossAttack): BossShot[] {
       const angle = i * Math.PI * 2 / (phase2 ? 12 : 8);
       return shot(x, y, Math.cos(angle) * 5.5, Math.sin(angle) * 5.5, 15, 12, 12);
     });
-    case 'eye_beam': return fan(phase2 ? [-0.14, 0, 0.14] : [0], 12, 20).map((bullet) => ({ ...bullet, w: 32, h: 12 }));
+    case 'eye_beam': return fan(phase2 ? [-0.14, 0, 0.14] : [0], 12, 20).map((bullet) => ({ ...bullet, w: 32, h: 12, reflectable: false }));
     default: return [];
   }
 }

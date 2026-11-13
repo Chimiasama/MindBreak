@@ -2,7 +2,7 @@
 
 ## Estados dos inimigos comuns
 
-`src/game/enemyAI.ts` controla os onze arquétipos usando estados explícitos: `patrol`, `alert`, `chase`, `windup`, `attack`, `recover`, `stunned`, `airborne`, `return` e `dead`. O módulo escolhe intenções; o motor aplica movimento, tiros e dano. Integração do terreno continua em `groundActors.ts`.
+`src/game/enemyAI.ts` controla os doze arquétipos usando estados explícitos: `patrol`, `alert`, `chase`, `windup`, `attack`, `recover`, `stunned`, `airborne`, `return` e `dead`. O módulo escolhe intenções; o motor aplica movimento, tiros e dano. Integração do terreno continua em `groundActors.ts`.
 
 ```mermaid
 stateDiagram-v2
@@ -56,3 +56,5 @@ Os cooldowns iniciais dos mapas continuam respeitados. Os valores acima são aju
 177 testes passaram no fechamento do bloco, incluindo os onze arquétipos, mira travada, perda de alvo, interrupção, recuperação, cooperação, giro do guarda, proteção contra stun, colisão/ordem de contato dos projéteis e leitura de saves antigos. TypeScript, build e smoke de navegação/carregamento em Chromium passaram. A dificuldade de cada encontro, chefes e controles físicos continuam em avaliação nas etapas próprias.
 
 Na integração do incremento 12, a patrulha passou a inverter a direção ao encontrar borda/parede. Inimigos aéreos sem alvo voltam à altura de origem, e o fim da recuperação readquire a posição visível antes de preparar outro ataque. Há testes de regressão para os três casos. A suíte de contato com parede considera que o ator pode se afastar depois de encostar, em vez de exigir que permaneça preso nela.
+
+No incremento 15 foram acrescentados instalador, torretas montadas e rajadas, com exceções explícitas de projéteis. As regras atuais, tempos e compatibilidade estão em [TORRETAS_E_PROJETEIS.md](TORRETAS_E_PROJETEIS.md). Os valores de recuperação da torreta incluem dois tiros adicionais no início; depois há a janela livre. Nenhum tiro atual atravessa sólidos; o Olho Cósmico não pode ser rebatido.
