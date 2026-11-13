@@ -1,6 +1,7 @@
 import { Body } from './collision';
 import { Enemy, StageDefinition } from './types';
 import { RESPAWN } from './tuning';
+import { defeatReward } from './rewards';
 
 interface SpawnRecord {
   id: string;
@@ -11,12 +12,14 @@ interface SpawnRecord {
   farTicks: number;
   armed: boolean;
   repeatable: boolean;
+  defeats: number;
 }
 
 export class SpawnManager {
   private records: SpawnRecord[];
   private nextEntityId = 1;
   private farDistance: number;
+  private rewarded = new WeakSet<Enemy>();
 
   constructor(stage: StageDefinition) {
     this.farDistance = Math.min(RESPAWN.farDistance, Math.max(900,
@@ -29,6 +32,7 @@ export class SpawnManager {
       deadAt: null,
       farTicks: 0,
       armed: false,
+      defeats: 0,
       // Mandatory encounters never refill or lock an already cleared arena.
       repeatable: !(stage.ambushArenas ?? []).some((arena) =>
         template.x >= arena.minX - 60 && template.x <= arena.maxX + 60),
@@ -53,6 +57,17 @@ export class SpawnManager {
 
   initial(): Enemy[] {
     return this.records.filter((record) => record.generation < 0).map((record) => this.materialize(record));
+  }
+
+  /** Count confirmed player defeats per origin, not mere appearances or hits. */
+  claimDefeatReward(enemy: Enemy) {
+    if (enemy.hp > 0 || this.rewarded.has(enemy)) return 0;
+    this.rewarded.add(enemy);
+    const record = this.records.find((spawn) => spawn.id === enemy.spawnId);
+    if (!record) return defeatReward(enemy.generation ?? 0);
+    const reward = defeatReward(record.defeats);
+    record.defeats++;
+    return reward;
   }
 
   update(player: Body, camera: Body, tick: number, alive: Enemy[], solids: Body[]): Enemy[] {

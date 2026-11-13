@@ -70,3 +70,37 @@ Retomar 1.3.0.2–1.3.0.4 e 1.4.0.3: fila de ações por tick, buffer/coyote, en
 A campanha ainda tem os oito mapas antigos. As 26 subfases estão detalhadas no plano, mas não foram criadas artificialmente por duplicação. Persistência entre subfases, viewport lógica, refinamento de chefes, trilhas, sprites e Android continuam pendentes. A resolução discreta de inimigos terrestres contra sólidos ainda não foi substituída por varredura. O balanceamento dos tempos/distâncias de respawn é inicial e precisa de playtest exploratório.
 
 O próximo lote deve consolidar câmera/resolução lógica e o contrato de campanha/subfase, seguido da primeira fase principal expandida. Publicação de código no GitHub está autorizada; publicação de release e geração de APK continuam dependendo de pedido expresso.
+
+
+## Incremento 3 — 13/11/2026
+
+### Correção de direção: recompensar persistência
+
+A orientação nova do usuário substitui a política anterior de zero pontos em reaparições. Farm de vidas não é tratado como problema por si só; persistência deve render progresso. Para limitar repetição apenas do mesmo inimigo sem impor teto global, a regra inicial adotada é **1.000 → 500 → 50 → 0** por derrota confirmada da mesma origem.
+
+- O histórico é separado por spawnId, persiste nos retornos/continue da tentativa corrente e reinicia ao carregar uma nova tentativa da fase. Não é só o número de aparições: um desaparecimento sem derrota confirmada não consome recompensa.
+- Inimigos comuns passam a recompensar a derrota, sem pontuar em cada golpe. Captura telecinética conta como uma derrota; a mesma entidade não paga duas vezes.
+- Pontos ocultos continuam alimentando o sistema interno de vidas extras. **Não foi adicionado teto de vidas por fase.** Drops de vida, vidas encontradas e limites separados por categoria foram registrados como alternativas futuras, não implementados sem escolha/balanceamento.
+- Pontos, limiar da próxima vida e totais numéricos foram retirados do HUD e das telas de conclusão/vitória. Vida conquistada continua tendo feedback visual/sonoro e o número de vidas permanece visível. Combo/rank continuam sendo informação de combate, não exposição do acumulador interno.
+- Regras anteriores para recompensas de chefe, objetos e reflexão continuam funcionando. Não foi criado XP ou novo atributo de personagem.
+
+### Continuação de jogabilidade: câmera
+
+- Extraído `camera.ts` com viewport de altura lógica 900. Na proporção 16:9 a área é 1600×900 em 960×540, 1280×720, 1920×1080 e 2560×1440; aumentar resolução não aumenta visão do mundo.
+- Retrato conserva altura lógica e enquadra largura menor, evitando comprimir um cenário inteiro e tornar o personagem minúsculo. Orientações/proporções diferentes ainda veem larguras diferentes por decisão de enquadramento.
+- Câmera antecipa o lado para o qual o personagem olha, tem zona morta de oito unidades e segue com interpolação. Limites de mundo/arena e dimensões mínimas são tratados; rotação/redimensionamento reenquadram imediatamente.
+- A área do overdrive permanece independente da câmera. Respawn usa a mesma área lógica do desenho para decidir visibilidade.
+
+### Evidências
+
+- `npm test`: **56 testes passaram**, nenhum falhou/foi ignorado. Incluem ciclos reais de reaparição e recompensa decrescente por origem, morte única, captura, vida extra a partir de pontos ocultos, ausência de pontuação renderizada e equivalência de câmera entre resoluções.
+- `npm run lint`: passou.
+- Build web padrão e build com troca de teste desligada: passaram; sem geração de APK.
+- Chromium: recompensa de derrota elevou o acumulador interno de 14.900 para 15.900 e vidas de três para quatro, sem expor pontos no HUD. Conclusão de fase sem pontuação numérica validada. Área lógica idêntica em duas resoluções 16:9 confirmada em execução.
+- Regressão de navegador nos perfis de teste/final passou: troca livre apenas no perfil de teste, início, pausa, reinício e escolha de personagem no continue. As 24 combinações de oito mapas/três heróis executaram e renderizaram sem exceções/posições inválidas.
+- Toque simultâneo em tela mobile, voo e liberação fora do botão passaram novamente. Options virtual pausou e retomou pela interface. Isso não certifica Android/DualShock 4 físicos.
+- Nenhuma Action remota acionada, nenhum APK gerado. A configuração de workflows permanece exclusivamente manual.
+
+### Pendências preservadas
+
+A regra de pontuação foi corrigida antes de avançar conteúdo. A campanha ainda tem oito mapas; contratos e produção das 26 subfases, salvamento, ajustes de aceleração/balanceamento, música, sprites e pacote Android continuam no plano. A câmera ganhou base lógica, mas DPR, escala inteira e opções de shake ainda exigem acabamento e ensaio em aparelho.

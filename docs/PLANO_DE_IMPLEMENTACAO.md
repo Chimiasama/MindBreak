@@ -15,6 +15,10 @@ Data inicial: 13/11/2026. Documento de trabalho: atualizar os estados e registra
 - **0.1.0.7 — Actions e APK:** todos os workflows devem ter somente `workflow_dispatch`, sem push, pull_request, schedule, workflow_run ou gatilhos automáticos. Só gerar APK quando o usuário pedir expressamente. Alterações no código não autorizam uma geração de APK.
 - **0.1.0.8 — Futuro:** multiplayer e eventual migração de engine ficam previstos, fora do escopo ativo.
 
+- **0.1.0.9 — Persistência recompensada:** o usuário aceita farm de vidas e prefere progressão inspirada em roguelites. Reaparição não deve zerar imediatamente a recompensa. Regra inicial adotada: 1.000 → 500 → 50 → 0 por derrota confirmada do mesmo spawn, sem teto adicional de vidas por fase.
+- **0.1.0.10 — Progressão oculta:** não mostrar pontos nem o limiar da próxima vida no HUD ou nas telas de conclusão; manter cálculo e concessão de vidas internos. A descoberta das regras pelo jogador é intencional.
+- **0.1.0.11 — Alternativas futuras:** limite separado por origem de vida (pontos, item encontrado, drop ocasional) foi sugerido como alternativa, não como obrigação. Não adicionar teto ou loteria sem balanceamento próprio; a implementação atual usa apenas a recompensa decrescente.
+
 ### 0.2 Forma de implantar cada incremento
 
 - **0.2.0.1:** manter mudanças pequenas por sistema, com testes do comportamento afetado; não misturar novos mapas, física e arte numa única entrega sem validação intermediária.
@@ -66,8 +70,8 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 - **1.5.0.1:** reunir gravidade, aceleração, velocidade terminal, arrasto, controle aéreo e impulsos em perfis versionados, com unidades documentadas e referências ao passo de 60 Hz.
 - **1.5.0.2:** definir aceleração/desaceleração em vez de atribuição instantânea de velocidade; conservar a agilidade arcade. Medir altura/distância de salto para Ren/Maya/Leon antes e depois.
 - **1.5.0.3 — Normalização implementada; rotas e ajuste de foco pendentes:** normalizar voo diagonal de Maya, revisar consumo/recarga de foco e garantir que cada rota principal continue acessível aos personagens sem voo.
-- **1.5.0.4 — Área de overdrive independente da tela implementada; viewport lógica pendente:** adotar viewport lógica de gameplay e política de enquadramento para retrato/paisagem; separar área do overdrive da resolução da tela. Escala visual não pode mudar dano/alcance.
-- **1.5.0.5:** implementar look-ahead com limites por sala, antecipação vertical, zona morta e opção de intensidade do shake. Ajustar HUD/controles sem cobrir pontos de pouso.
+- **1.5.0.4 — Área de overdrive e viewport com altura lógica implementadas; ensaio físico pendente:** usar altura lógica de 900 unidades: a mesma proporção de tela mostra a mesma área do mundo em resoluções diferentes. Retrato mantém altura lógica e vê menos largura; não comprimir um cenário inteiro em sprites minúsculos. A área do overdrive é independente da resolução. DPR e escala inteira ainda exigem acabamento visual.
+- **1.5.0.5 — Antecipação, limites e zona morta implementados; ajustes de shake/opções pendentes:** implementar look-ahead com limites por sala, antecipação vertical, zona morta e opção de intensidade do shake. Ajustar HUD/controles sem cobrir pontos de pouso.
 - **1.5.0.6 — Saída da fase:** suíte de regressão, trajetórias comparáveis entre taxas de render, todas as rotas críticas acessíveis e ensaio em Android antes de congelar números de balanceamento.
 
 ## Fase 2 — Combate, vida e regras de personagem
@@ -113,7 +117,7 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 ### 3.3 Exceções, recompensas e testes — IMPLEMENTADO para arenas atuais; persistência entre subfases PENDENTE
 
 - **3.3.0.1:** chefes e inimigos de emboscada obrigatória não reaparecem após conclusão; inimigos ordinários podem reaparecer. Uma arena concluída não deve voltar a trancar o jogador.
-- **3.3.0.2:** baús secretos, cura garantida e objetos únicos persistem coletados. Primeira geração dá recompensa normal; reaparições dão zero pontos e não geram progresso/itens únicos, impedindo farm de 1-UP. A economia pode ser revista depois de playtest, sem permitir recompensa duplicada por alvo/ataque.
+- **3.3.0.2:** baús secretos, cura garantida e objetos únicos persistem coletados. Derrotas confirmadas por origem dão inicialmente 1.000, 500, 50 e depois zero pontos. Acertos comuns/guard crush sem derrota não pontuam nem consomem a curva. Captura telecinética conta como uma derrota. Desaparecer sem derrota atribuída não consome recompensa. Não há teto de vidas por fase; pontos continuam concedendo 1-UP internamente, sem expor valores ao jogador. Itens únicos continuam protegidos contra duplicação. Esta regra substitui a política anterior de zero pontos para toda reaparição.
 - **3.3.0.3 — Aceite:** afastamento curto não repõe inimigo; afastamento grande/tempo suficiente e retorno repõem; pausa não conta tempo; mapa vertical funciona; nenhum respawn visível, duplicado, em parede ou em arena concluída.
 
 ## Fase 4 — Oito fases, 26 subfases
@@ -272,6 +276,6 @@ Os nomes são propostas de produção e podem ser refinados sem alterar o total.
 
 1. Ler este documento e o registro de execução.
 2. Verificar `git status`, preservar mudanças existentes e rodar a suíte da base.
-3. Retomar os itens pendentes de jogabilidade/campanha: câmera lógica independente da tela, balanceamento, contratos de subfase e produção dos mapas. O incremento 2 já adicionou fila, buffer/coyote, repopulação e correções adicionais de combate/colisão.
+3. Retomar os itens pendentes de jogabilidade/campanha: câmera lógica independente da tela, balanceamento, contratos de subfase e produção dos mapas. O incremento 2 adicionou fila, buffer/coyote, repopulação e correções adicionais de combate/colisão. O incremento 3 corrige a recompensa por persistência, oculta pontos e implementa altura lógica/antecipação/zona morta da câmera.
 4. Atualizar status somente com evidência. Antes de avançar para cada lote de subfases, validar o lote anterior.
 5. Não confundir a publicação do ambiente de desenvolvimento com a publicação do jogo, commits remotos, GitHub Actions ou APK.

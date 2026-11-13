@@ -405,7 +405,7 @@ export default function App() {
               )}
             </div>
 
-            {/* Right HUD Cluster: Stage, Score & Controls */}
+            {/* Progression score remains internal; show stage and gameplay controls only. */}
             <div className="pointer-events-auto flex flex-col items-end gap-1.5 shrink-0">
               <div className="flex items-center gap-1.5">
                 <button
@@ -428,12 +428,6 @@ export default function App() {
               <div className="text-right">
                 <div className="font-display text-xs sm:text-sm font-bold text-slate-200 whitespace-nowrap">
                   Fase {hud.stageId}/8 · Restam {hud.enemiesRemaining}
-                </div>
-                <div className="font-mono text-xs font-bold tabular-nums text-amber-300">
-                  {hud.score.toLocaleString('pt-BR')} PTS
-                </div>
-                <div className="font-mono text-[10px] tabular-nums text-slate-400">
-                  1-UP em {hud.nextOneUpScore.toLocaleString('pt-BR')}
                 </div>
               </div>
             </div>
@@ -749,11 +743,11 @@ export default function App() {
             <p className="mt-2 text-sm text-slate-300">
               {gameState === 'PAUSED' && `Fase ${hud.stageId}: ${hud.stageTitle}`}
               {gameState === 'STAGE_CLEAR' &&
-                `Pontuação atual: ${hud.score.toLocaleString('pt-BR')} PTS. Prepare-se para o próximo setor.`}
+                'Prepare-se para o próximo setor.'}
               {gameState === 'GAME_OVER' &&
                 'Os agentes da Nexus fecharam o cerco. Levante-se e tente novamente!'}
               {gameState === 'CAMPAIGN_VICTORY' &&
-                `Você completou todas as 8 fases com ${hud.score.toLocaleString('pt-BR')} PTS!`}
+                'Você completou todas as 8 fases e derrotou a Nexus!'}
             </p>
 
             <div className="mt-6 flex flex-col gap-3">

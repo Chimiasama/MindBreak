@@ -203,11 +203,13 @@ test('expired coyote window consumes the normal aerial jump instead', () => {
   assert.equal(state.player.doubleJump, false); engine.stop();
 });
 
-test('reappeared enemies cannot generate score or extra-life farming', () => {
+test('reappeared enemies reward persistence on defeat, not on each hit', () => {
   const { engine, state } = emptyRoom();
   const target = { ...STAGE_ENEMY(), id: 99, hp: 100, maxHp: 100, x: 500, y: 100, generation: 1 };
   state.hitEnemy(target, 20, 0, 0);
   assert.equal(state.player.score, 0); assert.equal(state.player.lives, 3);
+  state.hitEnemy(target, 100, 0, 0);
+  assert.equal(state.player.score, 500);
   engine.stop();
 });
 
@@ -278,4 +280,26 @@ test('idle gamepad preserves a keyboard jump hold after action polling', (t) => 
   t.after(() => { if (original) Object.defineProperty(navigator, 'getGamepads', original); else delete (navigator as any).getGamepads; });
   const { engine, state } = emptyRoom(); engine.setKey('jumpHeld', true);
   state.pollGamepad(); assert.equal(state.keys.jumpHeld, true); engine.stop();
+});
+
+test('earned hidden score can still grant a life and is not capped per stage', () => {
+  const { engine, state } = emptyRoom();
+  state.player.score = 14900;
+  state.player.nextOneUpScore = 15000;
+  const target = { ...STAGE_ENEMY(), id: 99, hp: 10, maxHp: 100, x: 500, y: 100, generation: 1 };
+  state.hitEnemy(target, 20, 0, 0);
+  assert.equal(state.player.score, 15400);
+  assert.equal(state.player.lives, 4);
+  assert.equal(state.player.nextOneUpScore, 30000);
+  engine.stop();
+});
+
+test('telekinetic capture counts as a single defeated enemy for progression', () => {
+  const { engine, state } = emptyRoom();
+  state.enemies = [{ ...STAGE_ENEMY(), id: 100, hp: 100, maxHp: 100, x: 550, y: 144, generation: 0 }];
+  engine.triggerPsy();
+  assert.equal(state.enemies.length, 0);
+  assert.equal(state.player.score, 1000);
+  assert.equal(state.thrownEnemies.length, 1);
+  engine.stop();
 });

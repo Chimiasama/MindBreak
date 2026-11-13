@@ -33,7 +33,7 @@ Essa configuração retira a troca livre da interface e bloqueia o método do mo
 
 Inimigos comuns podem reaparecer após afastamento prolongado e retorno. O ajuste inicial exige cinco segundos longe da origem e pelo menos quinze segundos desde a morte. A distância mínima de afastamento é adaptada ao tamanho 2D do mapa, até 1.800 unidades. Reaparições aguardam um ponto fora da câmera, afastado do jogador e sem sólidos/entidades sobrepostos.
 
-Inimigos de emboscadas obrigatórias não reaparecem; chefes não são repostos. Inimigos reaparecidos não rendem pontos para evitar farm de vidas. Baús e itens únicos não são restaurados por esse sistema. Os valores estão em `src/game/tuning.ts`.
+Inimigos de emboscadas obrigatórias não reaparecem; chefes não são repostos. Persistência é recompensada: derrotas confirmadas do mesmo inimigo de origem rendem internamente 1.000, 500, 50 e depois zero pontos. O histórico é por origem e por tentativa da fase; golpes sem matar não consomem a sequência, e captura telecinética conta como derrota. Não há teto adicional de vidas por fase. Pontos e limiar da próxima vida ficam ocultos na interface, mas continuam funcionando internamente. Baús e itens únicos não são restaurados por esse sistema. Os ajustes de respawn estão em `src/game/tuning.ts`; a curva de recompensas está em `src/game/rewards.ts`.
 
 ## GitHub Actions e Android
 

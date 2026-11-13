@@ -5,6 +5,7 @@ import { moveAgainstSolids, depenetrate, overlaps, sweepTime } from './collision
 import { ALLOW_TEST_CHARACTER_SWITCH } from './rules';
 import { MOVEMENT } from './tuning';
 import { SpawnManager } from './spawns';
+import { viewportFor, cameraTarget, followCamera } from './camera';
 import { CHARACTER_ORDER, CHARACTERS } from './characters';
 import { getEnemyPixelSprite, getHeroPixelSprite } from './pixelSprites';
 import { STAGES } from './stages';
@@ -92,8 +93,6 @@ export interface EngineCallbacks {
   onContinueCountdown: (stageId: number, score: number) => void;
   onGameOver: (stageId: number, score: number) => void;
 }
-
-const ZOOM = 0.8;
 
 export class GameEngine {
   private canvas: HTMLCanvasElement;
@@ -220,6 +219,7 @@ export class GameEngine {
   }
 
   private camera = { x: 0, y: 0 };
+  private get viewport() { return viewportFor(this.canvas.width, this.canvas.height); }
   private shakeAmount = 0;
   private superCutinTimer = 0;
   private superLabel = '';
@@ -393,10 +393,8 @@ export class GameEngine {
     };
 
     this.initScarf(found.spawnX, found.spawnY);
-    const viewW = this.canvas.width / ZOOM;
-    const viewH = this.canvas.height / ZOOM;
-    this.camera.x = Math.max(0, this.player.x - viewW * 0.4);
-    this.camera.y = Math.max(found.boundsTop, this.player.y + this.player.h - viewH * 0.7);
+    this.camera = cameraTarget(this.player, this.viewport,
+      { top: found.boundsTop, bottom: found.boundsBottom, width: found.boundsWidth });
     this.showAlert(`FASE ${found.id}: ${found.title.toUpperCase()}`, 140);
     sound.startMusic(found.musicGenre);
     this.emitHud();
@@ -505,9 +503,12 @@ export class GameEngine {
   }
 
   resize(width: number, height: number) {
-    this.canvas.width = width;
-    this.canvas.height = height;
+    this.canvas.width = Math.max(1, Math.round(Number.isFinite(width) ? width : 1));
+    this.canvas.height = Math.max(1, Math.round(Number.isFinite(height) ? height : 1));
     this.ctx.imageSmoothingEnabled = false;
+    this.camera = cameraTarget(this.player, this.viewport,
+      { top: this.stage.boundsTop, bottom: this.stage.boundsBottom, width: this.stage.boundsWidth },
+      this.ambushArenas.find((arena) => arena.active && !arena.cleared));
   }
 
   setKey(key: InputKey, pressed: boolean, source: InputSource = 'keyboard') {
@@ -788,7 +789,7 @@ export class GameEngine {
           this.screenShake(11);
           this.addParticle(en.x + en.w / 2, en.y + 24, '#00f0ff', 16, 6);
           this.addMangaFx('GUARD CRUSH!', en.x, en.y - 28, '#facc15');
-          this.registerHit(150, (en.generation ?? 0) === 0);
+          this.registerHit(0);
           return;
         }
 
@@ -961,6 +962,8 @@ export class GameEngine {
     if (targetIdx !== -1 && p.psyEnergy >= 28) {
       p.psyEnergy -= 28;
       const grabbed = this.enemies.splice(targetIdx, 1)[0];
+      grabbed.hp = 0;
+      this.addScore(this.spawns.claimDefeatReward(grabbed));
       sound.sfxPsyThrow();
       sound.playVoiceShout(this.characterId);
       this.hitstop = 4;
@@ -1064,7 +1067,8 @@ export class GameEngine {
     this.screenShake(6);
     sound.sfxHit();
     this.addParticle(en.x + en.w / 2, en.y + en.h / 2, CHARACTERS[this.characterId].accentColor, 10, 5);
-    this.registerHit(120, (en.generation ?? 0) === 0);
+    this.registerHit(0);
+    if (en.hp <= 0) this.addScore(this.spawns.claimDefeatReward(en));
   }
 
   private damageBoss(dmg: number) {
@@ -1155,11 +1159,11 @@ export class GameEngine {
     }
   }
 
-  private registerHit(scorePoints: number, awardScore = true) {
+  private registerHit(scorePoints: number) {
     this.player.comboHits++;
     this.player.comboTimer = 130;
     this.player.psyEnergy = Math.min(this.player.maxPsy, this.player.psyEnergy + 8);
-    if (awardScore) this.addScore(scorePoints * Math.max(1, Math.floor(this.player.comboHits / 3)));
+    this.addScore(scorePoints * Math.max(1, Math.floor(this.player.comboHits / 3)));
   }
 
   private checkAABB(
@@ -1581,7 +1585,7 @@ export class GameEngine {
     // Ordinary exploration spawns re-arm only after substantial absence.
     this.enemies.push(...this.spawns.update(p, {
       x: this.camera.x, y: this.camera.y,
-      w: this.canvas.width / ZOOM, h: this.canvas.height / ZOOM,
+      w: this.viewport.width, h: this.viewport.height,
     }, this.tickCount, this.enemies, solids));
     // Update Enemies (Cooperative Squad AI)
     this.updateEnemies();
@@ -1667,19 +1671,10 @@ export class GameEngine {
       if (a.x < -40) a.x = 1600;
     });
 
-    // Camera with 0.8x Zoom-Out & Rule of Thirds (ground at bottom ~70%, >65% upper vision)
-    const viewW = this.canvas.width / ZOOM;
-    const viewH = this.canvas.height / ZOOM;
-    const camMinX = activeArena ? activeArena.minX : 0;
-    const camMaxX = activeArena ? Math.max(activeArena.minX, activeArena.maxX - viewW) : Math.max(0, this.stage.boundsWidth - viewW);
-
-    const targetCamX = Math.max(camMinX, Math.min(camMaxX, p.x - viewW * 0.36));
-    const targetCamY = Math.max(
-      this.stage.boundsTop,
-      Math.min(this.stage.boundsBottom - viewH, p.y + p.h - viewH * 0.7)
-    );
-    this.camera.x += (targetCamX - this.camera.x) * 0.14;
-    this.camera.y += (targetCamY - this.camera.y) * 0.14;
+    const target = cameraTarget(p, this.viewport,
+      { top: this.stage.boundsTop, bottom: this.stage.boundsBottom, width: this.stage.boundsWidth }, activeArena);
+    this.camera.x = followCamera(this.camera.x, target.x);
+    this.camera.y = followCamera(this.camera.y, target.y);
 
     if (this.tickCount % 4 === 0) {
       this.emitHud();
@@ -2114,7 +2109,7 @@ export class GameEngine {
   }
 
   // =========================================================================
-  // RENDERING (16-Bit Pixel Art + 0.8x Zoom + Rule of Thirds)
+  // RENDERING (Pixel Art + resolution-independent world height)
   // =========================================================================
   private draw() {
     const ctx = this.ctx;
@@ -2157,9 +2152,9 @@ export class GameEngine {
 
     this.drawWeather(ctx, w, h);
 
-    // World Space with 0.8x Zoom-Out!
+    // World scale follows a fixed logical height, not physical screen resolution.
     ctx.save();
-    ctx.scale(ZOOM, ZOOM);
+    ctx.scale(this.viewport.zoom, this.viewport.zoom);
     const sx = (Math.random() - 0.5) * this.shakeAmount;
     const sy = (Math.random() - 0.5) * this.shakeAmount;
     ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
