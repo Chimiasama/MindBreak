@@ -1,6 +1,6 @@
 # MIND//BREAK: Kinetic Rebels
 
-Jogo de ação e plataforma 2D em React, TypeScript, Canvas e Web Audio. Oito mapas atuais; expansão planejada para oito fases principais e 26 subfases distintas.
+Jogo de ação e plataforma 2D em React, TypeScript, Canvas e Web Audio. Oito fases principais: o distrito já tem quatro subfases conectadas, e as fases 2–8 mantêm os sete mapas originais. São 11 mapas na campanha atual, rumo a 26 subfases distintas.
 
 ## Desenvolvimento
 
@@ -29,7 +29,12 @@ VITE_TEST_CHARACTER_SWITCH=false npm run build
 
 Essa configuração retira a troca livre da interface e bloqueia o método do motor. O build padrão ainda é o perfil de testes. A escolha de personagem no continue permanece funcionando nos dois perfis.
 
-## Exploração
+## Campanha e exploração
+
+No distrito: **1A Laboratório ↔ 1B Telhados ↔ 1C Esgotos ↔ 1D Avenida/Cipher-01**. Aperte **CIMA** dentro das portas para atravessar. HP, foco, munição, buffs, inimigos e baús abertos são preservados ao voltar. Bandeiras ativam pontos de apoio. Só o chefe de 1D encerra a fase 1.
+
+O menu permite retomar a exploração na sessão atual. Recarregar/fechar a página ainda não salva a campanha; o save persistente continua no plano. O mapa original do distrito está disponível pelo botão de teste, oculto no perfil final.
+
 
 Inimigos comuns podem reaparecer após afastamento prolongado e retorno. O ajuste inicial exige cinco segundos longe da origem e pelo menos quinze segundos desde a morte. A distância mínima de afastamento é adaptada ao tamanho 2D do mapa, até 1.800 unidades. Reaparições aguardam um ponto fora da câmera, afastado do jogador e sem sólidos/entidades sobrepostos.
 
@@ -45,6 +50,7 @@ Options/Start é lido mesmo em pausa. O mapeamento padrão do DualShock 4 está 
 
 ## Documentação
 
+- [Campanha e subfases: contratos e regras atuais](docs/CAMPANHA_E_SUBFASES.md)
 - [Plano de implementação](docs/PLANO_DE_IMPLEMENTACAO.md)
 - [Registro de execução e verificações](docs/EXECUCAO.md)
 - [Diagnóstico técnico original](docs/DOCUMENTO_TECNICO.md)

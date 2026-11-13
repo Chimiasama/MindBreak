@@ -1,0 +1,66 @@
+import { STAGES } from '../stages';
+import { overlaps } from '../collision';
+import { StageDefinition } from '../types';
+import { DISTRICT } from './district';
+import { CampaignStage, SubstageDefinition, SubstageId } from './types';
+export type { CampaignStage, SubstageDefinition, SubstageId, PlayerCarry, CampaignProgress } from './types';
+
+export function adaptLegacy(stage: StageDefinition): SubstageDefinition {
+  return { ...stage, substageId: `${stage.id}A`, exits: [], entryCheckpoint: 'entrada',
+    checkpoints: [{ id: 'entrada', label: 'Entrada do setor', x: stage.spawnX, y: stage.spawnY }] };
+}
+
+export const SUBSTAGES: SubstageDefinition[] = [...DISTRICT, ...STAGES.slice(1).map(adaptLegacy)];
+export const CAMPAIGN: CampaignStage[] = STAGES.map((stage) => ({ id: stage.id, title: stage.title,
+  entry: `${stage.id}A`, substages: SUBSTAGES.filter((area) => area.id === stage.id).map((area) => area.substageId),
+  plannedCount: stage.id === 1 || stage.id === 8 ? 4 : 3 }));
+
+export function getSubstage(id: SubstageId): SubstageDefinition {
+  const result = SUBSTAGES.find((area) => area.substageId === id);
+  if (!result) throw new Error(`Subfase desconhecida: ${id}`);
+  return result;
+}
+
+/** Reject broken authoring data before it can create a dead end in gameplay. */
+export function validateCampaign(areas: SubstageDefinition[] = SUBSTAGES, chapters: CampaignStage[] = CAMPAIGN) {
+  const errors: string[] = [];
+  const byId = new Map(areas.map((area) => [area.substageId, area]));
+  if (byId.size !== areas.length) errors.push('IDs de subfase duplicados');
+  for (const area of areas) {
+    if (!chapters.some((chapter) => chapter.id === area.id && chapter.substages.includes(area.substageId))) errors.push(`${area.substageId}: subfase sem filiação`);
+    const geometry = [...area.platforms, ...area.exits];
+    if (geometry.some((body) => ![body.x, body.y, body.w, body.h].every(Number.isFinite) || body.w <= 0 || body.h <= 0)) errors.push(`${area.substageId}: geometria inválida`);
+    if (new Set(area.props.map((prop) => prop.id)).size !== area.props.length) errors.push(`${area.substageId}: objetos duplicados`);
+    if (!area.checkpoints.some((point) => point.id === area.entryCheckpoint)) errors.push(`${area.substageId}: entrada ausente`);
+    if (new Set(area.checkpoints.map((point) => point.id)).size !== area.checkpoints.length) errors.push(`${area.substageId}: checkpoints duplicados`);
+    if (new Set(area.exits.map((exit) => exit.id)).size !== area.exits.length) errors.push(`${area.substageId}: saídas duplicadas`);
+    for (const point of area.checkpoints) {
+      const body = { x: point.x, y: point.y, w: 32, h: 56 };
+      if (![point.x, point.y].every(Number.isFinite) || point.x < 10 || point.x + 32 > area.boundsWidth - 10 || point.y < area.boundsTop || point.y + 56 > area.boundsBottom ||
+        area.platforms.some((solid) => overlaps(body, solid))) errors.push(`${area.substageId}/${point.id}: checkpoint obstruído ou fora do mapa`);
+    }
+    for (const exit of area.exits) {
+      const target = byId.get(exit.target);
+      if (!target) errors.push(`${area.substageId}/${exit.id}: destino ausente`);
+      else if (!target.checkpoints.some((point) => point.id === exit.targetCheckpoint)) errors.push(`${area.substageId}/${exit.id}: checkpoint de destino ausente`);
+      if (target && target.id !== area.id) errors.push(`${area.substageId}/${exit.id}: saída atravessa fase principal`);
+    }
+  }
+  for (const chapter of chapters) {
+    const visited = new Set<SubstageId>();
+    const queue = [chapter.entry];
+    while (queue.length) {
+      const id = queue.shift()!;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      queue.push(...(byId.get(id)?.exits.map((exit) => exit.target) ?? []));
+    }
+    if (!chapter.substages.every((id) => visited.has(id))) errors.push(`${chapter.id}: subfase inalcançável`);
+    if (chapter.substages.filter((id) => byId.get(id)?.boss).length !== 1) errors.push(`${chapter.id}: deve ter exatamente um encontro final`);
+    if (chapter.substages.some((id) => !byId.has(id) || byId.get(id)!.id !== chapter.id)) errors.push(`${chapter.id}: filiação inválida`);
+  }
+  return errors;
+}
+
+const campaignErrors = validateCampaign();
+if (campaignErrors.length) throw new Error(`Campanha inválida: ${campaignErrors.join('; ')}`);

@@ -104,3 +104,36 @@ A orientação nova do usuário substitui a política anterior de zero pontos em
 ### Pendências preservadas
 
 A regra de pontuação foi corrigida antes de avançar conteúdo. A campanha ainda tem oito mapas; contratos e produção das 26 subfases, salvamento, ajustes de aceleração/balanceamento, música, sprites e pacote Android continuam no plano. A câmera ganhou base lógica, mas DPR, escala inteira e opções de shake ainda exigem acabamento e ensaio em aparelho.
+
+## Incremento 4 — 13/11/2026
+
+### Campanha e conteúdo entregue
+
+- Criados contratos executáveis de fase principal, subfase, porta, checkpoint, recursos carregados e progresso da sessão em `src/game/campaign/`.
+- O distrito passa a ter **quatro mapas novos conectados**: 1A Fuga do Laboratório, 1B Telhados de Neon, 1C Esgotos de Manutenção e 1D Avenida Bloqueada. São 18 inimigos comuns iniciais, 11 pontos de apoio, seis portas e um encontro final com Cipher-01.
+- As fases 2–8 preservam seus sete mapas originais via adaptadores. A campanha tem **11 mapas executáveis**, com meta editorial ainda em 26. O distrito original continua disponível pela API e pelo botão de teste, oculto no perfil final.
+- A ação CIMA para portas usa a fila de simulação em teclado, toque e gamepad. Um toque curto não se perde; manter cima sem novo evento não atravessa automaticamente.
+- Portas preservam herói, HP, foco, vidas, pontuação oculta, próximo limiar de vida, WAV e tempo restante dos buffs. Não curam nem trocam personagem.
+- Estado de objetos/baús, pickups, inimigos vivos e HP, arenas e histórico de recompensas fica separado por subfase e é restaurado ao voltar. Spawns têm namespace de setor, evitando identidades ambíguas.
+- Tempo simulado em outro setor conta para a ausência/cooldown. Retornos elegíveis são repovoados antes do primeiro desenho, sem surgir diante de uma câmera já mostrada; distância de segurança, ocupação e população máxima continuam valendo. Preparação offscreen durante exploração normal se adapta à largura/altura da viewport.
+- Pontos de apoio são ativados por aproximação no chão e indicados no HUD/bandeiras. Morte com vida restante e continue voltam ao ponto ativado no setor corrente, com piso revalidado. O continue ainda pode mudar herói sem apagar exploração.
+- Arenas ativas e chefe em combate bloqueiam portas. Cipher-01 aguarda a arena obrigatória do bloqueio; só o encontro de 1D conclui a fase 1. Avanço para fase 2 continua carregando o mesmo herói, vidas e progresso interno conforme o contrato anterior entre fases principais.
+- O menu pode retomar a exploração da sessão atual. Isso preserva o estado vivo em memória; não há promessa de save após fechar/recarregar a página.
+- Validação de dados na carga rejeita portas inválidas, checkpoints obstruídos, geometria inválida, IDs duplicados, filiação incorreta, áreas inalcançáveis e quantidade incorreta de encontros finais. O total planejado é verificado sem fingir que as subfases futuras já existem.
+
+### Validação e correção de rota
+
+- `npm test`: **87 testes passaram**, nenhum falhou/foi ignorado. Há cobertura de grafo, compatibilidade antiga, preservação de recursos/estado, recompensas no retorno, morte/continue, pontos de apoio, botão curto de interação, gamepad, bloqueios e conclusão única.
+- As rotas principais das quatro subfases foram percorridas em simulação com os três heróis, sem voo, teletransporte durante a travessia, contato com perigos ou dependência de resgate/imunidade. Combate/arenas são isolados nesses testes de geometria e têm verificações próprias; isso não certifica o balanceamento de todos os confrontos/segredos.
+- O teste de geometria foi reforçado para detectar tentativa de dano, mesmo com imunidade do fixture. Encontrou contato com ácido para Maya/Leon no canal inicial dos esgotos. Os dois vãos foram ajustados de 120 para 80 unidades, mantendo as rotas superiores/segredos, e todos os testes rigorosos passaram. A restrição do teste foi mantida.
+- A limpeza dos testes de campanha/jogabilidade passou a parar o sequenciador de música após cada teste, inclusive quando uma asserção falha, evitando que uma execução isolada fique aberta por um intervalo do fixture.
+- `npm run lint`: passou. Builds web padrão e com `VITE_TEST_CHARACTER_SWITCH=false`: passaram; o aviso preexistente de `__dirname` permanece.
+- Chromium: ação real de Cima atravessou portas, retornou com HP/munição e baú aberto preservados e retomou a mesma sessão pelo menu. A sequência completa de setores, protocolo de derrota final e avanço para fase 2 passaram com a interface React.
+- Todos os **11 mapas da campanha × três heróis = 33 combinações** executaram e renderizaram no navegador por 120 updates cada. As 24 combinações de oito mapas originais/três heróis também passaram na regressão de compatibilidade.
+- Toque simultâneo, voo, liberação fora do botão e Options virtual passaram. Toque real no botão CIMA atravessou porta mesmo com gamepad virtual ocioso. Sem transbordamento horizontal a 390 px. Não é certificação de Android/DualShock 4 físico.
+- Perfil final testado sem troca livre nem botão do distrito original. Pontos continuam ausentes do HUD/conclusão.
+- `git diff --check`: passou. Nenhuma Action acionada e nenhum APK gerado; os workflows continuam exclusivamente manuais.
+
+### Documentação e próximos itens
+
+O contrato atual está em `CAMPANHA_E_SUBFASES.md`, e o plano marca 4.1 implementada, 4.2 parcial e 4.3 parcial. O próximo bloco é o save versionado com restauração de estado e validação de dados, seguido dos próximos lotes de subfases. Música/arte/Android permanecem nas etapas posteriores. A retomada em memória não deve ser apresentada como persistência após encerrar o navegador.

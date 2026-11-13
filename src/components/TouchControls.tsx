@@ -7,6 +7,7 @@ interface TouchControlsProps {
   onKey: (key: 'left' | 'right' | 'up' | 'down' | 'jumpHeld', pressed: boolean) => void;
   onJump: () => void;
   onDropDown: () => void;
+  onInteract: () => void;
   onAttack: () => void;
   onDash: () => void;
   onPsy: () => void;
@@ -19,6 +20,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
   onKey,
   onJump,
   onDropDown,
+  onInteract,
   onAttack,
   onDash,
   onPsy,
@@ -77,7 +79,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
         <button
           type="button"
           aria-label="Escalar parede ou voar para cima"
-          {...bindHold('up')}
+          {...bindHold('up', onInteract)}
           className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-cyan-400/80 bg-slate-950/75 font-display text-lg font-bold text-white shadow-lg active:scale-90 active:bg-cyan-500/40"
         >
           ▲

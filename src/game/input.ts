@@ -1,6 +1,6 @@
 export type InputKey = 'left' | 'right' | 'up' | 'down' | 'jumpHeld';
 export type InputSource = 'keyboard' | 'touch' | 'gamepad';
-export type GameAction = 'jump' | 'attack' | 'dash' | 'psy' | 'assist';
+export type GameAction = 'jump' | 'attack' | 'dash' | 'psy' | 'assist' | 'interact';
 type Keys = Record<InputKey, boolean>;
 export const KEY_BINDINGS: Record<string, InputKey> = {
   ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right',

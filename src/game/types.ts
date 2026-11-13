@@ -231,6 +231,9 @@ export interface StageDefinition {
 }
 
 export interface HudSnapshot {
+  substageId: string;
+  checkpoint: string;
+  nearbyExit: string | null;
   stageId: number;
   stageTitle: string;
   characterId: CharacterId;

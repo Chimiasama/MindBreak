@@ -1,5 +1,8 @@
-import test from 'node:test';
+import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { sound } from '../src/game/audio';
+
+afterEach(() => sound.stopMusic());
 import { FixedStepClock } from '../src/game/simulation';
 import { GameInput } from '../src/game/input';
 import { moveAgainstSolids } from '../src/game/collision';

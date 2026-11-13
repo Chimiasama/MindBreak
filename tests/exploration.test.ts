@@ -98,3 +98,10 @@ test('initial penetration resolves while impossible squeeze is reported', () => 
   const ceiling = { x: 0, y: 0, w: 300, h: 60 };
   assert.equal(depenetrate(squeezed, [floor, ceiling]), false);
 });
+
+test('large viewports preload eligible enemies beyond the old fixed activation radius', () => {
+  const { manager } = setup(); arm(manager);
+  // Origin x=430 is still outside this wide viewport plus margin, but 1700 units away.
+  const result = manager.update(player(2130), { x: 800, y: 0, w: 1600, h: 900 }, 1000, [], []);
+  assert.equal(result.length, 1);
+});

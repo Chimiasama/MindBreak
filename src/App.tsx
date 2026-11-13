@@ -18,6 +18,7 @@ import { STAGES } from './game/stages';
 import { ALLOW_TEST_CHARACTER_SWITCH } from './game/rules';
 import { KeyboardState, KEY_BINDINGS } from './game/input';
 import { CharacterId, GameState, HudSnapshot } from './game/types';
+import { CAMPAIGN } from './game/campaign';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -32,8 +33,13 @@ export default function App() {
   const [dialoguePurpose, setDialoguePurpose] = useState<'intro' | 'outro'>('intro');
   const [continueTimer, setContinueTimer] = useState<number>(9);
   const [continueChar, setContinueChar] = useState<CharacterId>('ren');
+  const [resumeAvailable, setResumeAvailable] = useState(false);
+  const [legacyMode, setLegacyMode] = useState(false);
 
   const [hud, setHud] = useState<HudSnapshot>({
+    substageId: '1A',
+    checkpoint: '',
+    nearbyExit: null,
     stageId: 1,
     stageTitle: STAGES[0].title,
     characterId: 'ren',
@@ -156,6 +162,7 @@ export default function App() {
       const binding = keyboard.set(e.code, true);
       if (binding) engine.setKey(binding.key, binding.pressed);
       if (KEY_BINDINGS[e.code]) e.preventDefault();
+      if ((e.code === 'ArrowUp' || e.code === 'KeyW') && !e.repeat) engine.queueAction('interact');
       if (e.code === 'ArrowDown' || e.code === 'KeyS') {
         engine.triggerDropDown();
       }
@@ -206,20 +213,24 @@ export default function App() {
     carryScore = 0,
     showIntro = true,
     carryLives = 3,
-    carryNextOneUp = 15000
+    carryNextOneUp = 15000,
+    legacy = false
   ) => {
     const engine = engineRef.current;
     if (!engine) return;
     sound.init();
     setSelectedStageId(stageId);
     setSelectedChar(charId);
-    engine.loadStage(stageId, charId, carryScore, carryLives, carryNextOneUp);
+    setLegacyMode(legacy);
+    setResumeAvailable(false);
+    if (legacy) engine.loadStage(stageId, charId, carryScore, carryLives, carryNextOneUp);
+    else engine.startCampaign(stageId, charId, carryScore, carryLives, carryNextOneUp);
     engine.start();
 
-    const stageDef = STAGES.find((s) => s.id === stageId);
-    if (showIntro && stageDef && stageDef.introDialogue.length > 0) {
+    const intro = engine.getIntroDialogue();
+    if (showIntro && intro.length > 0) {
       engine.setPaused(true);
-      setDialogueQueue(stageDef.introDialogue);
+      setDialogueQueue(intro);
       setDialogueIndex(0);
       setDialoguePurpose('intro');
       setGameState('DIALOGUE');
@@ -271,6 +282,7 @@ export default function App() {
   };
 
   const returnToMenu = () => {
+    setResumeAvailable(engineRef.current?.canResume() ?? false);
     engineRef.current?.stop();
     setGameState('TITLE_MENU');
   };
@@ -287,6 +299,7 @@ export default function App() {
             : 'B';
 
   const currentStageDef = STAGES.find((s) => s.id === selectedStageId) ?? STAGES[0];
+  const currentChapter = CAMPAIGN.find((stage) => stage.id === selectedStageId)!;
   const psyReady = hud.psyEnergy >= 95;
 
   return (
@@ -427,11 +440,20 @@ export default function App() {
               </div>
               <div className="text-right">
                 <div className="font-display text-xs sm:text-sm font-bold text-slate-200 whitespace-nowrap">
-                  Fase {hud.stageId}/8 · Restam {hud.enemiesRemaining}
+                  Setor {hud.substageId} · Restam {hud.enemiesRemaining}
                 </div>
+                {hud.checkpoint && <div className="max-w-44 truncate text-[10px] text-slate-400">Apoio: {hud.checkpoint}</div>}
               </div>
             </div>
           </header>
+
+          {gameState === 'PLAYING' && hud.nearbyExit && (
+            <div className="pointer-events-none fixed inset-x-0 top-36 z-20 flex justify-center px-4">
+              <div className="rounded-lg border border-cyan-500 bg-slate-950/95 px-4 py-2 text-sm text-cyan-200">
+                ▲ Cima para ir a {hud.nearbyExit}
+              </div>
+            </div>
+          )}
 
           {/* Tactical Alert Banner */}
           {hud.alertBanner && (
@@ -451,6 +473,7 @@ export default function App() {
               onKey={(k, pressed) => engineRef.current?.setKey(k, pressed, 'touch')}
               onJump={() => engineRef.current?.queueAction('jump', 'touch')}
               onDropDown={() => engineRef.current?.triggerDropDown()}
+              onInteract={() => engineRef.current?.queueAction('interact', 'touch')}
               onAttack={() => engineRef.current?.queueAction('attack', 'touch')}
               onDash={() => engineRef.current?.queueAction('dash', 'touch')}
               onPsy={() => engineRef.current?.queueAction('psy', 'touch')}
@@ -475,7 +498,16 @@ export default function App() {
                   Beat &apos;em Up 2D Psíquico · Mobilidade Strider · 8 Fases Urbanas · Pixel Art 16-Bits &amp; Android
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex max-w-full flex-wrap items-center gap-3">
+                {resumeAvailable && <button type="button"
+                  className="min-h-[44px] rounded-lg bg-cyan-500 px-4 py-2 text-sm font-bold text-slate-950"
+                  onClick={() => {
+                    const engine = engineRef.current;
+                    if (!engine?.canResume()) { setResumeAvailable(false); return; }
+                    engine.start();
+                    engine.setPaused(false);
+                    setGameState('PLAYING');
+                  }}>Retomar exploração</button>}
                 <PWAInstallButton />
                 <button
                   type="button"
@@ -557,12 +589,17 @@ export default function App() {
                   <div className="text-xs font-semibold text-cyan-400">
                     Fase {currentStageDef.id} de 8 · {currentStageDef.musicLabel}
                   </div>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {currentChapter.substages.length} {currentChapter.substages.length === 1 ? 'mapa jogável' : 'subfases conectadas'} · expansão prevista: {currentChapter.plannedCount} setores
+                  </p>
                   <h2 className="mt-1 font-display text-3xl font-extrabold text-white">
                     {currentStageDef.title}
                   </h2>
                   <p className="mt-1 text-xs text-slate-400">{currentStageDef.location}</p>
                   <p className="mt-3 text-sm leading-relaxed text-slate-200">
-                    {currentStageDef.description}
+                    {selectedStageId === 1
+                      ? 'Explore laboratório, telhados e esgotos conectados; volte para buscar segredos e enfrente Cipher-01 na avenida. Use CIMA nas portas para mudar de setor.'
+                      : currentStageDef.description}
                   </p>
 
                   <div className="mt-4 rounded-lg bg-slate-950/80 p-3 border border-slate-800">
@@ -582,6 +619,12 @@ export default function App() {
                   <Play className="h-5 w-5 fill-current" />
                   Iniciar Fase {selectedStageId}
                 </button>
+                {ALLOW_TEST_CHARACTER_SWITCH && selectedStageId === 1 && (
+                  <button type="button" onClick={() => startStage(1, selectedChar, 0, true, 3, 15000, true)}
+                    className="mt-2 min-h-[44px] text-xs text-slate-400 underline">
+                    Jogar mapa original do distrito (teste)
+                  </button>
+                )}
               </div>
             </div>
 
@@ -771,7 +814,8 @@ export default function App() {
                       hud.score,
                       true,
                       hud.lives,
-                      hud.nextOneUpScore
+                      hud.nextOneUpScore,
+                      legacyMode
                     )
                   }
                   className="min-h-[48px] w-full rounded-xl bg-pink-600 font-display text-lg font-bold text-white hover:bg-pink-500 transition"
@@ -783,7 +827,7 @@ export default function App() {
               {(gameState === 'GAME_OVER' || gameState === 'PAUSED') && (
                 <button
                   type="button"
-                  onClick={() => startStage(hud.stageId, hud.characterId, 0, false)}
+                  onClick={() => startStage(hud.stageId, hud.characterId, 0, false, 3, 15000, legacyMode)}
                   className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-pink-600 font-display text-lg font-bold text-white hover:bg-pink-500 transition"
                 >
                   <RefreshCw className="h-4 w-4" />

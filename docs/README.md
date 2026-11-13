@@ -1,5 +1,6 @@
 # Documentação do MIND//BREAK
 
+- [Campanha e subfases](CAMPANHA_E_SUBFASES.md): mapas disponíveis, portas, checkpoints e preservação de estado nesta sessão.
 - [Plano técnico de implantação](PLANO_DE_IMPLEMENTACAO.md): requisitos, etapas numeradas, estratégia para 26 subfases, respawn, áudio, arte e Android/GitHub Actions.
 - [Registro de execução](EXECUCAO.md): mudanças implementadas, verificações, limitações e próximo incremento.
 - [Diagnóstico técnico inicial](DOCUMENTO_TECNICO.md): análise da base original, anterior às correções de jogabilidade registradas no plano.

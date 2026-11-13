@@ -9,6 +9,7 @@ import { viewportFor, cameraTarget, followCamera } from './camera';
 import { CHARACTER_ORDER, CHARACTERS } from './characters';
 import { getEnemyPixelSprite, getHeroPixelSprite } from './pixelSprites';
 import { STAGES } from './stages';
+import { CAMPAIGN, adaptLegacy, getSubstage, SubstageDefinition, SubstageId, PlayerCarry, CampaignProgress } from './campaign';
 import {
   AmbushArena,
   BossRuntime,
@@ -19,8 +20,20 @@ import {
   HudSnapshot,
   PickupItem,
   Platform,
-  StageDefinition,
 } from './types';
+
+interface AreaState {
+  platforms: Platform[];
+  props: DestructibleProp[];
+  pickups: PickupItem[];
+  arenas: AmbushArena[];
+  enemies: Enemy[];
+  boss: BossRuntime;
+  spawns: SpawnManager;
+  tick: number;
+  checkpoint: string;
+  leftAt: number;
+}
 
 interface Bullet {
   x: number;
@@ -113,7 +126,11 @@ export class GameEngine {
   private tickCount = 0;
   private hitstop = 0;
 
-  private stage: StageDefinition = STAGES[0];
+  private stage: SubstageDefinition = adaptLegacy(STAGES[0]);
+  private campaignMode = false;
+  private areaCache = new Map<SubstageId, AreaState>();
+  private checkpointId = 'entrada';
+  private worldTick = 0;
   private characterId: CharacterId = 'ren';
 
   private platforms: Platform[] = [];
@@ -199,6 +216,7 @@ export class GameEngine {
     this.lastGamepadDash = false;
     this.lastGamepadPsy = false;
     this.lastGamepadAssist = false;
+    this.lastGamepadUp = false;
   }
 
   private cancelTransitions() {
@@ -244,6 +262,7 @@ export class GameEngine {
   private lastGamepadDash = false;
   private lastGamepadPsy = false;
   private lastGamepadAssist = false;
+  private lastGamepadUp = false;
   private lastGamepadPause = false;
   private gamepadWasConnected = false;
 
@@ -288,12 +307,32 @@ export class GameEngine {
     preserveLives = 3,
     preserveNextOneUp = 15000
   ) {
+    this.campaignMode = false;
+    this.areaCache.clear();
+    this.worldTick = 0;
+    const found = STAGES.find((stage) => stage.id === stageId) ?? STAGES[0];
+    this.initializeArea(adaptLegacy(found), charId, preserveScore, preserveLives, preserveNextOneUp);
+  }
+
+  startCampaign(stageId: number, charId: CharacterId, score = 0, lives = 3, nextOneUp = 15000) {
+    const chapter = CAMPAIGN.find((stage) => stage.id === stageId);
+    if (!chapter) throw new Error(`Fase desconhecida: ${stageId}`);
+    this.campaignMode = true;
+    this.areaCache.clear();
+    this.worldTick = 0;
+    this.initializeArea(getSubstage(chapter.entry), charId, score, lives, nextOneUp);
+  }
+
+  private initializeArea(found: SubstageDefinition, charId: CharacterId, preserveScore = 0,
+    preserveLives = 3, preserveNextOneUp = 15000, emitHud = true) {
     this.cancelTransitions();
     this.clearInput();
     this.clock.reset();
     this.wallKickLock = 0;
     this.standingPlatform = null;
-    const found = STAGES.find((s) => s.id === stageId) ?? STAGES[0];
+    this.hitstop = 0;
+    this.tickCount = 0;
+    this.checkpointId = found.entryCheckpoint;
     this.stage = found;
     this.characterId = charId;
     const char = CHARACTERS[charId];
@@ -313,7 +352,7 @@ export class GameEngine {
       cleared: false,
       active: false,
     }));
-    this.spawns = new SpawnManager(found);
+    this.spawns = new SpawnManager(found, found.substageId);
     this.enemies = this.spawns.initial();
     this.bullets = [];
     this.thrownEnemies = [];
@@ -330,11 +369,12 @@ export class GameEngine {
     this.continueTriggered = false;
     this.gameOverTriggered = false;
 
+    const bossConfig = found.boss ?? STAGES[0].boss;
     this.boss = {
-      ...found.boss,
-      active: true,
+      ...bossConfig,
+      active: !!found.boss,
       triggered: false,
-      hp: found.boss.maxHp,
+      hp: bossConfig.maxHp,
       vx: 0,
       vy: 0,
       facing: -1,
@@ -342,9 +382,9 @@ export class GameEngine {
       attackTimer: 70,
       specialTimer: 160,
       telegraph: 0,
-      twinX: found.boss.x + 120,
-      twinY: found.boss.y,
-      shieldActive: found.boss.behavior === 'cipher',
+      twinX: bossConfig.x + 120,
+      twinY: bossConfig.y,
+      shieldActive: bossConfig.behavior === 'cipher',
       orbitalAngle: 0,
     };
 
@@ -395,9 +435,89 @@ export class GameEngine {
     this.initScarf(found.spawnX, found.spawnY);
     this.camera = cameraTarget(this.player, this.viewport,
       { top: found.boundsTop, bottom: found.boundsBottom, width: found.boundsWidth });
-    this.showAlert(`FASE ${found.id}: ${found.title.toUpperCase()}`, 140);
+    this.showAlert(`SETOR ${found.substageId}: ${found.title.toUpperCase()}`, 140);
     sound.startMusic(found.musicGenre);
+    if (emitHud) this.emitHud();
+  }
+
+  getPlayerCarry(): PlayerCarry {
+    const p = this.player;
+    return { characterId: this.characterId, hp: p.hp, psyEnergy: p.psyEnergy, lives: p.lives,
+      score: p.score, nextOneUpScore: p.nextOneUpScore, wavAmmo: p.wavAmmo,
+      atkTimer: p.atkTimer, jmpTimer: p.jmpTimer, gstTimer: p.gstTimer };
+  }
+
+  canResume() {
+    return this.campaignMode && !this.stageClearTriggered && !this.continueTriggered && !this.gameOverTriggered && this.player.hp > 0;
+  }
+
+  getCampaignProgress(): CampaignProgress | null {
+    if (!this.campaignMode) return null;
+    return { chapterId: this.stage.id, substageId: this.stage.substageId, checkpointId: this.checkpointId,
+      visited: [...new Set([...this.areaCache.keys(), this.stage.substageId])], player: this.getPlayerCarry() };
+  }
+
+  getIntroDialogue() { return this.stage.introDialogue; }
+
+  private cacheArea() {
+    this.spawns.noteMissing(this.enemies, this.tickCount);
+    this.areaCache.set(this.stage.substageId, {
+      platforms: this.platforms, props: this.props, pickups: this.pickups, arenas: this.ambushArenas,
+      enemies: this.enemies, boss: this.boss, spawns: this.spawns, tick: this.tickCount,
+      checkpoint: this.checkpointId, leftAt: this.worldTick,
+    });
+  }
+
+  /** Portal transitions preserve the same hero and resources; only continue may choose a new one. */
+  travel(exitId: string) {
+    if (!this.campaignMode || !this.canAct() || this.ambushArenas.some((arena) => arena.active) ||
+      this.boss.active && this.boss.triggered) return false;
+    const exit = this.stage.exits.find((door) => door.id === exitId);
+    if (!exit || !overlaps(this.player, exit)) return false;
+    const target = getSubstage(exit.target);
+    const point = target.checkpoints.find((checkpoint) => checkpoint.id === exit.targetCheckpoint);
+    if (!point) return false;
+    const carry = this.getPlayerCarry();
+    this.cacheArea();
+    const cached = this.areaCache.get(target.substageId);
+    this.initializeArea(target, carry.characterId, carry.score, carry.lives, carry.nextOneUpScore, false);
+    if (cached) {
+      this.platforms = cached.platforms;
+      this.props = cached.props;
+      this.pickups = cached.pickups;
+      this.ambushArenas = cached.arenas;
+      this.enemies = cached.enemies;
+      this.boss = cached.boss;
+      this.spawns = cached.spawns;
+      this.tickCount = cached.tick;
+      this.spawns.advanceAway(this.worldTick - cached.leftAt);
+    }
+    this.checkpointId = point.id;
+    const { characterId: _, ...resources } = carry;
+    Object.assign(this.player, { ...resources, x: point.x, y: point.y, invulnTimer: 60,
+      lastGroundX: point.x, lastGroundY: point.y + this.player.h });
+    this.initScarf(point.x, point.y);
+    this.camera = cameraTarget(this.player, this.viewport,
+      { top: target.boundsTop, bottom: target.boundsBottom, width: target.boundsWidth });
+    if (cached) {
+      // The destination is not displayed yet: returning actors are present on first reveal,
+      // rather than appearing later inside the camera. All cooldown/safety rules still apply.
+      const solids = this.platforms.filter((platform) => !platform.broken && platform.type !== 'acid' && platform.type !== 'laser_gate');
+      this.enemies.push(...this.spawns.update(this.player, null, this.tickCount, this.enemies, solids, true));
+    }
     this.emitHud();
+    return true;
+  }
+
+  private respawnAtCheckpoint() {
+    if (this.campaignMode) {
+      const point = this.stage.checkpoints.find((checkpoint) => checkpoint.id === this.checkpointId);
+      if (point) {
+        this.player.lastGroundX = point.x;
+        this.player.lastGroundY = point.y + this.player.h;
+      }
+    }
+    this.recoverPlayer();
   }
 
   continueWithCharacter(charId: CharacterId) {
@@ -417,8 +537,7 @@ export class GameEngine {
     p.stunTimer = 0;
     p.vx = 0;
     p.vy = 0;
-    p.x = p.lastGroundX;
-    p.y = p.lastGroundY - p.h - 4;
+    this.respawnAtCheckpoint();
     this.continueTriggered = false;
     this.gameOverTriggered = false;
     this.paused = false;
@@ -532,7 +651,7 @@ export class GameEngine {
     const pad = Array.from(pads ?? []).find((candidate) => candidate?.connected);
     if (!pad) {
       this.input.clear('gamepad');
-      this.lastGamepadJump = this.lastGamepadAttack = this.lastGamepadDash = this.lastGamepadPsy = this.lastGamepadAssist = false;
+      this.lastGamepadJump = this.lastGamepadAttack = this.lastGamepadDash = this.lastGamepadPsy = this.lastGamepadAssist = this.lastGamepadUp = false;
       return;
     }
 
@@ -540,7 +659,10 @@ export class GameEngine {
     const ay = pad.axes[1] ?? 0;
     this.input.set('gamepad', 'left', ax < -0.35 || !!pad.buttons[14]?.pressed);
     this.input.set('gamepad', 'right', ax > 0.35 || !!pad.buttons[15]?.pressed);
-    this.input.set('gamepad', 'up', ay < -0.45 || !!pad.buttons[12]?.pressed);
+    const up = ay < -0.45 || !!pad.buttons[12]?.pressed;
+    this.input.set('gamepad', 'up', up);
+    if (up && !this.lastGamepadUp) this.queueAction('interact', 'gamepad');
+    this.lastGamepadUp = up;
     this.input.set('gamepad', 'down', ay > 0.45 || !!pad.buttons[13]?.pressed);
 
     const jumpBtn = !!pad.buttons[0]?.pressed;
@@ -1143,7 +1265,7 @@ export class GameEngine {
         p.stunTimer = 0;
         p.vx = 0;
         p.vy = 0;
-        this.recoverPlayer();
+        this.respawnAtCheckpoint();
         this.addMangaFx('RESPAWN! 3s I-FRAMES', p.x, p.y - 30, '#00f0ff');
         this.showAlert(`VIDAS RESTANTES: ${p.lives}`, 90);
         this.emitHud();
@@ -1209,6 +1331,7 @@ export class GameEngine {
   // UPDATE LOOP
   // =========================================================================
   private update() {
+    this.worldTick++;
     this.tickCount++;
 
     if (this.superCutinTimer > 0) {
@@ -1223,7 +1346,9 @@ export class GameEngine {
     const p = this.player;
     const char = CHARACTERS[this.characterId];
     this.coyoteTicks = p.grounded ? MOVEMENT.coyoteTicks : Math.max(0, this.coyoteTicks - 1);
+    let interactRequested = false;
     for (const { action } of this.input.drain()) {
+      if (action === 'interact') interactRequested = true;
       if (action === 'jump') this.jumpBuffer = MOVEMENT.jumpBufferTicks;
       if (action === 'attack') this.triggerAttack();
       if (action === 'dash') this.triggerDashOrSlide();
@@ -1591,6 +1716,19 @@ export class GameEngine {
     this.updateEnemies();
     if (!this.canAct()) return;
 
+    if (this.campaignMode) {
+      for (const point of this.stage.checkpoints) {
+        if (point.id !== this.checkpointId && p.grounded && Math.hypot(p.x - point.x, p.y - point.y) < 64) {
+          this.checkpointId = point.id;
+          this.showAlert(`PONTO DE APOIO: ${point.label.toUpperCase()}`, 100);
+        }
+      }
+      if (interactRequested) {
+        const door = this.stage.exits.find((exit) => overlaps(p, exit));
+        if (door && this.travel(door.id)) return;
+      }
+    }
+
     // Update Thrown Enemies
     this.thrownEnemies.forEach((te) => {
       const previous = { ...te };
@@ -1610,7 +1748,7 @@ export class GameEngine {
     this.thrownEnemies = this.thrownEnemies.filter((te) => Math.abs(te.x - p.x) < 1000);
 
     // Boss trigger & update
-    if (this.boss.active && !this.boss.triggered && Math.abs(p.x - this.boss.x) < 540) {
+    if (this.boss.active && !this.boss.triggered && !this.ambushArenas.some((arena) => arena.active && !arena.cleared) && Math.abs(p.x - this.boss.x) < 540) {
       this.boss.triggered = true;
       sound.sfxAlarm();
       this.showAlert(`CHEFE: ${this.boss.name} — ${this.boss.subtitle}`, 130);
@@ -2081,6 +2219,10 @@ export class GameEngine {
     const arenaLocked = this.ambushArenas.some((a) => a.active && !a.cleared);
     this.callbacks.onHudUpdate({
       stageId: this.stage.id,
+      substageId: this.stage.substageId,
+      checkpoint: this.stage.checkpoints.find((point) => point.id === this.checkpointId)?.label ?? '',
+      nearbyExit: this.campaignMode && !arenaLocked && !(this.boss.active && this.boss.triggered)
+        ? this.stage.exits.find((exit) => overlaps(p, exit))?.label ?? null : null,
       stageTitle: this.stage.title,
       characterId: this.characterId,
       characterName: CHARACTERS[this.characterId].name,
@@ -2158,6 +2300,27 @@ export class GameEngine {
     const sx = (Math.random() - 0.5) * this.shakeAmount;
     const sy = (Math.random() - 0.5) * this.shakeAmount;
     ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
+
+    if (this.campaignMode) {
+      for (const point of this.stage.checkpoints) {
+        const active = point.id === this.checkpointId;
+        ctx.strokeStyle = active ? '#facc15' : '#64748b';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(point.x + 8, point.y + 12, 16, 42);
+        ctx.fillStyle = active ? '#facc15' : '#64748b';
+        ctx.fillRect(point.x + 24, point.y + 12, 18, 10);
+      }
+      for (const exit of this.stage.exits) {
+        ctx.fillStyle = '#083344';
+        ctx.fillRect(exit.x, exit.y, exit.w, exit.h);
+        ctx.strokeStyle = '#22d3ee';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(exit.x, exit.y, exit.w, exit.h);
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillStyle = '#a5f3fc';
+        ctx.fillText(`▲ ${exit.label}`, exit.x - 12, exit.y - 12);
+      }
+    }
 
     // 2. Ceiling Pipes
     this.ceilingPipes.forEach((cp) => {

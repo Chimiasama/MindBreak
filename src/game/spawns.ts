@@ -21,11 +21,11 @@ export class SpawnManager {
   private farDistance: number;
   private rewarded = new WeakSet<Enemy>();
 
-  constructor(stage: StageDefinition) {
+  constructor(stage: Pick<StageDefinition, 'id' | 'enemies' | 'boundsWidth' | 'boundsBottom' | 'boundsTop' | 'ambushArenas'>, namespace = String(stage.id)) {
     this.farDistance = Math.min(RESPAWN.farDistance, Math.max(900,
       Math.hypot(stage.boundsWidth, stage.boundsBottom - stage.boundsTop) * 0.5));
     this.records = stage.enemies.map((template, index) => ({
-      id: `${stage.id}:${index + 1}`,
+      id: `${namespace}:${index + 1}`,
       template: { ...template },
       activeId: null,
       generation: -1,
@@ -70,23 +70,44 @@ export class SpawnManager {
     return reward;
   }
 
-  update(player: Body, camera: Body, tick: number, alive: Enemy[], solids: Body[]): Enemy[] {
+  noteMissing(alive: Enemy[], tick: number) {
     const liveIds = new Set(alive.filter((enemy) => enemy.hp > 0).map((enemy) => enemy.id));
-    const spawned: Enemy[] = [];
     for (const record of this.records) {
       if (record.activeId !== null && !liveIds.has(record.activeId)) {
         record.activeId = null;
         record.deadAt = tick;
       }
+    }
+  }
+
+  advanceAway(ticks: number) {
+    const elapsed = Math.max(0, Math.floor(ticks));
+    for (const record of this.records) {
+      if (record.activeId !== null || record.deadAt === null || !record.repeatable) continue;
+      record.deadAt -= elapsed;
+      record.farTicks += elapsed;
+      if (record.farTicks >= RESPAWN.farTicks) record.armed = true;
+    }
+  }
+
+  update(player: Body, camera: Body | null, tick: number, alive: Enemy[], solids: Body[], entering = false): Enemy[] {
+    this.noteMissing(alive, tick);
+    const liveIds = new Set(alive.filter((enemy) => enemy.hp > 0).map((enemy) => enemy.id));
+    const spawned: Enemy[] = [];
+    for (const record of this.records) {
       if (record.activeId !== null || !record.repeatable || record.deadAt === null) continue;
       const origin = record.template;
       const distance = Math.hypot(player.x - origin.x, player.y - origin.y);
       record.farTicks = distance >= this.farDistance ? record.farTicks + 1 : 0;
       if (record.farTicks >= RESPAWN.farTicks) record.armed = true;
+      // Prepare offscreen actors before they enter a large viewport; never pop them in view.
+      const activationRadius = camera ? Math.max(RESPAWN.activationRadius,
+        camera.w + RESPAWN.cameraMargin, camera.h + RESPAWN.cameraMargin) : RESPAWN.activationRadius;
+      const inRange = entering || distance <= activationRadius;
       if (!record.armed || tick - record.deadAt < RESPAWN.minimumDeadTicks ||
-          distance > RESPAWN.activationRadius || distance < RESPAWN.playerSafetyRadius ||
+          !inRange || distance < RESPAWN.playerSafetyRadius ||
           liveIds.size + spawned.length >= RESPAWN.maxActive) continue;
-      const visible = origin.x < camera.x + camera.w + RESPAWN.cameraMargin &&
+      const visible = camera && origin.x < camera.x + camera.w + RESPAWN.cameraMargin &&
         origin.x + origin.w > camera.x - RESPAWN.cameraMargin &&
         origin.y < camera.y + camera.h + RESPAWN.cameraMargin &&
         origin.y + origin.h > camera.y - RESPAWN.cameraMargin;
