@@ -273,7 +273,8 @@ test('snapshots remain valid during real simulation across every chapter, includ
 test('restoring a save cancels delayed completion callbacks from the previous run', (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   let completions = 0;
-  const { engine, state } = fixture(6);
+  const { engine, state } = fixture(1);
+  through(engine, state, 'telhados'); through(engine, state, 'esgotos'); through(engine, state, 'avenida');
   const save = checked(engine.captureCampaignSave()!);
   state.callbacks.onStageClear = () => { completions++; };
   state.damageBoss(10000);
@@ -296,5 +297,24 @@ test('expanding another chapter preserves compatible saves while changed current
   } finally {
     platform.w = width;
     district.engine.stop(); monorail.engine.stop();
+  }
+});
+
+test('every one of the 26 sectors can be restored in a fresh engine with its chapter exploration cache', () => {
+  for (const chapter of CAMPAIGN) {
+    const original = fixture(chapter.id, 'leon');
+    for (const id of chapter.substages) {
+      if (original.state.stage.substageId !== id) {
+        const door = original.state.stage.exits.find((exit: any) => exit.target === id);
+        assert.ok(door, `missing chain to ${id}`); through(original.engine, original.state, door.id);
+      }
+      const save = checked(original.engine.captureCampaignSave()!);
+      const fresh = fixture(); fresh.engine.restoreCampaignSave(save);
+      assert.equal(fresh.state.stage.substageId, id);
+      assert.equal(fresh.state.characterId, 'leon');
+      assert.deepEqual(fresh.engine.getCampaignProgress()!.visited, original.engine.getCampaignProgress()!.visited);
+      assert.equal(fresh.state.paused, true); fresh.engine.stop();
+    }
+    original.engine.stop();
   }
 });

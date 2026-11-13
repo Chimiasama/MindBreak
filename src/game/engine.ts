@@ -678,10 +678,10 @@ export class GameEngine {
   }
 
   setPaused(pause: boolean) {
-    this.paused = pause;
+    this.paused = pause || this.stageClearTriggered || this.continueTriggered || this.gameOverTriggered;
     this.clock.reset();
     this.clearInput();
-    if (pause) {
+    if (this.paused) {
       sound.stopMusic();
     } else {
       sound.startMusic(this.stage.musicGenre);
@@ -2178,6 +2178,7 @@ export class GameEngine {
       bossHp: Math.max(0, Math.ceil(this.boss.hp)),
       bossMaxHp: this.boss.maxHp,
       bossPhase: this.boss.phase,
+      bossSharedLife: this.boss.behavior === 'twins',
       alertBanner: this.alertBanner,
       wavAmmo: p.wavAmmo,
       atkTimer: Math.ceil(p.atkTimer / 60),

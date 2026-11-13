@@ -57,3 +57,5 @@ Os ticks são preservados; o tempo real com o app fechado não conta para respaw
 Ainda pendentes: comportamento após encerramento forçado do processo Android, atualização de APK com a mesma assinatura e testes físicos de armazenamento/lifecycle. Um encerramento abrupto antes do próximo evento/intervalo pode perder os últimos segundos. Não foi gerado APK nem acionada Action neste incremento.
 
 No incremento 11, o formato versão 1 passou a aceitar também `Enemy.ai`, mantendo leitura dos saves sem esse campo. Mira e temporizadores são validados; um ataque/preparação salvo retorna em recuperação ao carregar no checkpoint. Ver [IA_E_COMBATE.md](IA_E_COMBATE.md).
+
+No incremento 14, a restauração foi verificada nos 26 setores. A vitória do capítulo 8 restaura diretamente a tela final, sem novo bônus. Os mapas originais das fases 6–8 ficaram incompatíveis com as novas geometrias; dados são retidos, enquanto as fases 1–5 mantêm a identificação anterior.

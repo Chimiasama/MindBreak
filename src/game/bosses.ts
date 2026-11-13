@@ -114,7 +114,7 @@ export function moveBoss(boss: BossRuntime, solids: Platform[], minX: number, ma
     const supported = solids.some((solid) => Math.abs(boss.y + boss.h - solid.y) < 1 && boss.x < solid.x + solid.w && boss.x + boss.w > solid.x);
     if (supported && boss.vx && !hasSafeFooting(boss, boss.vx, solids)) {
       boss.vx = 0;
-      if (mind.state === 'active') { mind.state = 'recover'; mind.timer = BOSS_MOVES[mind.attack].recovery; }
+      if (mind.state === 'active') { mind.state = 'recover'; mind.timer = BOSS_MOVES[mind.attack].recovery; boss.shieldActive = false; }
     }
     boss.vy = Math.min(22, boss.vy + 0.6 * gravity);
   } else if (mind.state !== 'active' || !isBossCharge(mind.attack)) {

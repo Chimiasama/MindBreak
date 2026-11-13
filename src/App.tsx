@@ -80,6 +80,7 @@ export default function App() {
     bossHp: 0,
     bossMaxHp: 100,
     bossPhase: 1,
+    bossSharedLife: false,
     alertBanner: null,
     wavAmmo: 0,
     atkTimer: 0,
@@ -549,6 +550,7 @@ export default function App() {
                       <span className="font-mono text-[10px] text-amber-300">OVERLOAD</span>
                     )}
                   </div>
+                  {hud.bossSharedLife && <span className="text-[10px] font-bold text-cyan-300">VIDA COMPARTILHADA</span>}
                   <div className="h-2 w-40 sm:w-56 overflow-hidden rounded-sm bg-slate-950/90 ring-1 ring-pink-500/60">
                     <div
                       className="h-full bg-pink-500 transition-all duration-100"
@@ -763,7 +765,7 @@ export default function App() {
                     Fase {currentStageDef.id} de 8 · {currentStageDef.musicLabel}
                   </div>
                   <p className="mt-1 text-xs text-slate-400">
-                    {currentChapter.substages.length} {currentChapter.substages.length === 1 ? 'mapa jogável' : 'subfases conectadas'} · expansão prevista: {currentChapter.plannedCount} setores
+                    {currentChapter.substages.length} setores conectados
                   </p>
                   <h2 className="mt-1 font-display text-3xl font-extrabold text-white">
                     {currentStageDef.title}
@@ -780,7 +782,11 @@ export default function App() {
                             ? 'Explore tanques e linhas de esteiras em sentidos opostos. Volte aos terminais superiores e alcance Arisawa no núcleo de descarte.'
                             : selectedStageId === 5
                               ? 'Percorra o boulevard, as garagens de serviço e a suíte executiva. Use CIMA nos acessos e enfrente a escolta dos Gêmeos na ala panorâmica.'
-                              : currentStageDef.description}
+                              : selectedStageId === 6
+                                ? 'Explore galerias e jardins digitais antes do acervo restrito. Kusanagi aguarda no último setor.'
+                                : selectedStageId === 7
+                                  ? 'Cruze docas, blocos de contenção e o centro de comando. Procure os acessos e os pontos de apoio antes de enfrentar Vane.'
+                                  : 'Atravesse a base, o Núcleo Zero e o elevador orbital até a estratosfera. A gravidade diminui durante a subida; Oswald está no último setor.'}
                   </p>
 
                   <div className="mt-4 rounded-lg bg-slate-950/80 p-3 border border-slate-800">
@@ -800,7 +806,7 @@ export default function App() {
                   <Play className="h-5 w-5 fill-current" />
                   Iniciar Fase {selectedStageId}
                 </button>
-                {ALLOW_TEST_CHARACTER_SWITCH && selectedStageId <= 5 && (
+                {ALLOW_TEST_CHARACTER_SWITCH && (
                   <button type="button" onClick={() => startStage(selectedStageId, selectedChar, 0, true, 3, 15000, true)}
                     className="mt-2 min-h-[44px] text-xs text-slate-400 underline">
                     Jogar mapa original da fase {selectedStageId} (teste)

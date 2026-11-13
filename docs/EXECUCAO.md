@@ -231,3 +231,19 @@ Chefes passam a usar preparação com alvo travado, ataque com duração finita 
 Castor/Pólux agora recebem dano nos dois corpos com uma vida/identidade de dano compartilhada. Golpe, especiais, reflexão, WAV e corpo lançado consultam ambos; sobreposição ou travessia dos dois não duplica dano por ataque nem conclusão/recompensa. Portal respeita sólidos/limites e distância do jogador. Arenas acompanham a identidade da escolta para que sair dos limites por impulso não libere uma arena com sobrevivente.
 
 239 testes passaram; TypeScript e build passaram. Chromium confirmou golpe real no corpo secundário e preparação/marcador sem erro. Há simulação longa dos oito padrões, mas não certificação de vitória/dificuldade completa ou controle físico. O save mantém a regra de reiniciar chefe incompleto no checkpoint. Nenhuma Action/APK. Contrato em [CHEFES.md](CHEFES.md). Próximo bloco: setores das fases 6–8 para atingir 26 mapas próprios.
+
+## Incremento 14 — 26 setores próprios, torre completa e fluxo final
+
+Implementados **6A Galerias Holográficas**, **6B Jardins Digitais**, **6C Acervo Restrito**, **7A Docas de Blacksite**, **7B Blocos de Contenção**, **7C Centro de Comando**, **8A Base da Torre**, **8B Núcleo Zero**, **8C Elevador Orbital** e **8D Estratosfera**. São dez novos mapas, com 51 inimigos iniciais, 30 checkpoints e 30 objetos. A torre diminui a gravidade por setor e sobe 900 unidades no eixo orbital; plataformas móveis são opcionais, sem exigir voo para concluir.
+
+A campanha atinge **26 mapas próprios**, sem adaptadores no catálogo: 4+3+3+3+3+3+3+4. Total atual: 130 inimigos iniciais, 77 checkpoints e 78 objetos. Os oito originais continuam como ferramentas de teste. Seleção atualizada para mostrar setores conectados, sem anunciar expansão já concluída. Os chefes estão apenas nos últimos setores; o HUD dos gêmeos informa vida compartilhada.
+
+**307 testes passaram**. As rotas de ida dos 26 setores e retorno dos capítulos 2–8 foram verificadas com Ren/Maya/Leon sem voo, dano ou resgate; combate é isolado nesses ensaios. Cada setor também foi carregado em uma instância nova do motor, preservando recursos/cache de exploração. Há verificação de distribuição, geometria distinta, spawns/chefes fora do terreno, encontros únicos, checkpoint/câmera orbital e fim dos capítulos 6–8. Ajustada a aterrissagem antes do primeiro vão de 7A após o ensaio com Leon; os números de salto dos heróis não foram alterados.
+
+TypeScript, builds web/assets Android e sync passaram. Chromium horizontal atravessou as portas dos capítulos 6–8 por toque, carregou os saves no build de produção, mostrou a fase 2 de Oswald, concluiu os diálogos e restaurou a vitória sem repetir a recompensa. A derrota foi disparada no ensaio para verificar o fluxo final, não houve certificação de uma campanha inteira vencida em tempo real. Regressões de save, Voltar e os dois corpos dos gêmeos passaram novamente. Nenhuma Action acionada e nenhum APK gerado; físico Android/DualShock 4 permanece pendente.
+
+Os saves das fases 1–5 conservam a identificação de conteúdo. Os das geometrias originais 6–8 são retidos como incompatíveis, sem migração silenciosa. BossMind/projéteis continuam transientes, reiniciando chefe incompleto no checkpoint; formato do save continua versão 1.
+
+A meta de contagem/grafo foi atingida. Próximos passos: aceites de combate/balanceamento, rotas de segredos e ensaio em aparelho, depois infraestrutura de áudio (buses, sliders/preferências, scheduler) e primeiro tema do distrito/chefe; arte e interface seguem após isso. Multiplayer/migração de engine continuam futuros. Nenhum gatilho automático foi acrescentado.
+
+Na revisão do incremento 14, `setPaused(false)` passou a respeitar conclusão/continue/game over pendentes. Fechar um overlay não pode reativar a simulação nesse intervalo; carregar/reiniciar/confirmar continue faz a transição pelas regras próprias. Há teste de regressão para os três estados.

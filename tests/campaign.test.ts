@@ -27,7 +27,7 @@ test('campaign graph, checkpoint placement, exits and unique final encounters va
   assert.deepEqual(validateCampaign(), []);
   assert.equal(CAMPAIGN.length, 8);
   assert.equal(CAMPAIGN.reduce((total, chapter) => total + chapter.plannedCount, 0), 26);
-  assert.equal(SUBSTAGES.length, 19, 'sixteen authored maps plus three legacy adapters');
+  assert.equal(SUBSTAGES.length, 26, 'all campaign sectors are authored maps');
   assert.deepEqual(CAMPAIGN[0].substages, ['1A', '1B', '1C', '1D']);
   assert.equal(SUBSTAGES.filter((area) => area.id === 1 && area.boss).length, 1);
 });
@@ -114,13 +114,13 @@ test('extra-life death returns to the activated checkpoint rather than the lates
   engine.stop();
 });
 
-test('legacy loadStage remains available while chapters 6–8 retain their original adapters', () => {
+test('legacy loadStage remains available outside the expanded campaign', () => {
   const { engine, state } = fixture();
   engine.loadStage(1, 'ren'); assert.equal(state.stage.title, STAGES[0].title);
   assert.equal(state.campaignMode, false);
   for (let main = 6; main <= 8; main++) {
-    engine.startCampaign(main, 'ren');
-    assert.equal(state.stage.substageId, `${main}A`);
+    engine.loadStage(main, 'ren');
+    assert.equal(state.campaignMode, false);
     assert.equal(state.boss.active, true);
   }
   engine.stop();
@@ -138,7 +138,7 @@ test('absence in another area counts toward respawn only after sufficient simula
 });
 
 for (const hero of ['ren', 'maya', 'leon'] as const) {
-  for (const id of ['1A', '1B', '1C', '1D', '2A', '2B', '2C', '3A', '3B', '3C', '4A', '4B', '4C', '5A', '5B', '5C'] as const) {
+  for (const id of ['1A', '1B', '1C', '1D', '2A', '2B', '2C', '3A', '3B', '3C', '4A', '4B', '4C', '5A', '5B', '5C', '6A', '6B', '6C', '7A', '7B', '7C', '8A', '8B', '8C', '8D'] as const) {
     test(`${hero} can traverse the primary geometry of ${id} without flight or teleport`, (t) => {
       const chapter = Number(id[0]);
       const { engine, state } = fixture(hero, () => {}, chapter);
@@ -159,6 +159,13 @@ for (const hero of ['ren', 'maya', 'leon'] as const) {
       if (id === '4C') through(engine, state, 'nucleo');
       if (chapter === 5 && id !== '5A') through(engine, state, 'garagens');
       if (id === '5C') through(engine, state, 'suite');
+      if (chapter === 6 && id !== '6A') through(engine, state, 'jardins');
+      if (id === '6C') through(engine, state, 'acervo');
+      if (chapter === 7 && id !== '7A') through(engine, state, 'blocos');
+      if (id === '7C') through(engine, state, 'comando');
+      if (chapter === 8 && id !== '8A') through(engine, state, 'nucleo');
+      if (id === '8C' || id === '8D') through(engine, state, 'elevador');
+      if (id === '8D') through(engine, state, 'estratosfera');
       t.after(() => engine.stop());
       // Geometry-only acceptance: combat/arena outcomes are tested separately.
       state.stage = { ...state.stage, hasLowCeilingHazard: false };
@@ -336,7 +343,7 @@ test('a rooftop low gantry damages a standing hero while a timed slide avoids it
 });
 
 for (const hero of ['ren', 'maya', 'leon'] as const) {
-  for (const id of ['2A', '2B', '2C', '3A', '3B', '3C', '4A', '4B', '4C', '5A', '5B', '5C'] as const) {
+  for (const id of ['2A', '2B', '2C', '3A', '3B', '3C', '4A', '4B', '4C', '5A', '5B', '5C', '6A', '6B', '6C', '7A', '7B', '7C', '8A', '8B', '8C', '8D'] as const) {
     test(`${hero} can backtrack through ${id} without flight, hazards or rescue`, () => {
       const chapter = Number(id[0]);
       const { engine, state } = fixture(hero, () => {}, chapter);
@@ -348,6 +355,13 @@ for (const hero of ['ren', 'maya', 'leon'] as const) {
       if (id === '4C') through(engine, state, 'nucleo');
       if (chapter === 5 && id !== '5A') through(engine, state, 'garagens');
       if (id === '5C') through(engine, state, 'suite');
+      if (chapter === 6 && id !== '6A') through(engine, state, 'jardins');
+      if (id === '6C') through(engine, state, 'acervo');
+      if (chapter === 7 && id !== '7A') through(engine, state, 'blocos');
+      if (id === '7C') through(engine, state, 'comando');
+      if (chapter === 8 && id !== '8A') through(engine, state, 'nucleo');
+      if (id === '8C' || id === '8D') through(engine, state, 'elevador');
+      if (id === '8D') through(engine, state, 'estratosfera');
       state.checkpointId = state.stage.checkpoints.at(-1).id;
       engine.restoreCampaignSave(engine.captureCampaignSave()!);
       engine.setPaused(false);
@@ -478,4 +492,55 @@ test('an arena follows its authored squad identities even if a surviving actor l
   assert.equal(state.checkAmbushArenas(), arena); assert.equal(arena.cleared, false);
   members[0].hp = 0;
   assert.equal(state.checkAmbushArenas(), null); assert.equal(arena.cleared, true); engine.stop();
+});
+
+for (const chapter of [6, 7, 8]) {
+  test(`chapter ${chapter} traverses its complete sector chain before a single final completion`, (t) => {
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    let completions = 0; const { engine, state } = fixture('maya', () => { completions++; }, chapter);
+    const paths = chapter === 6 ? ['jardins', 'acervo'] : chapter === 7 ? ['blocos', 'comando'] : ['nucleo', 'elevador', 'estratosfera'];
+    for (const id of paths) { assert.equal(state.boss.active, false); through(engine, state, id); }
+    assert.equal(state.boss.active, true); assert.equal(completions, 0);
+    state.ambushArenas[0].active = true;
+    Object.assign(state.player, { x: state.stage.boss.x - 450, y: state.stage.spawnY, invulnTimer: 100000 });
+    state.update(); assert.equal(state.boss.triggered, false);
+    state.ambushArenas[0].active = false; state.ambushArenas[0].cleared = true;
+    state.update(); assert.equal(state.boss.triggered, true);
+    state.damageBoss(10000); t.mock.timers.tick(1200);
+    assert.equal(completions, 1);
+    const save = engine.captureCampaignSave()!;
+    assert.equal(engine.restoreCampaignSave(save), 'chapter-clear');
+    assert.equal(state.boss.active, false); assert.equal(state.boss.hp, 0);
+    if (chapter === 8) assert.equal(save.current, '8D');
+    engine.stop();
+  });
+}
+
+test('all 26 maps have distinct geometry, valid authored spawns and exactly one final encounter per chapter', () => {
+  assert.deepEqual(CAMPAIGN.map((chapter) => chapter.substages.length), [4, 3, 3, 3, 3, 3, 3, 4]);
+  assert.equal(new Set(SUBSTAGES.map((area) => JSON.stringify(area.platforms))).size, 26);
+  for (const area of SUBSTAGES) {
+    for (const actor of [...area.enemies, ...(area.boss ? [area.boss] : [])]) {
+      assert.equal(area.platforms.some((platform) => actor.x < platform.x + platform.w && actor.x + actor.w > platform.x &&
+        actor.y < platform.y + platform.h && actor.y + actor.h > platform.y), false, `${area.substageId}: actor starts in terrain`);
+    }
+  }
+  for (const chapter of CAMPAIGN) {
+    assert.equal(chapter.substages.filter((id) => getSubstage(id).boss).length, 1);
+    assert.ok(getSubstage(chapter.substages.at(-1)!).boss);
+  }
+});
+
+test('the orbital elevator scrolls through its ascent and retains checkpoint/gravity after reload', () => {
+  const { engine, state } = fixture('leon', () => {}, 8);
+  through(engine, state, 'nucleo'); through(engine, state, 'elevador');
+  engine.resize(1280, 720); const bottom = state.camera.y;
+  Object.assign(state.player, { x: 1080, y: 584, grounded: true, vx: 0, vy: 0 });
+  state.update(); assert.equal(state.checkpointId, 'eixo');
+  engine.restoreCampaignSave(engine.captureCampaignSave()!);
+  assert.equal(state.stage.gravityScale, 0.72); assert.equal(state.checkpointId, 'eixo');
+  assert.ok(Math.abs(state.player.x - 1080) < 1);
+  engine.setPaused(false); through(engine, state, 'estratosfera'); through(engine, state, 'elevador');
+  engine.resize(1280, 720); assert.ok(state.camera.y < bottom - 800);
+  engine.stop();
 });

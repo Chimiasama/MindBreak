@@ -139,3 +139,21 @@ test('all boss patterns remain finite in full simulation without unbounded proje
     engine.stop();
   }
 });
+
+test('the twin encounter exposes its shared life rule to the HUD', () => {
+  const { engine, state } = fixture(5); let snapshot: any;
+  state.callbacks.onHudUpdate = (hud: any) => { snapshot = hud; };
+  state.emitHud(); assert.equal(snapshot.bossSharedLife, true);
+  engine.loadStage(1, 'ren'); assert.equal(snapshot.bossSharedLife, false); engine.stop();
+});
+
+test('closing an overlay cannot unpause a terminal transition before its explicit resolution', () => {
+  const { engine, state } = fixture();
+  for (const flag of ['stageClearTriggered', 'continueTriggered', 'gameOverTriggered']) {
+    state[flag] = true; engine.setPaused(false);
+    assert.equal(state.paused, true);
+    state[flag] = false;
+  }
+  engine.loadStage(1, 'ren'); engine.setPaused(false); assert.equal(state.paused, false);
+  engine.stop();
+});

@@ -39,3 +39,5 @@ A campanha continua salvando a exploração e reiniciando um chefe incompleto ao
 239 testes passaram no fechamento deste bloco. Cobertura nova: sequências/fases dos oito chefes, alvo travado, recuperação, pulsos limitados, gravidade, escudo, parede fina, os dois corpos dos gêmeos, deduplicação de dano/conclusão, golpe comum dos três heróis em todos os chefes e simulação completa com projéteis limitados. Chromium confirmou dano real ao segundo corpo e o desenho da preparação.
 
 Esses ensaios não são uma certificação de derrota de cada chefe em uma partida completa, nem de dificuldade/controle físico. Arte, áudio, ajuste de arenas, câmera e legibilidade em aparelho ainda precisam de playtest. A implementação é uma base jogável com números documentados; não é release final.
+
+No incremento 14, o HUD dos gêmeos passou a indicar **VIDA COMPARTILHADA**. Os setores finais 6C/7C/8D integram os padrões de Kusanagi/Vane/Oswald; a prova de vitória/carregamento testa interface e integridade do save, não certifica balanceamento completo.

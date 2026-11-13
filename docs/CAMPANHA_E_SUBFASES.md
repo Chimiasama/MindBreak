@@ -4,7 +4,9 @@ Implementação inicial: incremento 4, 13/11/2026. Este documento descreve códi
 
 ## Conteúdo disponível
 
-A campanha mantém oito fases principais. Distrito: quatro mapas próprios; monotrilho, canteiro, fábrica e financeiro: três mapas próprios cada. As fases 6–8 usam seus três mapas originais por adaptadores. Existem **19 mapas na campanha atual**, rumo a 26. Os originais das fases 1–5 permanecem acessíveis pelos botões de teste e pela API `loadStage()`, fora dessa contagem.
+A campanha mantém oito fases principais com **26 mapas próprios**, distribuídos em **4+3+3+3+3+3+3+4**. Não há adaptadores dos mapas originais no catálogo de campanha. Os oito originais continuam acessíveis por botões de teste/API `loadStage()`, fora dessa contagem.
+
+O lote contém 130 inimigos iniciais, 77 checkpoints e 78 objetos de recurso/segredo. Essas quantidades descrevem os dados atuais, não um limite de respawn ou de vidas. A meta de conteúdo foi atingida; balanceamento integral, segredos, música/arte e ensaios físicos continuam em andamento.
 
 | Setor | Identidade | Inimigos iniciais | Pontos de apoio | Papel |
 | --- | --- | ---: | ---: | --- |
@@ -24,25 +26,26 @@ A campanha mantém oito fases principais. Distrito: quatro mapas próprios; mono
 | 5A | Boulevard de Mármore | 5 | 3 | Barricadas, terraços, carros e agentes executivos |
 | 5B | Garagens e Serviços | 5 | 3 | Barreiras laser, elevadores e acesso restrito |
 | 5C | Suíte Executiva | 5 | 3 | Escolta do cofre e Castor/Pólux |
+| 6A | Galerias Holográficas | 5 | 3 | Sensores, galerias e marquises |
+| 6B | Jardins Digitais | 5 | 3 | Canais e passarelas sob cerejeiras holográficas |
+| 6C | Acervo Restrito | 5 | 3 | Escolta dos arquivos e Kusanagi |
+| 7A | Docas de Blacksite | 5 | 3 | Vãos, vento e postos de vigilância |
+| 7B | Blocos de Contenção | 5 | 3 | Sensores, elevadores e passagem para o comando |
+| 7C | Centro de Comando | 5 | 3 | Guarda de comando e Vane |
+| 8A | Base da Torre | 5 | 3 | Segurança da torre em gravidade normal |
+| 8B | Núcleo Zero | 5 | 3 | Transportadores e gravidade 0,85 |
+| 8C | Elevador Orbital | 6 | 3 | Subida de 900 unidades em gravidade 0,72 |
+| 8D | Estratosfera | 5 | 3 | Última escolta, gravidade 0,65 e Oswald/Entidade Zero |
 
 ```mermaid
-flowchart LR
-  A[1A · Laboratório] <--> B[1B · Telhados]
-  B <--> C[1C · Esgotos]
-  C <--> D[1D · Avenida / Cipher-01]
-  D -. "vencer chefe e avançar" .-> E[2A · Vagões]
-  E <--> F[2B · Manutenção]
-  F <--> G[2C · Teto / Valkyrie-7]
-  G -. "vencer chefe e avançar" .-> H[3A · Fundação]
-  H <--> I[3B · Guindastes e vigas]
-  I <--> J[3C · Heliponto / Goliath-IV]
-  J -. "vencer chefe e avançar" .-> K[4A · Tanques]
-  K <--> L[4B · Esteiras]
-  L <--> M[4C · Núcleo / Arisawa]
-  M -. "vencer chefe e avançar" .-> N[5A · Boulevard]
-  N <--> O[5B · Garagens]
-  O <--> P[5C · Suíte / Gêmeos]
-  P -. "vencer chefe e avançar" .-> Q[6A · Museu original]
+flowchart TD
+  A["1 · Distrito: 1A ↔ 1B ↔ 1C ↔ 1D"] --> B["2 · Monotrilho: 2A ↔ 2B ↔ 2C"]
+  B --> C["3 · Canteiro: 3A ↔ 3B ↔ 3C"]
+  C --> D["4 · Fábrica: 4A ↔ 4B ↔ 4C"]
+  D --> E["5 · Financeiro: 5A ↔ 5B ↔ 5C"]
+  E --> F["6 · Museu: 6A ↔ 6B ↔ 6C"]
+  F --> G["7 · Blacksite: 7A ↔ 7B ↔ 7C"]
+  G --> H["8 · Torre: 8A ↔ 8B ↔ 8C ↔ 8D"]
 ```
 
 O grafo de portas só liga áreas da mesma fase principal. Avançar para a fase principal seguinte é uma transição de campanha após conclusão, não uma porta livre.
@@ -50,6 +53,7 @@ O grafo de portas só liga áreas da mesma fase principal. Avançar para a fase 
 ## Arquivos e contratos
 
 - `src/game/campaign/types.ts`: `CampaignStage`, `SubstageDefinition`, `CheckpointDefinition`, `ExitDefinition`, `PlayerCarry` e `CampaignProgress`.
+- `src/game/campaign/museum.ts`, `blacksite.ts` e `tower.ts`: dez mapas finais; a torre tem gravidade progressiva e uma subida de 900 unidades no eixo orbital.
 - `src/game/campaign/factory.ts` e `financial.ts`: seis mapas das fases 4/5, com portas de retorno e arenas/chefes somente no último setor. `authoring.ts` compartilha valores de autoria dos novos mapas, sem alterar os capítulos já existentes.
 - `src/game/campaign/construction.ts`: três mapas do canteiro; o núcleo em degraus sobe de Y=1040 para Y=40, com câmera limitada ao setor e checkpoints no meio/topo.
 - `src/game/campaign/monorail.ts`: três mapas do monotrilho, com arena e chefe apenas no setor final.
@@ -68,7 +72,7 @@ A interação é **CIMA**: seta/W no teclado, botão superior do direcional de t
 
 É necessário estar dentro da região da porta. Segurar cima sem uma nova interação não atravessa automaticamente. As posições de chegada ficam afastadas da porta de retorno, evitando ida e volta involuntária. Estado de entrada é limpo na transição.
 
-Uma arena obrigatória ativa ou um chefe em combate bloqueia a saída. O chefe da avenida espera a arena obrigatória ser concluída antes de ativar seu encontro. Cipher-01 em 1D conclui a fase 1; Valkyrie-7 em 2C conclui a fase 2. Goliath-IV em 3C conclui a fase 3. Arisawa em 4C conclui a fase 4; os Gêmeos em 5C concluem a fase 5. Os cinco encontros finais aguardam suas escoltas obrigatórias. As configurações/padrões existentes dos chefes foram reaproveitados; isso não conclui o item de individualização dos oito chefes. Pórticos móveis estão habilitados em 2C, com aviso e desvio por rasteira; 2A/2B não usam esse perigo. Sair de um setor intermediário não concede bônus de conclusão nem dispara vitória.
+Uma arena obrigatória ativa ou um chefe em combate bloqueia a saída. O chefe da avenida espera a arena obrigatória ser concluída antes de ativar seu encontro. Cipher-01 em 1D conclui a fase 1; Valkyrie-7 em 2C conclui a fase 2. Goliath-IV em 3C conclui a fase 3. Arisawa em 4C conclui a fase 4; os Gêmeos em 5C concluem a fase 5. Kusanagi em 6C, Vane em 7C e Oswald em 8D fecham os últimos capítulos. Os oito encontros finais aguardam suas escoltas obrigatórias e usam as sequências de [CHEFES.md](CHEFES.md). Pórticos móveis estão habilitados em 2C, com aviso e desvio por rasteira; 2A/2B não usam esse perigo. Sair de um setor intermediário não concede bônus de conclusão nem dispara vitória.
 
 ## Estado preservado nas transições
 
@@ -102,9 +106,9 @@ A retomada exata funciona enquanto a sessão está aberta. O incremento 7 acresc
 
 `validateCampaign()` roda na carga dos dados e nos testes. Rejeita IDs duplicados, filiação incorreta, geometrias inválidas, checkpoints obstruídos/fora do mapa, portas sem destino/checkpoint, setores inalcançáveis e fases sem exatamente um encontro final. A soma editorial de 26 setores é verificada separadamente da quantidade já construída.
 
-A geometria principal de 1A–1D e 2A–2C/3A–3C/4A–4C/5A–5C foi atravessada por simulação para os três heróis, sem voo/teletransporte, sem resgate de abismo e sem contato com ácido ou dependência de imunidade. Nos capítulos 2–5, a volta também foi verificada em cada setor com os três heróis. Os lasers de 5B fazem parte das rotas testadas, sem depender de invulnerabilidade. Os testes de rota isolam combate/arena/pórticos (esses possuem teste próprio) para avaliar deslocamento; não representam uma certificação de dificuldade de todos os confrontos ou segredos. Há testes separados para bloqueios, derrota final, morte/continue e preservação de estado.
+A geometria principal dos 26 setores foi atravessada por simulação para os três heróis, sem voo/teletransporte, sem resgate de abismo e sem contato com ácido ou dependência de imunidade. Nos capítulos 2–8, a volta também foi verificada em cada setor com os três heróis. Os lasers de 5B fazem parte das rotas testadas, sem depender de invulnerabilidade. Os testes de rota isolam combate/arena/pórticos (esses possuem teste próprio) para avaliar deslocamento; não representam uma certificação de dificuldade de todos os confrontos ou segredos. Há testes separados para bloqueios, derrota final, morte/continue e preservação de estado.
 
-Os cenários continuam usando a arte provisória e o sistema sonoro existente. Produção das demais subfases, polimento de encontros e validação Android/DualShock 4 físico continuam pendentes. Nenhuma Action automática ou geração de APK faz parte desta etapa.
+Os cenários continuam usando a arte provisória e o sistema sonoro existente. Polimento de encontros e segredos e validação Android/DualShock 4 físico continuam pendentes. Nenhuma Action automática ou geração de APK faz parte desta etapa.
 
 ## Compatibilidade do incremento 10
 
@@ -113,3 +117,13 @@ A expansão substitui o antigo adaptador de 3A pelos novos mapas 3A/3B/3C. Saves
 ## Compatibilidade do incremento 12
 
 A expansão das fases 4/5 mantém a identificação de conteúdo dos capítulos 1–3. Saves das versões originais de 4A/5A ficam incompatíveis com as novas geometrias e são retidos para descarte/substituição explícita, sem migração silenciosa. A IA tem leitura compatível do campo opcional `Enemy.ai`, conforme [IA_E_COMBATE.md](IA_E_COMBATE.md). Os perfis de chefes ainda são os existentes; o trabalho nos mapas não equivale a concluir suas mecânicas futuras.
+
+## Incremento 14 — catálogo completo
+
+Museu e Blacksite têm três setores cada; a torre tem quatro. Só o último setor de cada capítulo possui chefe. A cadeia inteira é alcançável por portas de ida/volta, e os oito capítulos têm exatamente um encontro final. Os testes de geometria incluem lasers, vento e gravidade por setor, sem voo, dano ou resgate como atalho. A restauração foi exercitada em uma instância nova do motor para cada um dos 26 setores.
+
+Na torre, a gravidade passa de 1 em 8A para 0,85/0,72/0,65. O nome Elevador Orbital descreve o eixo da subida: o percurso principal é escalável por degraus e há plataformas móveis opcionais, não um elevador automático que carregue o jogador sem comandos. O checkpoint intermediário e a câmera vertical foram verificados.
+
+Saves dos capítulos 1–5 mantêm sua identificação de conteúdo. Os saves das versões originais de 6–8 são retidos como incompatíveis com as novas geometrias, sem migração silenciosa. Formato continua versão 1. Vitória final/carregamento persistente não repete a recompensa nem ressuscita o chefe.
+
+Chegar a 26 mapas não encerra a produção: dificuldade, rotas de segredo, acessibilidade, arte, áudio e teste físico seguem os aceites do plano. Os ensaios de fluxo final usam derrota disparada em teste para validar diálogos/interface/save; não representam uma campanha inteira vencida em tempo real.

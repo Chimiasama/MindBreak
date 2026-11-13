@@ -279,6 +279,7 @@ export interface HudSnapshot {
   bossHp: number;
   bossMaxHp: number;
   bossPhase: 1 | 2;
+  bossSharedLife: boolean;
   alertBanner: string | null;
   wavAmmo: number;
   atkTimer: number;
