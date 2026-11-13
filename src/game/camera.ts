@@ -1,10 +1,10 @@
 import { Body } from './collision';
 
-/** Reference 1280×720 renders 1600×900 world units; resolution never changes this area. */
+/** Reference 1280×720 renders 960×540 world units; resolution never changes this area. */
 export function viewportFor(width: number, height: number) {
   const safeWidth = Number.isFinite(width) ? Math.max(1, width) : 1;
   const safeHeight = Number.isFinite(height) ? Math.max(1, height) : 1;
-  const worldHeight = 900;
+  const worldHeight = 540;
   const zoom = safeHeight / worldHeight;
   return { zoom, width: safeWidth / zoom, height: worldHeight };
 }

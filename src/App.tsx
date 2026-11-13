@@ -1,3 +1,4 @@
+import { registerPlugin } from '@capacitor/core';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Heart,
@@ -20,10 +21,14 @@ import { KeyboardState, KEY_BINDINGS } from './game/input';
 import { CharacterId, GameState, HudSnapshot } from './game/types';
 import { CAMPAIGN } from './game/campaign';
 
+const GameShell = registerPlugin<{ exitApp(): Promise<void> }>('GameShell');
+
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<GameEngine | null>(null);
 
+  const [backConfirmation, setBackConfirmation] = useState(false);
+  const backConfirmationRef = useRef(false);
   const [gameState, setGameState] = useState<GameState>('TITLE_MENU');
   const [selectedChar, setSelectedChar] = useState<CharacterId>('ren');
   const [selectedStageId, setSelectedStageId] = useState<number>(1);
@@ -96,8 +101,11 @@ export default function App() {
     if (!canvas) return;
 
     const engine = new GameEngine(canvas, {
-      onPauseRequest: () => setGameState((current) =>
-        current === 'PLAYING' ? 'PAUSED' : current === 'PAUSED' ? 'PLAYING' : current),
+      onPauseRequest: () => {
+        if (backConfirmationRef.current) return;
+        setGameState((current) =>
+          current === 'PLAYING' ? 'PAUSED' : current === 'PAUSED' ? 'PLAYING' : current);
+      },
       onHudUpdate: (snapshot) => {
         setHud(snapshot);
         setContinueChar(snapshot.characterId);
@@ -121,8 +129,20 @@ export default function App() {
   }, [handleContinueCountdown, handleGameOver, handleStageClear]);
 
   useEffect(() => {
-    engineRef.current?.setPaused(gameState !== 'PLAYING');
-  }, [gameState]);
+    engineRef.current?.setPaused(backConfirmation || gameState !== 'PLAYING');
+  }, [gameState, backConfirmation]);
+
+  useEffect(() => {
+    const onAndroidBack = () => {
+      if (backConfirmationRef.current) return;
+      backConfirmationRef.current = true;
+      engineRef.current?.clearInput();
+      engineRef.current?.setPaused(true);
+      setBackConfirmation(true);
+    };
+    window.addEventListener('mindbreak:android-back', onAndroidBack);
+    return () => window.removeEventListener('mindbreak:android-back', onAndroidBack);
+  }, []);
 
   useEffect(() => {
     const suspend = () => {
@@ -141,7 +161,7 @@ export default function App() {
 
   // 9-second classic arcade Continue countdown
   useEffect(() => {
-    if (gameState !== 'CONTINUE_COUNTDOWN') return;
+    if (backConfirmation || gameState !== 'CONTINUE_COUNTDOWN') return;
     if (continueTimer <= 0) {
       engineRef.current?.triggerFinalGameOver();
       return;
@@ -150,14 +170,14 @@ export default function App() {
       setContinueTimer((t) => t - 1);
     }, 1000);
     return () => window.clearTimeout(id);
-  }, [continueTimer, gameState]);
+  }, [continueTimer, gameState, backConfirmation]);
 
   // Keyboard controls when PLAYING
   useEffect(() => {
     const keyboard = new KeyboardState();
     const onKeyDown = (e: KeyboardEvent) => {
       const engine = engineRef.current;
-      if (!engine || gameState !== 'PLAYING') return;
+      if (!engine || gameState !== 'PLAYING' || backConfirmationRef.current) return;
 
       const binding = keyboard.set(e.code, true);
       if (binding) engine.setKey(binding.key, binding.pressed);
@@ -287,6 +307,20 @@ export default function App() {
     setGameState('TITLE_MENU');
   };
 
+  const dismissBackConfirmation = () => {
+    backConfirmationRef.current = false;
+    setBackConfirmation(false);
+  };
+
+  const confirmBack = async () => {
+    if (gameState === 'TITLE_MENU') {
+      await GameShell.exitApp();
+    } else {
+      returnToMenu();
+      dismissBackConfirmation();
+    }
+  };
+
   const styleRank =
     hud.comboHits >= 15
       ? 'SSS'
@@ -304,6 +338,38 @@ export default function App() {
 
   return (
     <div className="relative h-full w-full bg-[#070510] text-slate-100 font-sans overflow-hidden">
+      {backConfirmation && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-6"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              event.stopPropagation();
+              dismissBackConfirmation();
+            }
+            if (event.key === 'Tab') {
+              const buttons = event.currentTarget.querySelectorAll('button');
+              const next = document.activeElement === buttons[0] ? buttons[1] : buttons[0];
+              event.preventDefault();
+              next.focus();
+            }
+          }}>
+          <section role="alertdialog" aria-modal="true" aria-labelledby="android-back-title"
+            className="w-full max-w-md rounded-2xl border border-cyan-400/40 bg-slate-950 p-6 text-center shadow-xl">
+            <h2 id="android-back-title" className="text-xl font-bold">
+              {gameState === 'TITLE_MENU' ? 'Fechar o aplicativo?' : 'Voltar à tela inicial?'}
+            </h2>
+            <p className="mt-3 text-sm text-slate-300">
+              {gameState === 'TITLE_MENU' ? 'Deseja encerrar o MIND//BREAK?' : 'O jogo será interrompido para voltar à tela inicial.'}
+            </p>
+            <div className="mt-6 flex justify-center gap-4">
+              <button autoFocus onClick={dismissBackConfirmation} className="rounded-lg border border-slate-500 px-5 py-3">Cancelar</button>
+              <button onClick={() => void confirmBack()} className="rounded-lg bg-cyan-400 px-5 py-3 font-bold text-slate-950">
+                {gameState === 'TITLE_MENU' ? 'Fechar' : 'Tela inicial'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
       {/* Main Full-Viewport Canvas */}
       <canvas ref={canvasRef} className="block h-full w-full" style={{ imageRendering: 'pixelated' }} />
 

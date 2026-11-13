@@ -48,3 +48,13 @@ Saída: `android/app/build/outputs/apk/debug/app-debug.apk`. Para abrir no Andro
 Incremento 5: 91 testes passaram, TypeScript e build web passaram. Build nativo real concluído localmente: APK de aproximadamente 4,2 MB, assinatura verificada por `apksigner`, package/minSDK/targetSDK conferidos por `aapt`. Conferidos assets internos, ausência de service worker e configuração sem servidor remoto.
 
 Não foi acionada a nova Action nesta entrega. Conclusão no runner do GitHub, download do artifact, instalação/atualização em celular, áudio após gesto, rotação/safe areas, retorno de background, toque simultâneo e DualShock 4 físico ainda precisam de ensaio. Compilação não certifica essas interações.
+
+## Incremento 6 — apresentação e navegação no celular
+
+- Android usa `sensorLandscape`: permanece horizontal, permitindo virar entre as duas posições horizontais. O navegador comum não recebe bloqueio de orientação.
+- `MainActivity` oculta barras de status e navegação via `WindowInsetsControllerCompat`, com modo imersivo e reaplicação ao retomar/recuperar foco. Um gesto deliberado ainda pode revelar as barras temporariamente; isso é comportamento do Android. Não requer permissão de sobreposição sobre outros apps.
+- Controles ficam pelo menos 24 px afastados das bordas laterais e inferior, respeitando safe areas maiores.
+- Câmera passou de 900 para 540 unidades de altura lógica: personagens ficam cerca de 67% maiores na mesma tela. A mudança também vale no navegador. Física, velocidades e dimensões do mundo permanecem iguais.
+- O botão/gesto Voltar usa `OnBackPressedDispatcher`, sem navegar pelo histórico do WebView ou encerrar imediatamente. Um evento encaminha a decisão ao App: fora do menu, confirma retorno à tela inicial; no menu, confirma fechamento. Apenas a confirmação de fechar chama o plugin nativo `GameShell.exitApp` e encerra a Activity.
+- Durante a confirmação, simulação, entrada de gameplay e contador de continue ficam suspensos. Voltar repetido não duplica nem confirma o diálogo. Cancelar mantém a tela anterior; após voltar ao menu, a retomada depende das regras existentes da campanha e da sessão em memória.
+- Validação: 91 testes, TypeScript e compilação Java Android passaram. Chromium em 915×412 validou os dois textos de confirmação, cancelar, Voltar repetido, retorno ao menu e retomada, sem erros JavaScript. Uma ponte nativa simulada confirmou que cancelar não chama `exitApp` e confirmar chama uma vez; isso não certifica o fechamento em aparelho. Nenhum novo APK ou execução de Action foi solicitado/gerado neste incremento. Orientação, barras/gestos e fechamento nativo exigem confirmação no aparelho após uma construção manual.

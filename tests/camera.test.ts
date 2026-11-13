@@ -8,16 +8,16 @@ const bounds = { top: -260, bottom: 980, width: 3350 };
 test('matching aspect ratios show the same world area at different resolutions', () => {
   for (const [width, height] of [[1280, 720], [1920, 1080], [960, 540], [2560, 1440]]) {
     const view = viewportFor(width, height);
-    assert.equal(view.width, 1600);
-    assert.equal(view.height, 900);
+    assert.equal(view.width, 960);
+    assert.equal(view.height, 540);
     assert.deepEqual(cameraTarget(body, view, bounds), cameraTarget(body, viewportFor(1280, 720), bounds));
   }
 });
 
 test('portrait keeps the logical height while framing a narrower horizontal area', () => {
   const view = viewportFor(390, 844);
-  assert.equal(view.height, 900);
-  assert.ok(view.width < 420 && view.width > 400);
+  assert.equal(view.height, 540);
+  assert.ok(view.width < 250 && view.width > 249);
   assert.ok(view.zoom > 0);
 });
 

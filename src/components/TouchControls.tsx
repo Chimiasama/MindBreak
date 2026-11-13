@@ -71,7 +71,11 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
   return (
     <div
       className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex items-end justify-between px-3 sm:px-6"
-      style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      style={{
+        paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+        paddingLeft: 'max(1.5rem, env(safe-area-inset-left))',
+        paddingRight: 'max(1.5rem, env(safe-area-inset-right))',
+      }}
     >
       {/* Left Thumb: Ergonomic 4-Way D-Pad (includes ▲ for Active Wall Climb & Maya 8-Dir Flight) */}
       <div className="pointer-events-auto grid grid-cols-3 grid-rows-3 gap-1.5 touch-game-control">

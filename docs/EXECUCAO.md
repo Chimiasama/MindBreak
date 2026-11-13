@@ -147,3 +147,11 @@ Capacitor 8.6.2 e projeto Android foram adicionados com Gradle 8.14.3/checksum, 
 Os avisos da execução antiga eram Node 20 das Actions e migração de ubuntu-latest, corrigidos com Actions Node 24 fixadas por SHA e Ubuntu 26.04 explícito. Java 21 foi fixado pela compatibilidade, não por um aviso de Java confirmado.
 
 Validação: 91 testes passaram, TypeScript e build web passaram; APK real compilado localmente (~4,2 MB), assinatura verificada e identificação `com.chimiasama.mindbreak`, mínimo API 24/target 36 conferidos. Nenhuma validação física de celular/controle é declarada. Instruções completas e pendências em [ANDROID_APK.md](ANDROID_APK.md). Uma nova execução manual em main é necessária; repetir a execução antiga preserva o workflow antigo.
+
+## Incremento 6 — horizontal, câmera próxima e botão Voltar
+
+Android fixado em horizontal reversível (`sensorLandscape`), com barras de sistema ocultadas por modo imersivo e restabelecimento ao recuperar foco. Controles com margem mínima de 24 px e safe areas. A câmera agora mostra 540 unidades de altura em vez de 900, ampliando o personagem aproximadamente 67%, sem alterar física.
+
+Voltar abre confirmação: retornar ao menu durante a sessão ou fechar estando no menu. Um callback Android encaminha ao React, que pausa simulação/entradas/contador durante o diálogo. Fechamento só ocorre pelo plugin nativo após confirmação; repetição de Voltar não encerra. A retomada em memória segue as regras existentes.
+
+91 testes passaram, TypeScript e compilação Java Android passaram. Chromium horizontal validou confirmação nas duas telas, repetição, cancelamento, retorno e retomada sem erros; uma ponte nativa simulada só recebeu `exitApp` após confirmação. Não foi gerado novo APK nem acionada Action. Validação física de orientação/barras/gestos/fechamento ainda pendente. Guia atualizado em [ANDROID_APK.md](ANDROID_APK.md).
