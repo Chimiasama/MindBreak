@@ -185,3 +185,17 @@ Implementados os perfis de movimento versão 1: arranque/frenagem curtos por her
 Inimigos terrestres usam varredura contra sólidos em X/Y, incluindo knockback/stun, transporte por plataforma e esteira com parede. A perseguição verifica piso/borda/perigo, respeita limite à origem e evita flanco sem aterrissagem segura. Queda causada por impulso continua possível; desaparecimento ambiental não passa a conceder recompensa. Navegação aérea, física dos chefes e a futura máquina de estados completa permanecem separadas.
 
 144 testes passaram, incluindo as rotas anteriores e a nova cobertura de movimento/terreno. TypeScript, build web e smoke de navegador passaram. Sem Action remota ou APK. Próximo bloco: canteiro em 3A/3B/3C, usando a nova base e verificando percurso e retorno com os três heróis.
+
+## Incremento 10 — fundação, subida e heliponto
+
+A fase 3 foi expandida em **3A Fundação da Torre**, **3B Guindastes e Vigas** e **3C Heliponto na Tormenta**. São 16 inimigos iniciais, nove checkpoints e nove objetos de recurso/segredo. O núcleo sobe mil unidades em degraus, com patamar intermediário, guindastes móveis e andaimes opcionais. Goliath-IV está apenas no heliponto e espera a escolta obrigatória. O mapa original do canteiro continua acessível como teste, sem gravar por cima da campanha.
+
+A campanha tem **15 mapas**: dez próprios nos capítulos 1–3 e cinco adaptadores dos capítulos 4–8. Continuam previstas 26 subfases. As mudanças na fase 3 alteram sua identificação de conteúdo; saves do antigo canteiro são mantidos como incompatíveis, sem migração silenciosa. A identificação das fases 1/2 permanece igual. Arte e trilha foram reaproveitadas, sem afirmar produção nova.
+
+Também corrigida a medição da distância de ataque depois de deslocar um inimigo por impulso/plataforma: ele não pode acertar corpo a corpo usando uma posição antiga. Há teste de regressão próprio.
+
+**166 testes passaram**, incluindo percurso e retorno dos novos setores para os três heróis sem voo, dano ou resgate, validação de spawns fora do terreno, checkpoint/restauração no meio da subida, acompanhamento vertical da câmera, escolta e conclusão única do chefe. Os ensaios de rota isolam combate e não certificam dificuldade integral ou todos os segredos. Os primeiros ensaios revelaram andaimes interferindo no arco de salto; a geometria foi ajustada antes do aceite.
+
+TypeScript, build web e assets Android passaram. Chromium em 915×412 validou aceleração/frenagem pelo teclado, movimento+pulo com dois toques simultâneos via CDP, liberação dos comandos, portas 3A → 3B → 3C por CIMA, câmera na subida e carregamento de save no build de produção, sem overflow ou erros JavaScript. Fluxos de save e Voltar foram verificados novamente. Ensaio físico Android/DualShock 4 continua pendente; nenhuma Action acionada e nenhum APK gerado.
+
+Próximas pendências: acabamento do comportamento/combate de inimigos e chefes, expansão da fábrica e do distrito financeiro (4A–4C/5A–5C), depois demais capítulos. Música e arte permanecem após a base de gameplay; multiplayer/migração de engine seguem futuros. As Actions continuam exclusivamente manuais.

@@ -33,7 +33,9 @@ Data inicial: 13/11/2026. Documento de trabalho: atualizar os estados e registra
 
 No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, buffer/coyote, teclado por tecla física, colisão varrida de tiros/corpos, recuperação de sobreposição/esmagamento, regra de impacto por alvo, ajuste de PSY/armor e respawn exploratório nos oito mapas atuais. Também inclui pausa por gamepad e CI exclusivamente manual. Continuam pendentes 26 mapas, salvamento, novo sistema musical, novos sprites e APK; não são apresentados como prontos.
 
-**Estado mais recente (incrementos 7–8):** save local versão 1 e retomada por checkpoint implementados; campanha com 13 mapas (1A–1D, 2A–2C e seis adaptadores), contra a meta de 26. Android horizontal/imersivo e construção de APK manual já implementados nos incrementos 5–6. Não confundir as pendências históricas acima com o estado atual. Música, arte nova, expansão dos demais capítulos e os itens de física marcados como pendentes continuam no plano.
+**Marco dos incrementos 7–8:** save local versão 1 e retomada por checkpoint implementados; campanha com 13 mapas (1A–1D, 2A–2C e seis adaptadores), contra a meta de 26. Android horizontal/imersivo e construção de APK manual já implementados nos incrementos 5–6. Música, arte nova, expansão dos demais capítulos e os itens de física marcados como pendentes continuam no plano.
+
+**Incrementos 9–10:** perfis de aceleração/frenagem versão 1 e varredura dos inimigos terrestres implementados; envelope de salto em corrida preservado e documentado em `MOVIMENTACAO_E_TERRENO.md`. O canteiro ganhou 3A–3C com subida de mil unidades, ida/volta verificada e Goliath-IV apenas no heliponto. Campanha atual: 15 mapas; meta: 26. Continuam pendentes ensaio físico, acabamento/chefes/IA completa e expansão das fases 4–8.
 
 ## Fase 1 — Base de física, colisão e movimentação
 
@@ -64,7 +66,7 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 - **1.4.0.1 — Implementado:** extrair `moveAgainstSolids()` para `collision.ts`, escolher a face sólida mais próxima cruzada em X/Y e bloquear atravessamento de plataforma fina. Limitar velocidade de queda a 22 unidades/tick neste ajuste inicial.
 - **1.4.0.2 — Implementado:** acompanhar plataforma móvel de apoio e transportar o jogador pelo deslocamento dela. Preservar impulso externo do wall-kick por seis ticks antes de aceitar novamente o controle horizontal normal.
 - **1.4.0.3 — Implementado com testes; ajuste de esmagamento em aparelho PENDENTE:** tratar sobreposição inicial e esmagamento entre plataforma móvel/teto, verificar deslocamento de esteira contra paredes e revalidar checkpoint quando o piso seguro deixar de existir. Definir explicitamente dano/resgate em esmagamento; não teletransportar silenciosamente para dentro de sólidos.
-- **1.4.0.4 — Implementado para projéteis/corpos lançados contra alvos:** aplicar varredura aos projéteis e corpos lançados, com colisão por segmento/tempo de impacto. A primeira versão alterou apenas sólidos contra o jogador; o incremento 2 adiciona varredura de projéteis/corpos contra alvos. O incremento 9 acrescenta varredura dos inimigos terrestres contra sólidos, incluindo stun, esteiras e apoio móvel.
+- **1.4.0.4 — Implementado para projéteis/corpos contra alvos e terreno dos inimigos:** aplicar varredura aos projéteis e corpos lançados, com colisão por segmento/tempo de impacto. A primeira versão alterou apenas sólidos contra o jogador; o incremento 2 adiciona varredura de projéteis/corpos contra alvos. O incremento 9 acrescenta varredura dos inimigos terrestres contra sólidos, incluindo stun, esteiras e apoio móvel.
 - **1.4.0.5 — Aceite:** queda rápida, dash contra parede, teto baixo, cantos, retorno de abismo, parede alternada, plataforma ascendente/descendente e esteiras não atravessam sólidos nem deixam o jogador preso. Rodar nas oito fases e três personagens.
 
 ### 1.5 Ajuste de movimento e câmera — PARCIAL: perfis/aceleração/câmera implementados; acabamento e ensaio físico pendentes
@@ -124,16 +126,16 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 
 ## Fase 4 — Oito fases, 26 subfases
 
-Estado após o incremento 8: quatro mapas novos no distrito, três no monotrilho e seis adaptadores das fases 3–8, totalizando 13 mapas na campanha. O distrito original fica como ferramenta de teste. Ver `CAMPANHA_E_SUBFASES.md` para os contratos executáveis, regras de portas e limites da retomada em memória. O incremento 7 acrescenta save local versionado e restauração no checkpoint; detalhes em `SALVAMENTO.md`.
+Estado após o incremento 10: quatro mapas novos no distrito, três no monotrilho, três no canteiro e cinco adaptadores das fases 4–8, totalizando 15 mapas na campanha. Os mapas originais dos capítulos 1–3 ficam como ferramentas de teste. Ver `CAMPANHA_E_SUBFASES.md` para os contratos executáveis, regras de portas e limites da retomada em memória. O incremento 7 acrescenta save local versionado e restauração no checkpoint; detalhes em `SALVAMENTO.md`.
 
-### 4.1 Contratos de campanha — IMPLEMENTADO para distrito, monotrilho e adaptadores das fases 3–8
+### 4.1 Contratos de campanha — IMPLEMENTADO para distrito, monotrilho, canteiro e adaptadores das fases 4–8
 
 - **4.1.0.1:** criar `CampaignStage` (fase principal), `SubstageDefinition` (mapa jogável), `ExitDefinition` (ligação/condição), `CheckpointDefinition` e `CampaignProgress`. Usar identificadores como `1A`, não índices frágeis de array.
 - **4.1.0.2:** distinguir fim de sala/subfase de derrota de chefe/fim de fase. `loadSubstage()` recebe herói, HP, vidas, foco, pontos, buffs e estado persistente; reiniciar/checkpoint/continue têm contratos separados.
 - **4.1.0.3:** criar adaptador temporário dos oito `StageDefinition`; os mapas antigos continuam executáveis enquanto novas subfases são construídas. Não multiplicar artificialmente oito mapas iguais.
 - **4.1.0.4:** construir grafo com ida/volta onde fizer sentido, portas, requisitos e saídas explícitas; completar fase principal somente no objetivo final. Retorno de exploração não refaz chefe nem história final.
 
-### 4.2 Distribuição editorial inicial — PARCIAL: 1A–1D e 2A–2C implementadas; outras expansões pendentes
+### 4.2 Distribuição editorial inicial — PARCIAL: 1A–1D, 2A–2C e 3A–3C implementadas; outras expansões pendentes
 
 Os nomes são propostas de produção e podem ser refinados sem alterar o total. São 26 mapas distintos: 4+3+3+3+3+3+3+4.
 
@@ -149,7 +151,7 @@ Os nomes são propostas de produção e podem ser refinados sem alterar o total.
 | 8 — Torre | 8A Base da torre; 8B Núcleo Zero; 8C Elevador orbital; 8D Estratosfera | 4 | Oswald / Entidade Zero |
 
 - **4.2.0.1 — Implementado como lote jogável inicial; acabamento/playtest de dificuldade pendentes:** desenvolver primeiro 1A–1D como amostra completa: deslocamento, exploração opcional, respawn, checkpoint e chefe. Validar com os três heróis antes de replicar padrões.
-- **4.2.0.2 — Fase 2 implementada; fase 3 pendente:** produzir fases 2/3; depois 4/5; depois 6/7; por fim 8. Cada lote entrega mapas com começo, retorno, segredo, checkpoint e objetivo, não apenas cenário vazio.
+- **4.2.0.2 — Fases 2/3 implementadas; lote 4/5 pendente:** produzir fases 2/3; depois 4/5; depois 6/7; por fim 8. Cada lote entrega mapas com começo, retorno, segredo, checkpoint e objetivo, não apenas cenário vazio.
 - **4.2.0.3:** mapear requisitos de salto/alcance por trecho; nenhuma rota obrigatória pode exigir voo exclusivo de Maya. Habilidades podem facilitar segredos, mas não bloquear campanha com outro herói.
 - **4.2.0.4:** elaborar diálogos por entrada e evento, evitando repetir texto a cada retorno; reservar chefes para a última subfase e encontros intermediários onde contribuírem para ritmo.
 - **4.2.0.5 — Aceite:** 26 IDs únicos alcançáveis; todos os caminhos principais sem softlock; conclusão da campanha validada com Ren/Maya/Leon; contagem 24–28 verificada por ferramenta de validação de dados.
@@ -282,6 +284,6 @@ Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; A
 
 1. Ler este documento e o registro de execução.
 2. Verificar `git status`, preservar mudanças existentes e rodar a suíte da base.
-3. Retomar os itens pendentes de jogabilidade/campanha: balanceamento e próximos lotes de mapas. O incremento 7 implementa o save local versionado, validado antes de restaurar, com cópia anterior e preservação da exploração/recompensas. O incremento 8 entrega 2A–2C com rotas de ida/volta verificadas para os três heróis; a campanha tem 13 mapas. A câmera lógica e os contratos de subfase já foram implementados, e o distrito tem quatro mapas conectados. O incremento 2 adicionou fila, buffer/coyote, repopulação e correções adicionais de combate/colisão. O incremento 3 corrige a recompensa por persistência, oculta pontos e implementa altura lógica/antecipação/zona morta da câmera.
+3. Retomar jogabilidade/campanha: estados e balanceamento de inimigos/chefes (2.2/2.3), expansão da fábrica e financeiro (4.2.0.2), depois capítulos 6–8. A campanha tem 15 mapas e save local versão 1. Aceleração/frenagem, terreno varrido, lógica de câmera e rotas principais dos capítulos 1–3 estão implementados; acabamento e ensaio físico continuam pendentes. Consultar os incrementos 9–10 em `EXECUCAO.md` antes de modificar esses contratos.
 4. Atualizar status somente com evidência. Antes de avançar para cada lote de subfases, validar o lote anterior.
 5. Não confundir a publicação do ambiente de desenvolvimento com a publicação do jogo, commits remotos, GitHub Actions ou APK.

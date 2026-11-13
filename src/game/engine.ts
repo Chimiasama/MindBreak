@@ -2035,9 +2035,9 @@ export class GameEngine {
         return;
       }
 
-      const dx = p.x - en.x;
-      const dy = p.y - en.y;
-      const dist = Math.hypot(dx, dy);
+      let dx = p.x - en.x;
+      let dy = p.y - en.y;
+      let dist = Math.hypot(dx, dy);
       const desiredFacing: 1 | -1 = dx >= 0 ? 1 : -1;
 
       // Guard Turn Delay (~0.6s / 36 frames) so player can Dash behind for Backstab!
@@ -2106,6 +2106,9 @@ export class GameEngine {
         return;
       }
       en.vx *= 0.86;
+      dx = p.x - en.x;
+      dy = p.y - en.y;
+      dist = Math.hypot(dx, dy);
       if (en.airborne) return;
       const home = enemyHome(en);
       const returning = Math.abs(en.x - home) > GROUND_ENEMY.leash;

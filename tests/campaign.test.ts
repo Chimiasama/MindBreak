@@ -27,7 +27,7 @@ test('campaign graph, checkpoint placement, exits and unique final encounters va
   assert.deepEqual(validateCampaign(), []);
   assert.equal(CAMPAIGN.length, 8);
   assert.equal(CAMPAIGN.reduce((total, chapter) => total + chapter.plannedCount, 0), 26);
-  assert.equal(SUBSTAGES.length, 13, 'seven authored district/monorail maps plus six legacy adapters');
+  assert.equal(SUBSTAGES.length, 15, 'ten authored district/monorail/construction maps plus five legacy adapters');
   assert.deepEqual(CAMPAIGN[0].substages, ['1A', '1B', '1C', '1D']);
   assert.equal(SUBSTAGES.filter((area) => area.id === 1 && area.boss).length, 1);
 });
@@ -114,11 +114,11 @@ test('extra-life death returns to the activated checkpoint rather than the lates
   engine.stop();
 });
 
-test('legacy loadStage remains available while chapters 3–8 retain their original adapters', () => {
+test('legacy loadStage remains available while chapters 4–8 retain their original adapters', () => {
   const { engine, state } = fixture();
   engine.loadStage(1, 'ren'); assert.equal(state.stage.title, STAGES[0].title);
   assert.equal(state.campaignMode, false);
-  for (let main = 3; main <= 8; main++) {
+  for (let main = 4; main <= 8; main++) {
     engine.startCampaign(main, 'ren');
     assert.equal(state.stage.substageId, `${main}A`);
     assert.equal(state.boss.active, true);
@@ -138,7 +138,7 @@ test('absence in another area counts toward respawn only after sufficient simula
 });
 
 for (const hero of ['ren', 'maya', 'leon'] as const) {
-  for (const id of ['1A', '1B', '1C', '1D', '2A', '2B', '2C'] as const) {
+  for (const id of ['1A', '1B', '1C', '1D', '2A', '2B', '2C', '3A', '3B', '3C'] as const) {
     test(`${hero} can traverse the primary geometry of ${id} without flight or teleport`, (t) => {
       const chapter = Number(id[0]);
       const { engine, state } = fixture(hero, () => {}, chapter);
@@ -150,6 +150,10 @@ for (const hero of ['ren', 'maya', 'leon'] as const) {
       if (chapter === 2 && id !== '2A') {
         through(engine, state, 'manutencao');
         if (id === '2C') through(engine, state, 'teto');
+      }
+      if (chapter === 3 && id !== '3A') {
+        through(engine, state, 'vigas');
+        if (id === '3C') through(engine, state, 'heliponto');
       }
       t.after(() => engine.stop());
       // Geometry-only acceptance: combat/arena outcomes are tested separately.
@@ -328,11 +332,14 @@ test('a rooftop low gantry damages a standing hero while a timed slide avoids it
 });
 
 for (const hero of ['ren', 'maya', 'leon'] as const) {
-  for (const id of ['2A', '2B', '2C'] as const) {
+  for (const id of ['2A', '2B', '2C', '3A', '3B', '3C'] as const) {
     test(`${hero} can backtrack through ${id} without flight, hazards or rescue`, () => {
-      const { engine, state } = fixture(hero, () => {}, 2);
-      if (id !== '2A') through(engine, state, 'manutencao');
+      const chapter = Number(id[0]);
+      const { engine, state } = fixture(hero, () => {}, chapter);
+      if (chapter === 2 && id !== '2A') through(engine, state, 'manutencao');
       if (id === '2C') through(engine, state, 'teto');
+      if (chapter === 3 && id !== '3A') through(engine, state, 'vigas');
+      if (id === '3C') through(engine, state, 'heliponto');
       state.checkpointId = state.stage.checkpoints.at(-1).id;
       engine.restoreCampaignSave(engine.captureCampaignSave()!);
       engine.setPaused(false);
@@ -346,7 +353,7 @@ for (const hero of ['ren', 'maya', 'leon'] as const) {
       state.damagePlayer = (...args: unknown[]) => { hurt = true; damage(...args); };
       engine.setKey('left', true);
       let airborneTicks = 0;
-      const goal = id === '2A' ? 140 : 40;
+      const goal = id.endsWith('A') ? 140 : 40;
       for (let tick = 0; tick < 2400 && state.player.x > goal + 24; tick++) {
         const p = state.player;
         if (p.grounded) {
@@ -369,3 +376,48 @@ for (const hero of ['ren', 'maya', 'leon'] as const) {
     });
   }
 }
+
+
+test('Goliath belongs only to the helipad and waits for its demolition escort', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let completions = 0;
+  const { engine, state } = fixture('leon', () => { completions++; }, 3);
+  state.damageBoss(10000); assert.equal(completions, 0); assert.equal(state.boss.active, false);
+  through(engine, state, 'vigas'); assert.equal(state.boss.active, false);
+  through(engine, state, 'heliponto'); assert.equal(state.boss.active, true);
+  Object.assign(state.player, { x: 1860, y: 384, invulnTimer: 100000 });
+  state.ambushArenas[0].active = true;
+  state.update(); assert.equal(state.boss.triggered, false);
+  state.ambushArenas[0].active = false; state.ambushArenas[0].cleared = true;
+  state.update(); assert.equal(state.boss.triggered, true);
+  state.damageBoss(10000); t.mock.timers.tick(1200);
+  assert.equal(completions, 1); engine.stop();
+});
+
+test('the construction ascent activates its intermediate checkpoint, survives reload and scrolls vertically', () => {
+  const { engine, state } = fixture('ren', () => {}, 3); through(engine, state, 'vigas');
+  engine.resize(1280, 720); const bottomCamera = state.camera.y;
+  Object.assign(state.player, { x: 1070, y: 584, vx: 0, vy: 0, grounded: true });
+  state.update(); assert.equal(state.checkpointId, 'nucleo');
+  const carry = engine.getPlayerCarry();
+  engine.restoreCampaignSave(engine.captureCampaignSave()!);
+  assert.equal(state.checkpointId, 'nucleo'); assert.ok(Math.abs(state.player.x - 1070) < 1);
+  assert.deepEqual(engine.getPlayerCarry(), carry);
+  Object.assign(state.props[0], { hp: 0, broken: true });
+  engine.setPaused(false); through(engine, state, 'heliponto'); through(engine, state, 'vigas');
+  assert.equal(state.props[0].broken, true); assert.equal(state.stage.substageId, '3B');
+  engine.resize(1280, 720);
+  assert.ok(state.camera.y < bottomCamera - 900);
+  assert.ok(state.camera.y >= state.stage.boundsTop); engine.stop();
+});
+
+test('construction enemies start outside authored solids/hazards and the chapter has three distinct maps', () => {
+  const areas = SUBSTAGES.filter((area) => area.id === 3);
+  assert.deepEqual(CAMPAIGN[2].substages, ['3A', '3B', '3C']);
+  assert.equal(areas.length, 3);
+  assert.equal(new Set(areas.map((area) => JSON.stringify(area.platforms))).size, 3);
+  for (const area of areas) for (const enemy of area.enemies) {
+    assert.equal(area.platforms.some((platform) => enemy.x < platform.x + platform.w && enemy.x + enemy.w > platform.x &&
+      enemy.y < platform.y + platform.h && enemy.y + enemy.h > platform.y), false, `${area.substageId}: ${enemy.type} starts inside terrain`);
+  }
+});

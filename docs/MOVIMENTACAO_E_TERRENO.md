@@ -44,3 +44,5 @@ Drones/jetpacks conservam sua navegação aérea; quando atordoados, usam a inte
 144 testes passaram no fechamento deste bloco: perfis, envelope medido dos saltos, equivalência por taxa de render, parede/teto/piso fino, apoio móvel, esteira, borda/perigo, stun, limite de perseguição e flanco sem piso. As rotas principais existentes passaram novamente para os três heróis, incluindo ida e volta no monotrilho.
 
 Balanceamento final, perseguição em geometrias complexas, padrões dos chefes, interpolação visual, opções de shake e ensaio físico Android/DualShock 4 continuam pendentes. Nenhuma Action automática ou construção de APK foi acrescentada.
+
+Na integração com o incremento 10, a distância de ataque terrestre passou a ser recalculada depois da aplicação do impulso/transporte. Um teste adicional garante que um inimigo empurrado para longe não acerte corpo a corpo usando sua posição anterior. As novas rotas do canteiro também foram verificadas com estes perfis.

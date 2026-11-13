@@ -180,3 +180,12 @@ test('hound flanking refuses a leap whose destination has no safe floor', () => 
   state.updateEnemies();
   assert.notEqual(hound.isFlanking, true); assert.equal(hound.vx, 0); engine.stop();
 });
+
+test('a ground enemy displaced out of melee range cannot hit using its previous position', () => {
+  const { engine, state } = fixture();
+  const enemy = actor(980); enemy.vx = -200; enemy.attackTimer = 0;
+  state.enemies = [enemy]; state.player.invulnTimer = 0;
+  state.updateEnemies();
+  assert.ok(state.player.x - enemy.x > 200);
+  assert.equal(state.player.hp, 100); engine.stop();
+});

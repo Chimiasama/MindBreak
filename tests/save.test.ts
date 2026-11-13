@@ -112,6 +112,7 @@ test('moving/crumbling platforms restore without a one-frame transport jump', ()
 
 test('broken crumble platforms and remaining recovery timers persist', () => {
   const { engine, state } = fixture(3);
+  through(engine, state, 'vigas');
   const crumble = state.platforms.find((p: any) => p.type === 'crumble');
   assert.ok(crumble);
   Object.assign(crumble, { crumbleTimer: 60, broken: true });
@@ -272,7 +273,7 @@ test('snapshots remain valid during real simulation across every chapter, includ
 test('restoring a save cancels delayed completion callbacks from the previous run', (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   let completions = 0;
-  const { engine, state } = fixture(3);
+  const { engine, state } = fixture(4);
   const save = checked(engine.captureCampaignSave()!);
   state.callbacks.onStageClear = () => { completions++; };
   state.damageBoss(10000);
