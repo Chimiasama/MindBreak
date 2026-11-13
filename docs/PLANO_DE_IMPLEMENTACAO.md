@@ -45,6 +45,8 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 
 **Estado atual após incrementos 13–14:** oito chefes com sequências próprias em duas fases, preparação/recuperação e gêmeos com dois corpos/vida compartilhada. Catálogo completo com **26 mapas próprios**, 130 inimigos iniciais, 77 checkpoints e 78 objetos. Rotas geométricas e retorno verificados para os três heróis; vitória/save verificados em integração. Balanceamento integral e físico, combos/especiais, áudio, arte e acessibilidade permanecem pendentes; catálogo completo não é release final.
 
+**Incremento 16:** sequência de três golpes corrigida, janelas/buffer/recuperação e cobertura corpo a corpo. Infraestrutura sonora com quatro canais/volumes persistentes, scheduler pelo relógio de áudio, retomada de sequência e suspensão em background. 332 testes e Chromium aprovados; detalhes em [COMBOS_E_AUDIO.md](COMBOS_E_AUDIO.md). Próximo bloco autônomo: tema do distrito/chefe (6.2.0.1–2), mantendo pendentes ajustes de especiais/combate e aceites físicos. Não há tema final ou certificação Android/controle concluídos.
+
 ## Fase 1 — Base de física, colisão e movimentação
 
 ### 1.1 Tempo de simulação — IMPLEMENTADO
@@ -98,7 +100,7 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 ### 2.2 Impactos e recursos — PARCIAL
 
 - **2.2.0.1 — Implementado para rasteira e corpo lançado:** dar identificador único a cada ataque e registrar alvos atingidos; rasteira e corpo lançado não podem aplicar dano a cada frame salvo se classificados como dano periódico com intervalo definido.
-- **2.2.0.2:** definir sequência de combo, janelas de ligação, launcher e recuperação por golpe. Animar e colidir pela mesma linha do tempo; não depender de comentários ambíguos sobre “terceiro golpe”.
+- **2.2.0.2 — Implementado no incremento 16; atlas final pendente:** sequência 0/1/2 com launcher no terceiro, janela de ligação de 24 ticks após recuperação e comando antecipado único nos últimos seis ticks. Impacto/som no início, efeito visual de 6/6/8 ticks e durações de 11/11/16 ticks; sem dano repetido durante o arco. Dano/stun/resgate interrompem, pausa limpa o buffer. Cobertura sólida também protege contra golpe/reflexão. Contrato em [COMBOS_E_AUDIO.md](COMBOS_E_AUDIO.md).
 - **2.2.0.3 — Custo/seleção de alvo corrigidos; especiais distintos pendentes:** padronizar PSY: custo mínimo correspondente à ação; diferenciar especiais dos heróis; fazer reflexão escolher atirador, chefe ou inimigo mais próximo conforme regra explícita.
 - **2.2.0.4 — Cooldown da armor corrigido; balanceamento geral pendente:** documentar HP, invulnerabilidade, armor e stun. Conferir Leon sem recuo mas com proteção adequada contra múltiplos projéteis simultâneos.
 - **2.2.0.5 — Aceite:** um ataque normal conta uma vez por alvo; WAV perfura mas não reaplica no mesmo alvo; telecinese não concede recompensa duplicada; combo e foco obedecem aos valores definidos.
@@ -215,11 +217,11 @@ Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; A
 
 ## Fase 6 — Música, efeitos e resposta sonora
 
-### 6.1 Infraestrutura — PENDENTE
+### 6.1 Infraestrutura — PARCIAL: mixer, preferências e scheduler implementados; pipeline de arquivos/auditoria física pendentes
 
-- **6.1.0.1:** separar buses master/music/SFX/voz, sliders e preferências salvas; ligar mute sem reiniciar estado indevidamente.
-- **6.1.0.2:** substituir agendamento musical dependente de `setInterval` puro por scheduler com look-ahead no relógio de AudioContext; tratar suspend/resume/background.
-- **6.1.0.3:** estabelecer formato de assets, licença/autoria, limites de memória e pré-carregamento. Começar com loops locais e síntese, sem exigir API externa para jogar.
+- **6.1.0.1 — Implementado no incremento 16:** buses master/music/SFX/voz, sliders no menu/pausa, preferências globais locais e mute sem reiniciar a fase da música; suavização de ganho, compressor e teto de 48 fontes.
+- **6.1.0.2 — Implementado no incremento 16; aceite auditivo físico pendente:** look-ahead de 100 ms, preenchimento a cada 25 ms, notas no relógio do AudioContext; pausa preserva sequência, background cancela fontes/suspende contexto e retorno depende do usuário. Atrasos não disparam notas acumuladas.
+- **6.1.0.3 — Síntese local e origem documentadas; arquivos/pré-carregamento pendentes:** sons atuais são procedurais, sem novos recursos externos. Política para próximos loops/fontes e limites em [COMBOS_E_AUDIO.md](COMBOS_E_AUDIO.md); definir codec/orçamento com Android real antes do carregador de arquivos.
 
 ### 6.2 Conteúdo musical — PENDENTE
 

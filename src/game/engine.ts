@@ -1,3 +1,4 @@
+import { COMBO, SWINGS, nextComboStep } from './combat';
 import { bossBodies, bossShots, bossWarnings, BOSS_MOVES, isBossCharge, moveBoss, stepBoss } from './bosses';
 import { sound } from './audio';
 import { AreaSave, CampaignSave, campaignContentId, decodeCampaignSave } from './campaign/save';
@@ -200,6 +201,7 @@ export class GameEngine {
     slashing: false,
     slashTimer: 0,
     comboStep: 0,
+    comboWindow: 0,
     comboHits: 0,
     comboTimer: 0,
     invulnTimer: 0,
@@ -218,7 +220,16 @@ export class GameEngine {
 
   private get keys() { return this.input.keys; }
 
+  private attackBuffered = false;
+
+  private resetAttack() {
+    this.attackBuffered = false;
+    this.player.slashing = false; this.player.slashTimer = 0;
+    this.player.comboWindow = 0; this.player.comboStep = 0;
+  }
+
   clearInput() {
+    this.attackBuffered = false;
     this.input.clear();
     this.jumpBuffer = 0;
     this.coyoteTicks = 0;
@@ -431,6 +442,7 @@ export class GameEngine {
       slashing: false,
       slashTimer: 0,
       comboStep: 0,
+      comboWindow: 0,
       comboHits: 0,
       comboTimer: 0,
       invulnTimer: 45,
@@ -684,7 +696,7 @@ export class GameEngine {
     this.clock.reset();
     this.clearInput();
     if (this.paused) {
-      sound.stopMusic();
+      sound.pauseMusic();
     } else {
       sound.startMusic(this.stage.musicGenre);
     }
@@ -920,12 +932,19 @@ export class GameEngine {
     if (!this.canAct()) return;
     sound.init();
     const p = this.player;
-    if (p.slashTimer > 0 || p.stunTimer > 0) return;
+    if (p.stunTimer > 0) { this.attackBuffered = false; return; }
+    if (p.slashTimer > 0) {
+      if (p.slashTimer <= COMBO.bufferTicks) this.attackBuffered = true;
+      return;
+    }
 
     const char = CHARACTERS[this.characterId];
     p.slashing = true;
-    p.slashTimer = 11;
-    p.comboStep = (p.comboStep + 1) % 3;
+    this.attackBuffered = false;
+    p.comboStep = nextComboStep(p.comboStep, p.comboWindow);
+    const swing = SWINGS[p.comboStep];
+    p.slashTimer = swing.totalTicks;
+    p.comboWindow = swing.totalTicks + COMBO.linkTicks;
     sound.sfxSlash();
     sound.playVoiceShout(this.characterId);
 
@@ -960,10 +979,11 @@ export class GameEngine {
       h: p.h + 28,
     };
 
+    const meleeSolids = enemySolids(this.platforms);
     // Hit destructible props & secret chests
     this.props.forEach((pr) => {
       if (pr.broken) return;
-      if (this.checkAABB(slashHitbox, pr)) {
+      if (this.checkAABB(slashHitbox, pr) && canSeeBody(p, pr, meleeSolids)) {
         pr.hp -= char.attackPower * dmgMult;
         this.screenShake(4);
         sound.sfxHit();
@@ -979,7 +999,7 @@ export class GameEngine {
 
     // Hit enemies with Guard Crush & Backstab!
     this.enemies.forEach((en) => {
-      if (!this.checkAABB(slashHitbox, en)) return;
+      if (en.hp <= 0 || !this.checkAABB(slashHitbox, en) || !canSeeBody(p, en, meleeSolids)) return;
 
       const enemyMid = en.x + en.w / 2;
       const playerMid = p.x + p.w / 2;
@@ -1025,7 +1045,7 @@ export class GameEngine {
 
       const isLauncher = p.comboStep === 2 && p.grounded;
       const backstabMult = attackingFromBehind ? 2 : 1;
-      const baseDmg = (char.attackPower + (p.comboStep === 2 ? 12 : 0)) * dmgMult * backstabMult;
+      const baseDmg = (char.attackPower + swing.bonusDamage) * dmgMult * backstabMult;
       const liftY = isLauncher ? -11.5 : en.airborne ? -5.8 : -3.5;
       const impactFrames = attackingFromBehind || isLauncher ? 5 : 2;
       this.hitEnemy(en, baseDmg, p.facing * (isLauncher ? 4 : 6.5), liftY, impactFrames);
@@ -1041,7 +1061,7 @@ export class GameEngine {
     });
 
     // Hit Boss
-    if (this.boss.active && this.boss.triggered && bossBodies(this.boss).some((body) => this.checkAABB(slashHitbox, body))) {
+    if (this.boss.active && this.boss.triggered && bossBodies(this.boss).some((body) => this.checkAABB(slashHitbox, body) && canSeeBody(p, body, meleeSolids))) {
       if (
         this.boss.shieldActive &&
         !breakShieldsNow &&
@@ -1058,14 +1078,14 @@ export class GameEngine {
           sound.sfxGuardCrush();
           this.addMangaFx('SHIELD BREAK!', this.boss.x, this.boss.y - 36, '#f97316');
         }
-        this.damageBoss(char.attackPower * dmgMult);
+        this.damageBoss((char.attackPower + swing.bonusDamage) * dmgMult);
         this.boss.vx = p.facing * 4.5;
       }
     }
 
     // Deflect Counter: slice enemy bullets & reflect at 2x speed aimed at shooter/nearest target!
     this.bullets.forEach((b) => {
-      if (!b.fromPlayer && b.reflectable !== false && !b.dead && this.checkAABB(slashHitbox, b)) {
+      if (!b.fromPlayer && b.reflectable !== false && !b.dead && this.checkAABB(slashHitbox, b) && canSeeBody(p, b, meleeSolids)) {
         b.fromPlayer = true;
         const origSpeed = Math.max(6.5, Math.hypot(b.vx, b.vy));
         const targetSpeed = origSpeed * 2;
@@ -1351,6 +1371,7 @@ export class GameEngine {
       this.addMangaFx('SUPER ARMOR!', p.x, p.y - 18, '#f97316');
       sound.sfxBlock();
     } else {
+      this.resetAttack();
       p.hp = Math.max(0, p.hp - dmg);
       p.vx = knockX;
       p.invulnTimer = 42;
@@ -1590,8 +1611,12 @@ export class GameEngine {
     }
     if (p.slashTimer > 0) {
       p.slashTimer--;
-      if (p.slashTimer <= 0) p.slashing = false;
+      const swing = SWINGS[p.comboStep];
+      p.slashing = p.slashTimer > swing.totalTicks - swing.activeTicks;
     }
+    if (p.comboWindow > 0) p.comboWindow--;
+    if (p.stunTimer > 0) this.resetAttack();
+    if (this.attackBuffered && p.slashTimer === 0) this.triggerAttack();
     if (p.comboTimer > 0) {
       p.comboTimer--;
       if (p.comboTimer <= 0) p.comboHits = 0;
@@ -1963,6 +1988,7 @@ export class GameEngine {
     p.invulnTimer = Math.max(60, p.invulnTimer);
     this.standingPlatform = null;
     this.clearInput();
+    this.resetAttack();
     this.addMangaFx('RESGATE!', p.x, p.y - 20, '#38bdf8');
   }
 
@@ -2593,7 +2619,10 @@ export class GameEngine {
     if (p.slashing) {
       ctx.save();
       ctx.strokeStyle = p.atkTimer > 0 ? '#ef4444' : char.accentColor;
-      ctx.lineWidth = 5;
+      const swing = SWINGS[p.comboStep];
+      const progress = (swing.totalTicks - p.slashTimer) / swing.activeTicks;
+      ctx.globalAlpha = 1 - progress * 0.65;
+      ctx.lineWidth = p.comboStep === 2 ? 7 : 5;
       ctx.beginPath();
       const startX = p.facing === 1 ? p.x + p.w : p.x;
       ctx.arc(

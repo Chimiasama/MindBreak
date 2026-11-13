@@ -58,3 +58,5 @@ Os cooldowns iniciais dos mapas continuam respeitados. Os valores acima são aju
 Na integração do incremento 12, a patrulha passou a inverter a direção ao encontrar borda/parede. Inimigos aéreos sem alvo voltam à altura de origem, e o fim da recuperação readquire a posição visível antes de preparar outro ataque. Há testes de regressão para os três casos. A suíte de contato com parede considera que o ator pode se afastar depois de encostar, em vez de exigir que permaneça preso nela.
 
 No incremento 15 foram acrescentados instalador, torretas montadas e rajadas, com exceções explícitas de projéteis. As regras atuais, tempos e compatibilidade estão em [TORRETAS_E_PROJETEIS.md](TORRETAS_E_PROJETEIS.md). Os valores de recuperação da torreta incluem dois tiros adicionais no início; depois há a janela livre. Nenhum tiro atual atravessa sólidos; o Olho Cósmico não pode ser rebatido.
+
+Incremento 16: golpes do jogador agora têm sequência 0/1/2, janela/buffer/recuperação e linha de visão por sólidos, inclusive contra chefes e ao rebater tiros. Ver [COMBOS_E_AUDIO.md](COMBOS_E_AUDIO.md).

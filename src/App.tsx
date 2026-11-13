@@ -1,3 +1,4 @@
+import { AudioSettings } from './components/AudioSettings';
 import { registerPlugin } from '@capacitor/core';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -48,7 +49,7 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState>('TITLE_MENU');
   const [selectedChar, setSelectedChar] = useState<CharacterId>('ren');
   const [selectedStageId, setSelectedStageId] = useState<number>(1);
-  const [muted, setMuted] = useState<boolean>(false);
+  const [muted, setMuted] = useState<boolean>(() => sound.isMuted());
   const [dialogueQueue, setDialogueQueue] = useState<{ speaker: string; line: string }[]>([]);
   const [dialogueIndex, setDialogueIndex] = useState<number>(0);
   const [dialoguePurpose, setDialoguePurpose] = useState<'intro' | 'outro'>('intro');
@@ -207,6 +208,7 @@ export default function App() {
       engineRef.current?.clearInput();
       setGameState((current) => current === 'PLAYING' ? 'PAUSED' : current);
       engineRef.current?.setPaused(true);
+      sound.suspend();
     };
     const onVisibility = () => { if (document.hidden) suspend(); };
     window.addEventListener('pagehide', suspend);
@@ -386,8 +388,8 @@ export default function App() {
     if (!engine) return;
     try {
       sound.init();
-      sound.setMuted(stored.save.preferences.muted);
-      setMuted(stored.save.preferences.muted);
+      // Audio preferences belong to the installation, independently of campaign progress.
+      setMuted(sound.isMuted());
       const mode = engine.restoreCampaignSave(stored.save);
       saveEnabledRef.current = true;
       setSelectedStageId(stored.save.chapterId);
@@ -676,6 +678,7 @@ export default function App() {
               </div>
             </div>
 
+            <AudioSettings />
             {storedCampaign.status !== 'missing' && (
               <section aria-label="Campanha salva" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-700/60 bg-slate-900 p-4">
                 <div>
@@ -963,7 +966,7 @@ export default function App() {
         gameState === 'GAME_OVER' ||
         gameState === 'CAMPAIGN_VICTORY') && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+          <div className="max-h-[90dvh] overflow-y-auto w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
             <h2 className="font-display text-3xl font-extrabold text-white">
               {gameState === 'PAUSED' && 'Jogo Pausado'}
               {gameState === 'STAGE_CLEAR' && `Fase ${hud.stageId} Concluída!`}
@@ -980,6 +983,7 @@ export default function App() {
                 'Você completou todas as 8 fases e derrotou a Nexus!'}
             </p>
 
+            {gameState === 'PAUSED' && <AudioSettings />}
             <div className="mt-6 flex flex-col gap-3">
               {gameState === 'PAUSED' && (
                 <button

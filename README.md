@@ -62,3 +62,5 @@ As alterações de jogabilidade atuais estão no registro; o diagnóstico origin
 A campanha agora salva automaticamente e pode ser carregada na tela inicial após fechar/reabrir o jogo. A restauração volta ao ponto de apoio, preservando recursos e exploração. Começar outra campanha ou apagar o save pede confirmação. O mapa original de teste não substitui a campanha salva. [Formato, recuperação e limites](docs/SALVAMENTO.md).
 
 Torretas industriais de parede/teto e instaladores: comportamento, colisão de tiros e salvamento documentados em [docs/TORRETAS_E_PROJETEIS.md](docs/TORRETAS_E_PROJETEIS.md).
+
+Combos e controles de áudio: [docs/COMBOS_E_AUDIO.md](docs/COMBOS_E_AUDIO.md) descreve os tempos dos três golpes, cobertura, quatro volumes persistentes e scheduler musical.

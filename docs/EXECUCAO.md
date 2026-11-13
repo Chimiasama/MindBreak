@@ -261,3 +261,11 @@ A varredura de tiros contra terreno já estava presente; não foi reproduzido at
 ## Orientação após o incremento 15 — saves de desenvolvimento
 
 O usuário esclareceu que é o único instalador e sempre testa com instalação limpa. Compatibilidade/preservação de saves antigos deixa de ser requisito até pedido expresso. Atualizados contrato 0.1.0.13, item 4.3.0.2 e SALVAMENTO.md; nenhum comportamento de gameplay ou armazenamento foi alterado nesta anotação. Próximos incrementos podem mudar o formato sem migrações ou esforço de preservar versões anteriores.
+
+## Incremento 16 — Combo de três golpes e mixer/scheduler de áudio
+
+Retomados 2.2.0.2 e 6.1.0.1–2. O combo começava na etapa errada e lançava no segundo golpe: agora cortes 0/1 e finalizador 2, com expiração, recuperação maior no finalizador e um comando antecipado no fim da recuperação. Impactos e sons acontecem no início aceito, uma vez por alvo; o arco termina antes da recuperação. Dano/stun/resgate interrompem a cadeia; pausa limpa buffer. Cobertura sólida protege inimigos/chefes/props/reflexão. Sem mudança na quantidade de fases ou novas migrações de save.
+
+Áudio passa por canais separados de música/efeitos/voz e master, com quatro sliders no menu/pausa, persistência global, mute sem reinício e suavização/limitação de picos. Notas são agendadas no relógio do AudioContext com look-ahead; pausa preserva a sequência, background cancela fontes/suspende contexto e retomada por gesto reativa. Limite de 48 fontes; sequências de efeitos usam offsets de áudio em vez de timeouts. Os oito protótipos musicais permanecem, sem anunciar novos temas como compostos.
+
+**332 testes**, TypeScript, builds web/assets Android e sync aprovados. Chromium horizontal confirmou preferências após reload, sliders na pausa, mute com fase avançando, suspend/resume de contexto real e sequência 0/1/2, sem erros JavaScript. Ensaio instrumentado, sem certificação auditiva Android/DualShock 4. Contrato, números e pendências em [COMBOS_E_AUDIO.md](COMBOS_E_AUDIO.md). Nenhuma Action/APK. Próximo bloco: composição do distrito e chefe, seguida dos demais temas; especiais, balanceamento/segredos, arte e aceites físicos continuam previstos.

@@ -1,6 +1,7 @@
 import { CharacterId, MusicGenre } from './types';
+import { AudioBus, AudioVolumes, AUDIO_SETTINGS_KEY, readAudioPreferences } from './audioPreferences';
 
-class SoundEngine {
+export class SoundEngine {
   private ctx: AudioContext | null = null;
   private bgmTimer: number | null = null;
   private step = 0;
@@ -8,14 +9,64 @@ class SoundEngine {
   private muted = false;
   private masterGain: GainNode | null = null;
 
+  private buses: Partial<Record<AudioBus, GainNode>> = {};
+  private volumes: AudioVolumes;
+  private nodes = new Map<AudioScheduledSourceNode, AudioBus>();
+  private nextNoteAt = 0;
+  private scheduledSteps: { at: number; step: number }[] = [];
+  private hasTrack = false;
+
+  constructor() {
+    let storage: Storage | undefined;
+    try { if (typeof window !== 'undefined') storage = window.localStorage; } catch { /* optional */ }
+    const prefs = readAudioPreferences(storage);
+    this.volumes = prefs.volumes; this.muted = prefs.muted;
+  }
+
+  getVolumes(): AudioVolumes { return { ...this.volumes }; }
+  private persist() {
+    try { window.localStorage?.setItem(AUDIO_SETTINGS_KEY, JSON.stringify({ volumes: this.volumes, muted: this.muted })); } catch { /* optional */ }
+  }
+  setVolume(bus: keyof AudioVolumes, value: number) {
+    if (!Number.isFinite(value)) return;
+    this.volumes[bus] = Math.max(0, Math.min(1, value));
+    this.applyVolumes(); this.persist();
+  }
+  private applyVolumes() {
+    if (!this.ctx || !this.masterGain) return;
+    this.masterGain.gain.setTargetAtTime(this.muted ? 0 : this.volumes.master, this.ctx.currentTime, 0.02);
+    for (const bus of ['music', 'sfx', 'voice'] as const) this.buses[bus]?.gain.setTargetAtTime(this.volumes[bus], this.ctx.currentTime, 0.02);
+  }
+  private track(node: AudioScheduledSourceNode, gain: GainNode, bus: AudioBus) {
+    this.nodes.set(node, bus);
+    node.onended = () => { this.nodes.delete(node); node.disconnect(); gain.disconnect(); };
+  }
+  private cancelNodes(bus?: AudioBus) {
+    for (const [node, channel] of this.nodes) if (!bus || channel === bus) {
+      try { node.stop(); } catch { /* already ended */ }
+      node.disconnect(); this.nodes.delete(node);
+    }
+  }
+  suspend() {
+    this.pauseMusic(); this.cancelNodes();
+    this.ctx?.suspend().catch(() => {});
+  }
+
   init() {
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!AudioCtx) return;
       this.ctx = new AudioCtx();
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.value = this.muted ? 0 : 0.7;
-      this.masterGain.connect(this.ctx.destination);
+      this.masterGain.gain.value = this.muted ? 0 : this.volumes.master;
+      const limiter = this.ctx.createDynamicsCompressor();
+      limiter.threshold.value = -8; limiter.knee.value = 8; limiter.ratio.value = 12;
+      limiter.attack.value = 0.003; limiter.release.value = 0.15;
+      this.masterGain.connect(limiter); limiter.connect(this.ctx.destination);
+      for (const bus of ['music', 'sfx', 'voice'] as const) {
+        const gain = this.ctx.createGain(); gain.gain.value = this.volumes[bus];
+        gain.connect(this.masterGain); this.buses[bus] = gain;
+      }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
@@ -24,9 +75,7 @@ class SoundEngine {
 
   setMuted(mute: boolean) {
     this.muted = mute;
-    if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setTargetAtTime(mute ? 0 : 0.7, this.ctx.currentTime, 0.02);
-    }
+    this.applyVolumes(); this.persist();
   }
 
   isMuted() {
@@ -35,8 +84,9 @@ class SoundEngine {
 
   startMusic(genre: MusicGenre) {
     this.init();
-    this.currentGenre = genre;
-    this.stopMusic();
+    if (!this.hasTrack || this.currentGenre !== genre) {
+      this.stopMusic(); this.currentGenre = genre; this.step = 0; this.hasTrack = true;
+    } else this.pauseMusic();
 
     const tempoMs: Record<MusicGenre, number> = {
       electro_funk: 135,
@@ -49,22 +99,37 @@ class SoundEngine {
       symphonic_dnb: 102,
     };
 
-    this.step = 0;
-    this.bgmTimer = window.setInterval(() => this.tickBGM(), tempoMs[genre]);
+    this.nextNoteAt = (this.ctx?.currentTime ?? 0) + 0.02;
+    const schedule = () => {
+      if (!this.ctx || this.ctx.state !== 'running') return;
+      const now = this.ctx.currentTime;
+      this.scheduledSteps = this.scheduledSteps.filter((event) => event.at >= now);
+      // Timer stalls skip silence instead of compressing missed notes into a burst.
+      if (this.nextNoteAt < now) this.nextNoteAt = now + 0.02;
+      while (this.nextNoteAt < now + 0.1) {
+        this.scheduledSteps.push({ at: this.nextNoteAt, step: this.step });
+        this.tickBGM(this.nextNoteAt);
+        this.nextNoteAt += tempoMs[this.currentGenre] / 1000;
+      }
+    };
+    schedule();
+    this.bgmTimer = window.setInterval(schedule, 25);
+  }
+
+  pauseMusic() {
+    if (this.bgmTimer !== null) { clearInterval(this.bgmTimer); this.bgmTimer = null; }
+    const pending = this.scheduledSteps.find((event) => event.at >= (this.ctx?.currentTime ?? 0));
+    if (pending) this.step = pending.step;
+    this.scheduledSteps = []; this.cancelNodes('music');
   }
 
   stopMusic() {
-    if (this.bgmTimer !== null) {
-      clearInterval(this.bgmTimer);
-      this.bgmTimer = null;
-    }
+    this.pauseMusic(); this.hasTrack = false; this.step = 0;
   }
 
-  private tickBGM() {
-    if (!this.ctx || !this.masterGain || this.muted || this.ctx.state !== 'running') return;
-
-    const s = this.step;
-    this.step++;
+  private tickBGM(at: number) {
+    if (!this.ctx || !this.masterGain || this.ctx.state !== 'running') return;
+    const s = this.step++;
 
     const tracks: Record<MusicGenre, { bass: number[]; lead: number[]; wave: OscillatorType; leadWave: OscillatorType }> = {
       electro_funk: {
@@ -120,26 +185,26 @@ class SoundEngine {
     const t = tracks[this.currentGenre];
     const bassFreq = t.bass[s % t.bass.length];
     if (bassFreq > 0) {
-      this.playOsc(bassFreq, t.wave, 0.11, 0.085);
+      this.playOsc(bassFreq, t.wave, 0.11, 0.085, undefined, at, 'music');
     }
 
     if (s % 2 === 0) {
-      this.playOsc(58, 'sine', 0.08, 0.17, 28);
+      this.playOsc(58, 'sine', 0.08, 0.17, 28, at, 'music');
     }
     if (s % 4 === 2) {
-      this.playNoise(0.07, 0.075);
+      this.playNoise(0.07, 0.075, at, 'music');
     }
 
     const leadFreq = t.lead[Math.floor(s / 2) % t.lead.length];
     if (leadFreq > 0 && s % 2 === 0) {
-      this.playOsc(leadFreq, t.leadWave, 0.14, 0.045);
+      this.playOsc(leadFreq, t.leadWave, 0.14, 0.045, undefined, at, 'music');
     }
   }
 
-  private playOsc(freq: number, type: OscillatorType, duration: number, vol = 0.14, endFreq?: number) {
-    if (!this.ctx || !this.masterGain || this.muted) return;
+  private playOsc(freq: number, type: OscillatorType, duration: number, vol = 0.14, endFreq?: number, at = this.ctx?.currentTime ?? 0, bus: AudioBus = 'sfx') {
+    if (!this.ctx || !this.masterGain || this.ctx.state !== 'running' || this.nodes.size >= 48) return;
     try {
-      const now = this.ctx.currentTime;
+      const now = at;
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = type;
@@ -150,7 +215,8 @@ class SoundEngine {
       gain.gain.setValueAtTime(vol, now);
       gain.gain.exponentialRampToValueAtTime(0.0005, now + duration);
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.buses[bus]!);
+      this.track(osc, gain, bus);
       osc.start(now);
       osc.stop(now + duration);
     } catch {
@@ -158,8 +224,8 @@ class SoundEngine {
     }
   }
 
-  private playNoise(duration: number, vol = 0.1) {
-    if (!this.ctx || !this.masterGain || this.muted) return;
+  private playNoise(duration: number, vol = 0.1, at = this.ctx?.currentTime ?? 0, bus: AudioBus = 'sfx') {
+    if (!this.ctx || !this.masterGain || this.ctx.state !== 'running' || this.nodes.size >= 48) return;
     try {
       const sampleCount = Math.floor(this.ctx.sampleRate * duration);
       const buffer = this.ctx.createBuffer(1, sampleCount, this.ctx.sampleRate);
@@ -172,8 +238,9 @@ class SoundEngine {
       const gain = this.ctx.createGain();
       gain.gain.value = vol;
       src.connect(gain);
-      gain.connect(this.masterGain);
-      src.start();
+      gain.connect(this.buses[bus]!);
+      this.track(src, gain, bus);
+      src.start(at);
     } catch {
       // Ignore
     }
@@ -181,7 +248,7 @@ class SoundEngine {
 
   /** Dual-formant synthesized anime voice shout for Ren (sharp), Maya (ethereal), Leon (guttural) */
   playVoiceShout(charId: CharacterId) {
-    if (!this.ctx || !this.masterGain || this.muted) return;
+    if (!this.ctx || !this.masterGain || this.ctx.state !== 'running' || this.nodes.size >= 48) return;
     try {
       const now = this.ctx.currentTime;
       const baseFreq = charId === 'ren' ? 280 : charId === 'maya' ? 370 : 145;
@@ -212,7 +279,8 @@ class SoundEngine {
       osc.connect(f2);
       f1.connect(gain);
       f2.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.buses.voice!);
+      this.track(osc, gain, 'voice');
 
       osc.start(now);
       osc.stop(now + 0.21);
@@ -250,7 +318,7 @@ class SoundEngine {
   }
   sfxGuardCrush() {
     this.playOsc(280, 'square', 0.12, 0.25, 90);
-    setTimeout(() => this.playOsc(580, 'sawtooth', 0.2, 0.24, 140), 70);
+    this.playOsc(580, 'sawtooth', 0.2, 0.24, 140, (this.ctx?.currentTime ?? 0) + 0.07);
   }
   sfxDeflect() {
     this.playOsc(980, 'sine', 0.11, 0.24, 1540);
@@ -272,7 +340,7 @@ class SoundEngine {
   }
   sfxOverdrive() {
     this.playOsc(120, 'sawtooth', 0.6, 0.3, 660);
-    setTimeout(() => this.playOsc(880, 'square', 0.35, 0.24, 220), 180);
+    this.playOsc(880, 'square', 0.35, 0.24, 220, (this.ctx?.currentTime ?? 0) + 0.18);
   }
   sfxPickup() {
     this.playOsc(520, 'sine', 0.15, 0.18, 920);
@@ -280,7 +348,7 @@ class SoundEngine {
   sfxOneUp() {
     const notes = [523.25, 659.25, 783.99, 1046.5];
     notes.forEach((n, idx) => {
-      setTimeout(() => this.playOsc(n, 'square', 0.12, 0.18), idx * 75);
+      this.playOsc(n, 'square', 0.12, 0.18, undefined, (this.ctx?.currentTime ?? 0) + idx * 0.075);
     });
   }
   sfxAlarm() {
@@ -289,7 +357,7 @@ class SoundEngine {
   sfxStageClear() {
     const notes = [440, 554.4, 659.2, 880];
     notes.forEach((n, idx) => {
-      setTimeout(() => this.playOsc(n, 'triangle', 0.24, 0.22), idx * 110);
+      this.playOsc(n, 'triangle', 0.24, 0.22, undefined, (this.ctx?.currentTime ?? 0) + idx * 0.11);
     });
   }
 }
