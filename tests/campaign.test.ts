@@ -27,7 +27,7 @@ test('campaign graph, checkpoint placement, exits and unique final encounters va
   assert.deepEqual(validateCampaign(), []);
   assert.equal(CAMPAIGN.length, 8);
   assert.equal(CAMPAIGN.reduce((total, chapter) => total + chapter.plannedCount, 0), 26);
-  assert.equal(SUBSTAGES.length, 15, 'ten authored district/monorail/construction maps plus five legacy adapters');
+  assert.equal(SUBSTAGES.length, 19, 'sixteen authored maps plus three legacy adapters');
   assert.deepEqual(CAMPAIGN[0].substages, ['1A', '1B', '1C', '1D']);
   assert.equal(SUBSTAGES.filter((area) => area.id === 1 && area.boss).length, 1);
 });
@@ -114,11 +114,11 @@ test('extra-life death returns to the activated checkpoint rather than the lates
   engine.stop();
 });
 
-test('legacy loadStage remains available while chapters 4–8 retain their original adapters', () => {
+test('legacy loadStage remains available while chapters 6–8 retain their original adapters', () => {
   const { engine, state } = fixture();
   engine.loadStage(1, 'ren'); assert.equal(state.stage.title, STAGES[0].title);
   assert.equal(state.campaignMode, false);
-  for (let main = 4; main <= 8; main++) {
+  for (let main = 6; main <= 8; main++) {
     engine.startCampaign(main, 'ren');
     assert.equal(state.stage.substageId, `${main}A`);
     assert.equal(state.boss.active, true);
@@ -138,7 +138,7 @@ test('absence in another area counts toward respawn only after sufficient simula
 });
 
 for (const hero of ['ren', 'maya', 'leon'] as const) {
-  for (const id of ['1A', '1B', '1C', '1D', '2A', '2B', '2C', '3A', '3B', '3C'] as const) {
+  for (const id of ['1A', '1B', '1C', '1D', '2A', '2B', '2C', '3A', '3B', '3C', '4A', '4B', '4C', '5A', '5B', '5C'] as const) {
     test(`${hero} can traverse the primary geometry of ${id} without flight or teleport`, (t) => {
       const chapter = Number(id[0]);
       const { engine, state } = fixture(hero, () => {}, chapter);
@@ -155,6 +155,10 @@ for (const hero of ['ren', 'maya', 'leon'] as const) {
         through(engine, state, 'vigas');
         if (id === '3C') through(engine, state, 'heliponto');
       }
+      if (chapter === 4 && id !== '4A') through(engine, state, 'esteiras');
+      if (id === '4C') through(engine, state, 'nucleo');
+      if (chapter === 5 && id !== '5A') through(engine, state, 'garagens');
+      if (id === '5C') through(engine, state, 'suite');
       t.after(() => engine.stop());
       // Geometry-only acceptance: combat/arena outcomes are tested separately.
       state.stage = { ...state.stage, hasLowCeilingHazard: false };
@@ -332,7 +336,7 @@ test('a rooftop low gantry damages a standing hero while a timed slide avoids it
 });
 
 for (const hero of ['ren', 'maya', 'leon'] as const) {
-  for (const id of ['2A', '2B', '2C', '3A', '3B', '3C'] as const) {
+  for (const id of ['2A', '2B', '2C', '3A', '3B', '3C', '4A', '4B', '4C', '5A', '5B', '5C'] as const) {
     test(`${hero} can backtrack through ${id} without flight, hazards or rescue`, () => {
       const chapter = Number(id[0]);
       const { engine, state } = fixture(hero, () => {}, chapter);
@@ -340,6 +344,10 @@ for (const hero of ['ren', 'maya', 'leon'] as const) {
       if (id === '2C') through(engine, state, 'teto');
       if (chapter === 3 && id !== '3A') through(engine, state, 'vigas');
       if (id === '3C') through(engine, state, 'heliponto');
+      if (chapter === 4 && id !== '4A') through(engine, state, 'esteiras');
+      if (id === '4C') through(engine, state, 'nucleo');
+      if (chapter === 5 && id !== '5A') through(engine, state, 'garagens');
+      if (id === '5C') through(engine, state, 'suite');
       state.checkpointId = state.stage.checkpoints.at(-1).id;
       engine.restoreCampaignSave(engine.captureCampaignSave()!);
       engine.setPaused(false);
@@ -420,4 +428,42 @@ test('construction enemies start outside authored solids/hazards and the chapter
     assert.equal(area.platforms.some((platform) => enemy.x < platform.x + platform.w && enemy.x + enemy.w > platform.x &&
       enemy.y < platform.y + platform.h && enemy.y + enemy.h > platform.y), false, `${area.substageId}: ${enemy.type} starts inside terrain`);
   }
+});
+
+for (const chapter of [4, 5]) {
+  test(`chapter ${chapter} reserves its boss for the final sector and preserves exploration across reload`, (t) => {
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    let completions = 0;
+    const { engine, state } = fixture('maya', () => { completions++; }, chapter);
+    assert.equal(state.boss.active, false);
+    Object.assign(state.props[0], { hp: 0, broken: true });
+    const forward = chapter === 4 ? ['esteiras', 'nucleo'] : ['garagens', 'suite'];
+    through(engine, state, forward[0]);
+    assert.equal(state.boss.active, false);
+    engine.restoreCampaignSave(engine.captureCampaignSave()!); engine.setPaused(false);
+    assert.equal(state.areaCache.get(`${chapter}A`).props[0].broken, true);
+    through(engine, state, forward[1]);
+    assert.equal(state.boss.active, true);
+    assert.equal(completions, 0);
+    state.ambushArenas[0].active = true;
+    Object.assign(state.player, { x: state.stage.boss.x - 450, y: state.stage.spawnY, invulnTimer: 100000 });
+    state.update(); assert.equal(state.boss.triggered, false);
+    state.ambushArenas[0].active = false; state.ambushArenas[0].cleared = true;
+    state.update(); assert.equal(state.boss.triggered, true);
+    state.damageBoss(10000); t.mock.timers.tick(1200);
+    assert.equal(completions, 1); engine.stop();
+  });
+}
+
+test('new factory/financial maps have valid spawns and opposite conveyor directions', () => {
+  const areas = SUBSTAGES.filter((area) => area.id === 4 || area.id === 5);
+  assert.equal(areas.length, 6);
+  assert.equal(new Set(areas.map((area) => JSON.stringify(area.platforms))).size, 6);
+  for (const area of areas) for (const enemy of area.enemies) {
+    assert.equal(area.platforms.some((platform) => enemy.x < platform.x + platform.w && enemy.x + enemy.w > platform.x &&
+      enemy.y < platform.y + platform.h && enemy.y + enemy.h > platform.y), false, `${area.substageId}: ${enemy.type}`);
+  }
+  const speeds = getSubstage('4B').platforms.filter((platform) => platform.type === 'conveyor').map((platform) => platform.conveyorSpeed!);
+  assert.ok(speeds.some((speed) => speed < 0)); assert.ok(speeds.some((speed) => speed > 0));
+  assert.equal(getSubstage('5B').platforms.filter((platform) => platform.type === 'laser_gate').length, 2);
 });

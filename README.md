@@ -1,6 +1,6 @@
 # MIND//BREAK: Kinetic Rebels
 
-Jogo de ação e plataforma 2D em React, TypeScript, Canvas e Web Audio. Oito fases principais: o distrito tem quatro subfases conectadas, o monotrilho e o canteiro têm três cada, e as fases 4–8 mantêm cinco mapas originais. São 15 mapas na campanha atual, rumo a 26 subfases distintas.
+Jogo de ação e plataforma 2D em React, TypeScript, Canvas e Web Audio. Oito fases principais: o distrito tem quatro subfases conectadas, monotrilho, canteiro, fábrica e financeiro têm três cada, e as fases 6–8 mantêm três mapas originais. São 19 mapas na campanha atual, rumo a 26 subfases distintas.
 
 ## Desenvolvimento
 

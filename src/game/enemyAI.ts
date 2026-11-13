@@ -79,6 +79,10 @@ export function stepEnemyAI(enemy: Enemy, context: EnemyContext): EnemyIntent {
   if (mind.state === 'recover') {
     if (mind.timer > 0) { mind.timer--; return intent; }
     enter(enemy, 'chase');
+    if (context.visible) {
+      mind.aimX = context.player.x + context.player.w / 2;
+      mind.aimY = context.player.y + context.player.h / 2;
+    }
   }
   if (mind.state === 'windup') {
     enemy.telegraph = 1;
@@ -89,7 +93,8 @@ export function stepEnemyAI(enemy: Enemy, context: EnemyContext): EnemyIntent {
   if (mind.state === 'patrol') {
     if (context.visible) { enter(enemy, 'alert', ENEMY_ALERT_TICKS); return intent; }
     // Ranged actors keep their firing positions. Others patrol within their authored bounds.
-    if (!profile.ranged) {
+    if (flying) intent.move = 1;
+    else if (!profile.ranged) {
       if (enemy.x <= context.home - 110) enemy.facing = 1;
       if (enemy.x >= context.home + 110) enemy.facing = -1;
       intent.move = enemy.facing * 0.65;

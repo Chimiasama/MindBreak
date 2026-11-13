@@ -35,7 +35,9 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 
 **Marco dos incrementos 7–8:** save local versão 1 e retomada por checkpoint implementados; campanha com 13 mapas (1A–1D, 2A–2C e seis adaptadores), contra a meta de 26. Android horizontal/imersivo e construção de APK manual já implementados nos incrementos 5–6. Música, arte nova, expansão dos demais capítulos e os itens de física marcados como pendentes continuam no plano.
 
-**Incrementos 9–10:** perfis de aceleração/frenagem versão 1 e varredura dos inimigos terrestres implementados; envelope de salto em corrida preservado e documentado em `MOVIMENTACAO_E_TERRENO.md`. O canteiro ganhou 3A–3C com subida de mil unidades, ida/volta verificada e Goliath-IV apenas no heliponto. Campanha atual: 15 mapas; meta: 26. Continuam pendentes ensaio físico, acabamento/chefes/IA completa e expansão das fases 4–8.
+**Incrementos 9–10:** perfis de aceleração/frenagem versão 1 e varredura dos inimigos terrestres implementados; envelope de salto em corrida preservado e documentado em `MOVIMENTACAO_E_TERRENO.md`. O canteiro ganhou 3A–3C com subida de mil unidades, ida/volta verificada e Goliath-IV apenas no heliponto. Campanha nesse marco: 15 mapas; meta: 26. Continuavam pendentes ensaio físico, acabamento/chefes/IA completa e expansão das fases 4–8.
+
+**Estado atual após incrementos 11–12:** IA dos onze inimigos comuns com estados explícitos, ataques preparados/recuperação, proteção contra stun encadeado e colisão de projéteis com terreno. Fábrica e financeiro expandidos em 4A–4C/5A–5C. Campanha com 19 mapas: 16 próprios e três adaptadores. Chefes/padrões finais e expansão das fases 6–8 continuam pendentes; música/arte vêm após a base de gameplay.
 
 ## Fase 1 — Base de física, colisão e movimentação
 
@@ -126,16 +128,16 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 
 ## Fase 4 — Oito fases, 26 subfases
 
-Estado após o incremento 10: quatro mapas novos no distrito, três no monotrilho, três no canteiro e cinco adaptadores das fases 4–8, totalizando 15 mapas na campanha. Os mapas originais dos capítulos 1–3 ficam como ferramentas de teste. Ver `CAMPANHA_E_SUBFASES.md` para os contratos executáveis, regras de portas e limites da retomada em memória. O incremento 7 acrescenta save local versionado e restauração no checkpoint; detalhes em `SALVAMENTO.md`.
+Estado após o incremento 12: quatro mapas próprios no distrito, três em cada fase 2–5 e três adaptadores das fases 6–8, totalizando 19 mapas na campanha. Os mapas originais dos capítulos 1–5 ficam como ferramentas de teste. Ver `CAMPANHA_E_SUBFASES.md` para os contratos executáveis, regras de portas e limites da retomada em memória. O incremento 7 acrescenta save local versionado e restauração no checkpoint; detalhes em `SALVAMENTO.md`.
 
-### 4.1 Contratos de campanha — IMPLEMENTADO para distrito, monotrilho, canteiro e adaptadores das fases 4–8
+### 4.1 Contratos de campanha — IMPLEMENTADO para capítulos 1–5 e adaptadores das fases 6–8
 
 - **4.1.0.1:** criar `CampaignStage` (fase principal), `SubstageDefinition` (mapa jogável), `ExitDefinition` (ligação/condição), `CheckpointDefinition` e `CampaignProgress`. Usar identificadores como `1A`, não índices frágeis de array.
 - **4.1.0.2:** distinguir fim de sala/subfase de derrota de chefe/fim de fase. `loadSubstage()` recebe herói, HP, vidas, foco, pontos, buffs e estado persistente; reiniciar/checkpoint/continue têm contratos separados.
 - **4.1.0.3:** criar adaptador temporário dos oito `StageDefinition`; os mapas antigos continuam executáveis enquanto novas subfases são construídas. Não multiplicar artificialmente oito mapas iguais.
 - **4.1.0.4:** construir grafo com ida/volta onde fizer sentido, portas, requisitos e saídas explícitas; completar fase principal somente no objetivo final. Retorno de exploração não refaz chefe nem história final.
 
-### 4.2 Distribuição editorial inicial — PARCIAL: 1A–1D, 2A–2C e 3A–3C implementadas; outras expansões pendentes
+### 4.2 Distribuição editorial inicial — PARCIAL: 1A–1D e 2A–2C/3A–3C/4A–4C/5A–5C implementadas; outras expansões pendentes
 
 Os nomes são propostas de produção e podem ser refinados sem alterar o total. São 26 mapas distintos: 4+3+3+3+3+3+3+4.
 
@@ -151,7 +153,7 @@ Os nomes são propostas de produção e podem ser refinados sem alterar o total.
 | 8 — Torre | 8A Base da torre; 8B Núcleo Zero; 8C Elevador orbital; 8D Estratosfera | 4 | Oswald / Entidade Zero |
 
 - **4.2.0.1 — Implementado como lote jogável inicial; acabamento/playtest de dificuldade pendentes:** desenvolver primeiro 1A–1D como amostra completa: deslocamento, exploração opcional, respawn, checkpoint e chefe. Validar com os três heróis antes de replicar padrões.
-- **4.2.0.2 — Fases 2/3 implementadas; lote 4/5 pendente:** produzir fases 2/3; depois 4/5; depois 6/7; por fim 8. Cada lote entrega mapas com começo, retorno, segredo, checkpoint e objetivo, não apenas cenário vazio.
+- **4.2.0.2 — Fases 2–5 implementadas; lotes 6/7/8 pendentes:** produzir fases 2/3; depois 4/5; depois 6/7; por fim 8. Cada lote entrega mapas com começo, retorno, segredo, checkpoint e objetivo, não apenas cenário vazio.
 - **4.2.0.3:** mapear requisitos de salto/alcance por trecho; nenhuma rota obrigatória pode exigir voo exclusivo de Maya. Habilidades podem facilitar segredos, mas não bloquear campanha com outro herói.
 - **4.2.0.4:** elaborar diálogos por entrada e evento, evitando repetir texto a cada retorno; reservar chefes para a última subfase e encontros intermediários onde contribuírem para ritmo.
 - **4.2.0.5 — Aceite:** 26 IDs únicos alcançáveis; todos os caminhos principais sem softlock; conclusão da campanha validada com Ren/Maya/Leon; contagem 24–28 verificada por ferramenta de validação de dados.
@@ -284,6 +286,6 @@ Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; A
 
 1. Ler este documento e o registro de execução.
 2. Verificar `git status`, preservar mudanças existentes e rodar a suíte da base.
-3. Retomar jogabilidade/campanha: estados e balanceamento de inimigos/chefes (2.2/2.3), expansão da fábrica e financeiro (4.2.0.2), depois capítulos 6–8. A campanha tem 15 mapas e save local versão 1. Aceleração/frenagem, terreno varrido, lógica de câmera e rotas principais dos capítulos 1–3 estão implementados; acabamento e ensaio físico continuam pendentes. Consultar os incrementos 9–10 em `EXECUCAO.md` antes de modificar esses contratos.
+3. Retomar chefes/combate (2.2/2.3.0.3), expansão do museu/blacksite/torre (4.2.0.2) e playtest de encontros antes de música/arte. A campanha tem 19 mapas e save versão 1; estados da IA comum, terreno e ataques legíveis foram implementados nos incrementos 9–12. Consultar `EXECUCAO.md` e `IA_E_COMBATE.md`; não reaplicar nem desfazer esses blocos ao retomar.
 4. Atualizar status somente com evidência. Antes de avançar para cada lote de subfases, validar o lote anterior.
 5. Não confundir a publicação do ambiente de desenvolvimento com a publicação do jogo, commits remotos, GitHub Actions ou APK.

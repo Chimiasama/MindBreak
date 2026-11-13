@@ -158,3 +158,27 @@ test('checkpoint saves accept older enemies and validate AI without restoring a 
   saved.areas[0].enemies[0].ai!.timer = -1;
   assert.equal(decodeCampaignSave(JSON.stringify(saved)).status, 'corrupt'); engine.stop();
 });
+
+test('an aerial enemy without a target returns toward its authored hover height', () => {
+  const { engine, state } = fixture();
+  const enemy = actor('drone'); enemy.y = 500; enemy.originY = 300;
+  state.enemies = [enemy]; state.player.x = 5000;
+  for (let tick = 0; tick < 60; tick++) state.updateEnemies();
+  assert.ok(enemy.y < 350); assert.equal(enemy.ai!.state, 'patrol'); engine.stop();
+});
+
+test('patrol turns at an unsupported edge instead of waiting forever or falling', () => {
+  const { engine, state } = fixture(); const enemy = actor('mutant', 60); enemy.facing = -1;
+  state.enemies = [enemy]; state.player.x = 5000;
+  state.platforms = [{ x: 0, y: 600, w: 200, h: 500, type: 'solid' }];
+  for (let tick = 0; tick < 120; tick++) state.updateEnemies();
+  assert.equal(enemy.facing, 1); assert.ok(enemy.x > 6); assert.equal(enemy.y, 544); engine.stop();
+});
+
+test('finishing recovery reacquires the visible target before preparing the next attack', () => {
+  const enemy = actor(), c = context(enemy); prepare(enemy);
+  enemy.ai!.state = 'recover'; enemy.ai!.timer = 0; c.player.x = 900;
+  const intent = stepEnemyAI(enemy, c);
+  assert.equal(intent.attack, null); assert.equal(enemy.ai!.state, 'windup');
+  assert.equal(enemy.ai!.facing, -1); assert.equal(enemy.ai!.aimX, 916);
+});

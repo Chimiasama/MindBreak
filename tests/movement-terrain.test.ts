@@ -142,14 +142,18 @@ test('voluntary pursuit stops before a gap, acid or laser gate', () => {
   engine.stop();
 });
 
-test('normal chasing and stunned knockback both use the solid-wall solver', () => {
+test('voluntary walking and stunned knockback both use the solid-wall solver', () => {
   for (const stunned of [false, true]) {
     const { engine, state } = fixture();
     const enemy = actor(50); enemy.stunTimer = stunned ? 30 : 0; enemy.vx = stunned ? 70 : 0;
     const wall: Platform = { x: 100, y: 0, w: 1, h: 600, type: 'wall' };
     state.enemies = [enemy]; state.platforms = [floor, wall]; state.player.x = 160;
-    for (let tick = 0; tick < 60; tick++) state.updateEnemies();
-    assert.ok(enemy.x > 50); assert.ok(enemy.x + enemy.w <= 100);
+    let furthest = enemy.x;
+    for (let tick = 0; tick < 60; tick++) {
+      state.updateEnemies(); furthest = Math.max(furthest, enemy.x);
+      assert.ok(enemy.x + enemy.w <= 100);
+    }
+    assert.ok(furthest > 50, 'actor must have approached or been pushed toward the wall');
     assert.equal(overlaps(enemy, wall), false); engine.stop();
   }
 });

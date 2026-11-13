@@ -209,3 +209,17 @@ Corrigido stun do guarda por fora de dano bloqueado: dash/invulnerabilidade não
 Save versão 1 preserva os novos estados e aceita inimigos antigos sem IA. Ataques em andamento restauram em recuperação no checkpoint. Recompensas e identificação de conteúdo das fases existentes não foram alteradas.
 
 177 testes passaram, incluindo os onze arquétipos e novas regressões. TypeScript, build e smoke de navegador de exploração/save passaram. Nenhuma Action ou APK. Chefes ainda usam lógica separada; o balanceamento completo continua pendente. Contrato em [IA_E_COMBATE.md](IA_E_COMBATE.md). Próximo lote: fábrica/financeiro, em 4A–4C e 5A–5C.
+
+## Incremento 12 — fábrica e financeiro em seis setores
+
+Implementadas **4A Tanques de Refrigeração**, **4B Linhas de Esteiras**, **4C Núcleo de Descarte**, **5A Boulevard de Mármore**, **5B Garagens e Serviços** e **5C Suíte Executiva**. São 30 inimigos iniciais, 18 checkpoints e 18 objetos de recurso/segredo. Tanques têm canais de resíduo, as esteiras seguem sentidos opostos e as garagens incluem duas barreiras laser e elevadores. Todos os capítulos possuem retorno entre setores; arenas e chefes ficam nos setores finais. Os mapas originais 4/5 continuam como testes sem substituir o save.
+
+A campanha tem agora **19 mapas**: 16 próprios nas fases 1–5 e três adaptadores das fases 6–8. A meta continua em 26. Saves dos capítulos 1–3 mantêm sua identificação; saves das geometrias originais de 4/5 são retidos como incompatíveis. Arte, trilha e padrões de chefes existentes foram reaproveitados, sem afirmar que a individualização dos chefes foi concluída.
+
+Refinamentos da IA: patrulha vira ao encontrar borda/parede, voo sem alvo retorna à altura original e recuperação readquire o alvo visível antes de preparar o próximo ataque. O teste antigo de parede foi ajustado para verificar aproximação e ausência de atravessamento durante todo o percurso, permitindo o afastamento esperado depois da inversão de patrulha.
+
+**219 testes passaram**, incluindo ida/volta dos seis setores com os três heróis sem voo, dano ou resgate; lasers fazem parte dos trajetos testados. Também foram verificadas geometria/spawns, esteiras opostas, save/restauração, preservação de objetos e bloqueio dos chefes até a escolta. Os primeiros ensaios encontraram falta de espaço de salto/aterrissagem perto de um tanque e de uma barreira; foram ajustados os mapas antes do aceite. Percurso isolado não certifica dificuldade dos confrontos ou todos os segredos.
+
+TypeScript, build web e assets Android passaram. Chromium horizontal validou seleção das fases 4/5, portas por CIMA via toque, carregamento dos saves com três setores no build de produção, retorno ao menu e retomada, sem overflow/erros JavaScript. Regressões de toque simultâneo, save e Voltar continuaram passando. Nenhuma Action acionada e nenhum APK gerado; teste físico Android/DualShock 4 permanece pendente.
+
+Próximo bloco: individualização dos chefes/combate e expansão de museu, blacksite e torre (fases 6–8), para fechar a meta de 26. Música, arte e acabamento seguem após a base. Multiplayer/migração de engine continuam futuros, sem alterações nos gatilhos manuais das Actions.

@@ -776,7 +776,11 @@ export default function App() {
                         ? 'Atravesse vagões, cabos de manutenção e o teto do trem. Explore os compartimentos superiores, use CIMA nas escotilhas e enfrente Valkyrie-7 no último setor.'
                         : selectedStageId === 3
                           ? 'Cruze a fundação, suba o núcleo de guindastes e vigas e enfrente Goliath-IV no heliponto. Use os pontos de apoio durante a subida e CIMA nos acessos entre setores.'
-                          : currentStageDef.description}
+                          : selectedStageId === 4
+                            ? 'Explore tanques e linhas de esteiras em sentidos opostos. Volte aos terminais superiores e alcance Arisawa no núcleo de descarte.'
+                            : selectedStageId === 5
+                              ? 'Percorra o boulevard, as garagens de serviço e a suíte executiva. Use CIMA nos acessos e enfrente a escolta dos Gêmeos na ala panorâmica.'
+                              : currentStageDef.description}
                   </p>
 
                   <div className="mt-4 rounded-lg bg-slate-950/80 p-3 border border-slate-800">
@@ -796,10 +800,10 @@ export default function App() {
                   <Play className="h-5 w-5 fill-current" />
                   Iniciar Fase {selectedStageId}
                 </button>
-                {ALLOW_TEST_CHARACTER_SWITCH && selectedStageId <= 3 && (
+                {ALLOW_TEST_CHARACTER_SWITCH && selectedStageId <= 5 && (
                   <button type="button" onClick={() => startStage(selectedStageId, selectedChar, 0, true, 3, 15000, true)}
                     className="mt-2 min-h-[44px] text-xs text-slate-400 underline">
-                    Jogar mapa original {selectedStageId === 1 ? 'do distrito' : selectedStageId === 2 ? 'do monotrilho' : 'do canteiro'} (teste)
+                    Jogar mapa original da fase {selectedStageId} (teste)
                   </button>
                 )}
               </div>

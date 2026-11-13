@@ -2066,7 +2066,10 @@ export class GameEngine {
         enemy.vx *= 0.85; enemy.vy *= 0.85;
       } else if (!flying && !enemy.airborne && intent.move !== 0 && enemy.facing === Math.sign(intent.move)) {
         if (Math.abs(enemy.x + intent.move - home) <= GROUND_ENEMY.leash || mind.state === 'return') {
-          if (hasSafeFooting(enemy, intent.move, this.platforms)) moveAgainstSolids(enemy, intent.move, 'x', solids);
+          if (hasSafeFooting(enemy, intent.move, this.platforms)) {
+            const wall = moveAgainstSolids(enemy, intent.move, 'x', solids);
+            if (wall && mind.state === 'patrol') enemy.facing = enemy.facing === 1 ? -1 : 1;
+          } else if (mind.state === 'patrol') enemy.facing = enemy.facing === 1 ? -1 : 1;
         }
       }
       if (intent.attack === 'shot') {

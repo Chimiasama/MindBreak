@@ -273,7 +273,7 @@ test('snapshots remain valid during real simulation across every chapter, includ
 test('restoring a save cancels delayed completion callbacks from the previous run', (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   let completions = 0;
-  const { engine, state } = fixture(4);
+  const { engine, state } = fixture(6);
   const save = checked(engine.captureCampaignSave()!);
   state.callbacks.onStageClear = () => { completions++; };
   state.damageBoss(10000);

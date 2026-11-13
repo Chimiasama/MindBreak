@@ -1,0 +1,105 @@
+import { STAGES } from '../stages';
+import { SubstageDefinition } from './types';
+import { chapterBase, enemyAt as enemy, exitAt as door } from './authoring';
+const chapter = STAGES[3];
+
+export const FACTORY: SubstageDefinition[] = [
+  {
+    ...chapterBase(4, 720), substageId: '4A', title: 'Tanques de Refrigeração', boundsWidth: 2500,
+    description: 'Atravesse canais de resíduo, procure os comandos superiores e alcance as linhas de transporte.',
+    entryCheckpoint: 'entrada', checkpoints: [
+      { id: 'entrada', label: 'Entrada dos tanques', x: 140, y: 664 },
+      { id: 'controle', label: 'Controle de refrigeração', x: 1100, y: 664 },
+      { id: 'saida', label: 'Acesso às linhas', x: 2300, y: 664 },
+    ],
+    exits: [door('esteiras', 'Linhas de esteiras', 2380, 720, '4B', 'entrada')],
+    platforms: [
+      { x: -100, y: 720, w: 820, h: 340, type: 'solid' },
+      { x: 720, y: 760, w: 80, h: 300, type: 'acid' },
+      { x: 800, y: 720, w: 680, h: 340, type: 'solid' },
+      { x: 1480, y: 760, w: 100, h: 300, type: 'acid' },
+      { x: 1580, y: 720, w: 1020, h: 340, type: 'solid' },
+      { x: 410, y: 630, w: 170, h: 90, type: 'wall' },
+      { x: 500, y: 320, w: 220, h: 18, type: 'solid' },
+      { x: 1040, y: 520, w: 200, h: 18, type: 'solid' },
+      { x: 1360, y: 400, w: 210, h: 18, type: 'solid' },
+      { x: 1510, y: 460, w: 140, h: 18, type: 'moving', moveAxis: 'y', moveRange: 40, moveSpeed: 0.025 },
+      { x: 1840, y: 620, w: 160, h: 100, type: 'wall' },
+      { x: 2100, y: 440, w: 220, h: 18, type: 'solid' },
+    ],
+    ceilingPipes: [{ x: 650, y: 300, w: 700, h: 10 }, { x: 1640, y: 270, w: 620, h: 10 }],
+    props: [
+      { id: 1, x: 290, y: 676, w: 42, h: 44, hp: 20, kind: 'crate', dropType: 'heal' },
+      { id: 2, x: 1440, y: 356, w: 50, h: 44, hp: 25, kind: 'chest', dropType: 'secret_a' },
+      { id: 3, x: 2230, y: 676, w: 42, h: 44, hp: 25, kind: 'terminal', dropType: 'psy' },
+    ],
+    enemies: [enemy('mutant', 650, 720, 75), enemy('drone', 930, 720, 45), enemy('mib_gunner', 1180, 720),
+      enemy('mutant', 1720, 720, 80), enemy('mib_shield', 2240, 720, 110)],
+    introDialogue: [
+      { speaker: 'MAYA', line: 'Os tanques estão vazando. Há passagens por cima e pontos de apoio entre as linhas.' },
+      { speaker: 'LEON', line: 'Atravessem as esteiras até o núcleo. Arisawa está usando o descarte para alimentar o Cyber-T-Rex.' },
+    ],
+  },
+  {
+    ...chapterBase(4, 660), substageId: '4B', title: 'Linhas de Esteiras', boundsWidth: 2640,
+    description: 'Esteiras em sentidos opostos mudam o ritmo da travessia; os terminais superiores guardam suprimentos.',
+    entryCheckpoint: 'entrada', checkpoints: [
+      { id: 'entrada', label: 'Passarela de alimentação', x: 140, y: 604 },
+      { id: 'terminal', label: 'Terminal entre linhas', x: 1320, y: 604 },
+      { id: 'saida', label: 'Saída do transporte', x: 2460, y: 604 },
+    ],
+    exits: [door('tanques', 'Tanques', 40, 660, '4A', 'saida'), door('nucleo', 'Núcleo de descarte', 2520, 660, '4C', 'entrada')],
+    platforms: [
+      { x: -100, y: 660, w: 620, h: 400, type: 'solid' },
+      { x: 520, y: 660, w: 700, h: 400, type: 'conveyor', conveyorSpeed: -1.6 },
+      { x: 1220, y: 660, w: 300, h: 400, type: 'solid' },
+      { x: 1520, y: 660, w: 680, h: 400, type: 'conveyor', conveyorSpeed: 1.8 },
+      { x: 2200, y: 660, w: 560, h: 400, type: 'solid' },
+      { x: 720, y: 570, w: 170, h: 90, type: 'wall' },
+      { x: 400, y: 420, w: 200, h: 18, type: 'solid' },
+      { x: 1150, y: 330, w: 220, h: 18, type: 'solid' },
+      { x: 1810, y: 560, w: 180, h: 100, type: 'wall' },
+      { x: 2100, y: 400, w: 160, h: 18, type: 'moving', moveAxis: 'x', moveRange: 50, moveSpeed: 0.025 },
+    ],
+    ceilingPipes: [{ x: 610, y: 230, w: 790, h: 10 }, { x: 1680, y: 240, w: 680, h: 10 }],
+    props: [
+      { id: 1, x: 350, y: 616, w: 42, h: 44, hp: 20, kind: 'crate', dropType: 'jmp' },
+      { id: 2, x: 1250, y: 286, w: 50, h: 44, hp: 25, kind: 'chest', dropType: 'secret_b' },
+      { id: 3, x: 2360, y: 616, w: 42, h: 44, hp: 25, kind: 'terminal', dropType: 'heal' },
+    ],
+    enemies: [enemy('drone', 620, 660, 45), enemy('mutant', 1000, 660, 80), enemy('sniper', 1220, 330, 55),
+      enemy('mib_gunner', 1400, 660), enemy('heavy_trooper', 2300, 660, 115)],
+  },
+  {
+    ...chapterBase(4, 700), substageId: '4C', title: 'Núcleo de Descarte', boundsWidth: 3000, goalX: 2740,
+    description: 'Rompa a guarda do reator e enfrente Arisawa e seu Cyber-T-Rex na plataforma de descarte.',
+    entryCheckpoint: 'entrada', checkpoints: [
+      { id: 'entrada', label: 'Galeria do reator', x: 140, y: 644 },
+      { id: 'reator', label: 'Antes da guarda do reator', x: 1500, y: 644 },
+      { id: 'arisawa', label: 'Plataforma de descarte', x: 2530, y: 644 },
+    ],
+    exits: [door('esteiras', 'Linhas de esteiras', 40, 700, '4B', 'saida')],
+    platforms: [
+      { x: -100, y: 700, w: 1000, h: 360, type: 'solid' },
+      { x: 900, y: 760, w: 80, h: 300, type: 'acid' },
+      { x: 980, y: 700, w: 2120, h: 360, type: 'solid' },
+      { x: 420, y: 610, w: 170, h: 90, type: 'wall' },
+      { x: 640, y: 500, w: 160, h: 18, type: 'solid' },
+      { x: 1020, y: 390, w: 200, h: 18, type: 'solid' },
+      { x: 1460, y: 430, w: 180, h: 18, type: 'solid' },
+      { x: 1950, y: 470, w: 220, h: 18, type: 'solid' },
+      { x: 2920, y: 300, w: 60, h: 400, type: 'wall' },
+    ],
+    ceilingPipes: [{ x: 820, y: 220, w: 840, h: 10 }],
+    props: [
+      { id: 1, x: 300, y: 656, w: 42, h: 44, hp: 20, kind: 'crate', dropType: 'heal' },
+      { id: 2, x: 1130, y: 346, w: 50, h: 44, hp: 25, kind: 'chest', dropType: 'secret_a' },
+      { id: 3, x: 2560, y: 656, w: 42, h: 44, hp: 25, kind: 'terminal', dropType: 'psy' },
+    ],
+    ambushArenas: [{ id: 1, triggerX: 1800, minX: 1660, maxX: 2430, cleared: false, active: false }],
+    enemies: [enemy('mib_gunner', 750, 700), enemy('jetpack', 1180, 700, 70),
+      enemy('mutant', 1850, 700, 85), enemy('mib_shield', 2050, 700, 110), enemy('heavy_trooper', 2260, 700, 120)],
+    boss: { ...chapter.boss, x: 2700, y: 604 },
+    outroDialogue: chapter.outroDialogue.map((line) => ({ ...line })),
+  },
+];

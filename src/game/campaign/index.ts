@@ -4,6 +4,8 @@ import { StageDefinition } from '../types';
 import { DISTRICT } from './district';
 import { MONORAIL } from './monorail';
 import { CONSTRUCTION } from './construction';
+import { FACTORY } from './factory';
+import { FINANCIAL } from './financial';
 import { CampaignStage, SubstageDefinition, SubstageId } from './types';
 export type { CampaignStage, SubstageDefinition, SubstageId, PlayerCarry, CampaignProgress } from './types';
 
@@ -12,7 +14,7 @@ export function adaptLegacy(stage: StageDefinition): SubstageDefinition {
     checkpoints: [{ id: 'entrada', label: 'Entrada do setor', x: stage.spawnX, y: stage.spawnY }] };
 }
 
-export const SUBSTAGES: SubstageDefinition[] = [...DISTRICT, ...MONORAIL, ...CONSTRUCTION, ...STAGES.slice(3).map(adaptLegacy)];
+export const SUBSTAGES: SubstageDefinition[] = [...DISTRICT, ...MONORAIL, ...CONSTRUCTION, ...FACTORY, ...FINANCIAL, ...STAGES.slice(5).map(adaptLegacy)];
 export const CAMPAIGN: CampaignStage[] = STAGES.map((stage) => ({ id: stage.id, title: stage.title,
   entry: `${stage.id}A`, substages: SUBSTAGES.filter((area) => area.id === stage.id).map((area) => area.substageId),
   plannedCount: stage.id === 1 || stage.id === 8 ? 4 : 3 }));

@@ -4,7 +4,7 @@ Implementação inicial: incremento 4, 13/11/2026. Este documento descreve códi
 
 ## Conteúdo disponível
 
-A campanha mantém oito fases principais. O distrito agora tem quatro mapas novos, com geometria, encontros, objetos e checkpoints próprios. O monotrilho e o canteiro também ganharam três mapas próprios cada. As fases 4–8 continuam usando seus cinco mapas originais por meio de adaptadores. Portanto, existem **15 mapas na campanha atual**; a meta editorial continua em 26. Os mapas originais do distrito, monotrilho e canteiro permanecem acessíveis pelos botões de teste e pela API `loadStage()`, fora da contagem dos 15.
+A campanha mantém oito fases principais. Distrito: quatro mapas próprios; monotrilho, canteiro, fábrica e financeiro: três mapas próprios cada. As fases 6–8 usam seus três mapas originais por adaptadores. Existem **19 mapas na campanha atual**, rumo a 26. Os originais das fases 1–5 permanecem acessíveis pelos botões de teste e pela API `loadStage()`, fora dessa contagem.
 
 | Setor | Identidade | Inimigos iniciais | Pontos de apoio | Papel |
 | --- | --- | ---: | ---: | --- |
@@ -18,6 +18,12 @@ A campanha mantém oito fases principais. O distrito agora tem quatro mapas novo
 | 3A | Fundação da Torre | 5 | 3 | Bases de concreto, vãos e exploração nas vigas |
 | 3B | Guindastes e Vigas | 6 | 3 | Subida de mil unidades, patamar intermediário e andaimes opcionais |
 | 3C | Heliponto na Tormenta | 5 | 3 | Escolta de demolição e encontro final com Goliath-IV |
+| 4A | Tanques de Refrigeração | 5 | 3 | Canais de resíduo, comandos superiores e suprimentos |
+| 4B | Linhas de Esteiras | 5 | 3 | Transporte em sentidos opostos e terminais elevados |
+| 4C | Núcleo de Descarte | 5 | 3 | Guarda do reator e Arisawa/Cyber-T-Rex |
+| 5A | Boulevard de Mármore | 5 | 3 | Barricadas, terraços, carros e agentes executivos |
+| 5B | Garagens e Serviços | 5 | 3 | Barreiras laser, elevadores e acesso restrito |
+| 5C | Suíte Executiva | 5 | 3 | Escolta do cofre e Castor/Pólux |
 
 ```mermaid
 flowchart LR
@@ -30,7 +36,13 @@ flowchart LR
   G -. "vencer chefe e avançar" .-> H[3A · Fundação]
   H <--> I[3B · Guindastes e vigas]
   I <--> J[3C · Heliponto / Goliath-IV]
-  J -. "vencer chefe e avançar" .-> K[4A · Fábrica original]
+  J -. "vencer chefe e avançar" .-> K[4A · Tanques]
+  K <--> L[4B · Esteiras]
+  L <--> M[4C · Núcleo / Arisawa]
+  M -. "vencer chefe e avançar" .-> N[5A · Boulevard]
+  N <--> O[5B · Garagens]
+  O <--> P[5C · Suíte / Gêmeos]
+  P -. "vencer chefe e avançar" .-> Q[6A · Museu original]
 ```
 
 O grafo de portas só liga áreas da mesma fase principal. Avançar para a fase principal seguinte é uma transição de campanha após conclusão, não uma porta livre.
@@ -38,6 +50,7 @@ O grafo de portas só liga áreas da mesma fase principal. Avançar para a fase 
 ## Arquivos e contratos
 
 - `src/game/campaign/types.ts`: `CampaignStage`, `SubstageDefinition`, `CheckpointDefinition`, `ExitDefinition`, `PlayerCarry` e `CampaignProgress`.
+- `src/game/campaign/factory.ts` e `financial.ts`: seis mapas das fases 4/5, com portas de retorno e arenas/chefes somente no último setor. `authoring.ts` compartilha valores de autoria dos novos mapas, sem alterar os capítulos já existentes.
 - `src/game/campaign/construction.ts`: três mapas do canteiro; o núcleo em degraus sobe de Y=1040 para Y=40, com câmera limitada ao setor e checkpoints no meio/topo.
 - `src/game/campaign/monorail.ts`: três mapas do monotrilho, com arena e chefe apenas no setor final.
 - `src/game/campaign/district.ts`: os quatro mapas do distrito. Paleta/música temática são reaproveitadas; geometria e arrays de encontros são novos.
@@ -55,7 +68,7 @@ A interação é **CIMA**: seta/W no teclado, botão superior do direcional de t
 
 É necessário estar dentro da região da porta. Segurar cima sem uma nova interação não atravessa automaticamente. As posições de chegada ficam afastadas da porta de retorno, evitando ida e volta involuntária. Estado de entrada é limpo na transição.
 
-Uma arena obrigatória ativa ou um chefe em combate bloqueia a saída. O chefe da avenida espera a arena obrigatória ser concluída antes de ativar seu encontro. Cipher-01 em 1D conclui a fase 1; Valkyrie-7 em 2C conclui a fase 2. Goliath-IV em 3C conclui a fase 3. Os três aguardam suas escoltas obrigatórias. Pórticos móveis estão habilitados em 2C, com aviso e desvio por rasteira; 2A/2B não usam esse perigo. Sair de um setor intermediário não concede bônus de conclusão nem dispara vitória.
+Uma arena obrigatória ativa ou um chefe em combate bloqueia a saída. O chefe da avenida espera a arena obrigatória ser concluída antes de ativar seu encontro. Cipher-01 em 1D conclui a fase 1; Valkyrie-7 em 2C conclui a fase 2. Goliath-IV em 3C conclui a fase 3. Arisawa em 4C conclui a fase 4; os Gêmeos em 5C concluem a fase 5. Os cinco encontros finais aguardam suas escoltas obrigatórias. As configurações/padrões existentes dos chefes foram reaproveitados; isso não conclui o item de individualização dos oito chefes. Pórticos móveis estão habilitados em 2C, com aviso e desvio por rasteira; 2A/2B não usam esse perigo. Sair de um setor intermediário não concede bônus de conclusão nem dispara vitória.
 
 ## Estado preservado nas transições
 
@@ -89,10 +102,14 @@ A retomada exata funciona enquanto a sessão está aberta. O incremento 7 acresc
 
 `validateCampaign()` roda na carga dos dados e nos testes. Rejeita IDs duplicados, filiação incorreta, geometrias inválidas, checkpoints obstruídos/fora do mapa, portas sem destino/checkpoint, setores inalcançáveis e fases sem exatamente um encontro final. A soma editorial de 26 setores é verificada separadamente da quantidade já construída.
 
-A geometria principal de 1A–1D, 2A–2C e 3A–3C foi atravessada por simulação para os três heróis, sem voo/teletransporte, sem resgate de abismo e sem contato com ácido ou dependência de imunidade. No monotrilho e no canteiro, a volta também foi verificada nos três setores e três heróis. Os testes de rota isolam combate/arena/pórticos (esses possuem teste próprio) para avaliar deslocamento; não representam uma certificação de dificuldade de todos os confrontos ou segredos. Há testes separados para bloqueios, derrota final, morte/continue e preservação de estado.
+A geometria principal de 1A–1D e 2A–2C/3A–3C/4A–4C/5A–5C foi atravessada por simulação para os três heróis, sem voo/teletransporte, sem resgate de abismo e sem contato com ácido ou dependência de imunidade. Nos capítulos 2–5, a volta também foi verificada em cada setor com os três heróis. Os lasers de 5B fazem parte das rotas testadas, sem depender de invulnerabilidade. Os testes de rota isolam combate/arena/pórticos (esses possuem teste próprio) para avaliar deslocamento; não representam uma certificação de dificuldade de todos os confrontos ou segredos. Há testes separados para bloqueios, derrota final, morte/continue e preservação de estado.
 
 Os cenários continuam usando a arte provisória e o sistema sonoro existente. Produção das demais subfases, polimento de encontros e validação Android/DualShock 4 físico continuam pendentes. Nenhuma Action automática ou geração de APK faz parte desta etapa.
 
 ## Compatibilidade do incremento 10
 
 A expansão substitui o antigo adaptador de 3A pelos novos mapas 3A/3B/3C. Saves de fases 1/2 preservam a identificação de conteúdo; saves da fase 3 original são apresentados como incompatíveis e ficam retidos para descarte/substituição explícita. Não existe migração automática entre geometrias diferentes. O mapa original continua acessível para testes, sem substituir o save de campanha. A máquina de estados completa da IA, aprimoramento dos chefes, arte e trilha novas continuam nas respectivas etapas do plano.
+
+## Compatibilidade do incremento 12
+
+A expansão das fases 4/5 mantém a identificação de conteúdo dos capítulos 1–3. Saves das versões originais de 4A/5A ficam incompatíveis com as novas geometrias e são retidos para descarte/substituição explícita, sem migração silenciosa. A IA tem leitura compatível do campo opcional `Enemy.ai`, conforme [IA_E_COMBATE.md](IA_E_COMBATE.md). Os perfis de chefes ainda são os existentes; o trabalho nos mapas não equivale a concluir suas mecânicas futuras.
