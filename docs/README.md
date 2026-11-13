@@ -1,5 +1,6 @@
 # Documentação do MIND//BREAK
 
+- [Chefes](CHEFES.md): sequências próprias, fases, recuperação, colisão e vida compartilhada dos gêmeos.
 - [IA e combate](IA_E_COMBATE.md): estados, preparação/recuperação, stun, visão e colisão de projéteis.
 - [Movimento e terreno](MOVIMENTACAO_E_TERRENO.md): perfis, medição dos saltos e regras físicas dos inimigos.
 - [Salvamento da campanha](SALVAMENTO.md): formato versionado, retomada, recuperação e limites.

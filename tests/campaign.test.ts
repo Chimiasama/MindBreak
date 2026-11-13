@@ -467,3 +467,15 @@ test('new factory/financial maps have valid spawns and opposite conveyor directi
   assert.ok(speeds.some((speed) => speed < 0)); assert.ok(speeds.some((speed) => speed > 0));
   assert.equal(getSubstage('5B').platforms.filter((platform) => platform.type === 'laser_gate').length, 2);
 });
+
+test('an arena follows its authored squad identities even if a surviving actor leaves its bounds', () => {
+  const { engine, state } = fixture();
+  through(engine, state, 'telhados'); through(engine, state, 'esgotos'); through(engine, state, 'avenida');
+  const arena = state.ambushArenas[0]; arena.active = true;
+  const members = state.enemies.filter((enemy: any) => enemy.x >= arena.minX - 60 && enemy.x <= arena.maxX + 60);
+  members.slice(1).forEach((enemy: any) => { enemy.hp = 0; });
+  members[0].x = 100;
+  assert.equal(state.checkAmbushArenas(), arena); assert.equal(arena.cleared, false);
+  members[0].hp = 0;
+  assert.equal(state.checkAmbushArenas(), null); assert.equal(arena.cleared, true); engine.stop();
+});

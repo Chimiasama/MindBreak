@@ -101,7 +101,7 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 
 - **2.3.0.1 — Implementado nos incrementos 9/11:** separar IA em estados patrulha/alerta/ataque/recuperação/stun/morte; introduzir limites de perseguição e verificação de piso para não acumular inimigos em abismos.
 - **2.3.0.2 — Cooperação/telegrafia e proteção contra stun implementadas no incremento 11; balanceamento pendente:** conservar cooperação guarda/cão/atirador, com sinais legíveis e limites para stun encadeado.
-- **2.3.0.3:** individualizar os oito chefes com padrões, telegrafia e contra-ataques próprios; gêmeos devem ter regra clara de dois corpos/vida compartilhada. Arisawa e Vane deixam de usar somente especial genérico.
+- **2.3.0.3 — Sequências próprias e gêmeos atingíveis implementados no incremento 13; balanceamento pendente:** individualizar os oito chefes com padrões, telegrafia e contra-ataques próprios; gêmeos devem ter regra clara de dois corpos/vida compartilhada. Arisawa e Vane deixam de usar somente especial genérico.
 - **2.3.0.4 — Aceite:** derrotar cada chefe com todos os personagens sem depender de bugs; fase 2 modifica o padrão com clareza; combates não geram softlock.
 
 ## Fase 3 — Exploração e repopulação de inimigos

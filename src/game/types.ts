@@ -165,7 +165,22 @@ export interface BossConfig {
     | 'oswald';
 }
 
+export type BossAttack = 'daggers' | 'lunge' | 'sweep' | 'dive' | 'charge' | 'shockwave' | 'acid_fan' | 'acid_rain' |
+  'crossfire' | 'portal' | 'draw_cut' | 'blade_fan' | 'plasma_burst' | 'mortar' | 'orbs' | 'eye_beam';
+export interface BossMind {
+  state: 'ready' | 'windup' | 'active' | 'recover';
+  timer: number;
+  index: number;
+  phase: 1 | 2;
+  attack: BossAttack;
+  aimX: number;
+  aimY: number;
+  facing: 1 | -1;
+}
+
 export interface BossRuntime extends BossConfig {
+  mind?: BossMind;
+  twinVy?: number;
   active: boolean;
   triggered: boolean;
   hp: number;

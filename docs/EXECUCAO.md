@@ -223,3 +223,11 @@ Refinamentos da IA: patrulha vira ao encontrar borda/parede, voo sem alvo retorn
 TypeScript, build web e assets Android passaram. Chromium horizontal validou seleção das fases 4/5, portas por CIMA via toque, carregamento dos saves com três setores no build de produção, retorno ao menu e retomada, sem overflow/erros JavaScript. Regressões de toque simultâneo, save e Voltar continuaram passando. Nenhuma Action acionada e nenhum APK gerado; teste físico Android/DualShock 4 permanece pendente.
 
 Próximo bloco: individualização dos chefes/combate e expansão de museu, blacksite e torre (fases 6–8), para fechar a meta de 26. Música, arte e acabamento seguem após a base. Multiplayer/migração de engine continuam futuros, sem alterações nos gatilhos manuais das Actions.
+
+## Incremento 13 — sequências dos oito chefes e dois corpos dos gêmeos
+
+Chefes passam a usar preparação com alvo travado, ataque com duração finita e recuperação. Cada um tem sequência própria nas duas fases, incluindo leque/chuva ácida de Arisawa, rajada/bombardeio de Vane, saque de Kusanagi e órbitas/olho de Oswald. A transformação interrompe o padrão anterior com respiro de 45 ticks. Investidas/mergulhos usam varredura; projéteis têm descarte vertical e continuam respeitando paredes.
+
+Castor/Pólux agora recebem dano nos dois corpos com uma vida/identidade de dano compartilhada. Golpe, especiais, reflexão, WAV e corpo lançado consultam ambos; sobreposição ou travessia dos dois não duplica dano por ataque nem conclusão/recompensa. Portal respeita sólidos/limites e distância do jogador. Arenas acompanham a identidade da escolta para que sair dos limites por impulso não libere uma arena com sobrevivente.
+
+239 testes passaram; TypeScript e build passaram. Chromium confirmou golpe real no corpo secundário e preparação/marcador sem erro. Há simulação longa dos oito padrões, mas não certificação de vitória/dificuldade completa ou controle físico. O save mantém a regra de reiniciar chefe incompleto no checkpoint. Nenhuma Action/APK. Contrato em [CHEFES.md](CHEFES.md). Próximo bloco: setores das fases 6–8 para atingir 26 mapas próprios.

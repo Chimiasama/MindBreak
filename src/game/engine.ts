@@ -1,3 +1,4 @@
+import { bossBodies, bossShots, bossWarnings, BOSS_MOVES, isBossCharge, moveBoss, stepBoss } from './bosses';
 import { sound } from './audio';
 import { AreaSave, CampaignSave, campaignContentId, decodeCampaignSave } from './campaign/save';
 import { FixedStepClock } from './simulation';
@@ -53,6 +54,7 @@ interface Bullet {
   hitIds?: Set<number>;
   color: string;
   damage: number;
+  gravity?: number;
   dead?: boolean;
 }
 
@@ -381,6 +383,7 @@ export class GameEngine {
     const bossConfig = found.boss ?? STAGES[0].boss;
     this.boss = {
       ...bossConfig,
+      mind: undefined, twinVy: 0,
       active: !!found.boss,
       triggered: false,
       hp: bossConfig.maxHp,
@@ -512,7 +515,7 @@ export class GameEngine {
           cleared: area.arenas[index].cleared, active: false })),
         enemies: area.enemies.map((enemy) => ({ ...enemy })), spawns,
         // A boss cannot be left through a portal. Checkpoint restores restart that encounter.
-        boss: { ...this.boss, ...(definition.boss ?? {}), active: !!definition.boss,
+        boss: { ...this.boss, ...(definition.boss ?? {}), mind: undefined, twinVy: 0, active: !!definition.boss,
           triggered: false, hp: definition.boss?.maxHp ?? this.boss.maxHp,
           phase: 1, vx: 0, vy: 0, twinX: (definition.boss?.x ?? 0) + 120,
           twinY: definition.boss?.y ?? 0, shieldActive: definition.boss?.behavior === 'cipher' },
@@ -1036,7 +1039,7 @@ export class GameEngine {
     });
 
     // Hit Boss
-    if (this.boss.active && this.boss.triggered && this.checkAABB(slashHitbox, this.boss)) {
+    if (this.boss.active && this.boss.triggered && bossBodies(this.boss).some((body) => this.checkAABB(slashHitbox, body))) {
       if (
         this.boss.shieldActive &&
         !breakShieldsNow &&
@@ -1069,7 +1072,7 @@ export class GameEngine {
         let target: { x: number; y: number; w: number; h: number } | undefined =
           b.shooterId !== undefined ? this.enemies.find((e) => e.id === b.shooterId) : undefined;
         if (!target && this.boss.active && this.boss.triggered) {
-          target = this.boss;
+          target = bossBodies(this.boss).sort((left, right) => Math.hypot(left.x - b.x, left.y - b.y) - Math.hypot(right.x - b.x, right.y - b.y))[0];
         }
         if (!target) {
           target = this.enemies.filter((enemy) => enemy.hp > 0).sort((left, right) =>
@@ -1153,7 +1156,7 @@ export class GameEngine {
           this.hitEnemy(en, 110, (en.x > p.x ? 1 : -1) * 10, -12, 6);
         }
       });
-      if (this.boss.active && this.boss.triggered && Math.abs(this.boss.x - p.x) < 760) {
+      if (this.boss.active && this.boss.triggered && bossBodies(this.boss).some((body) => Math.abs(body.x - p.x) < 760)) {
         this.damageBoss(100);
       }
       this.bullets = this.bullets.filter((b) => b.fromPlayer);
@@ -1210,7 +1213,7 @@ export class GameEngine {
           this.hitEnemy(en, 38, (en.x >= p.x ? 1 : -1) * 11, -8, 4);
         }
       });
-      if (this.boss.active && this.boss.triggered && Math.hypot(this.boss.x - p.x, this.boss.y - p.y) < 195) {
+      if (this.boss.active && this.boss.triggered && bossBodies(this.boss).some((body) => Math.hypot(body.x - p.x, body.y - p.y) < 195)) {
         this.damageBoss(35);
       }
     }
@@ -1254,7 +1257,7 @@ export class GameEngine {
           this.hitEnemy(en, 50, p.facing * 8, -9, 5);
         }
       });
-      if (this.boss.active && this.boss.triggered && Math.abs(this.boss.x - p.x) < 320) {
+      if (this.boss.active && this.boss.triggered && bossBodies(this.boss).some((body) => Math.abs(body.x - p.x) < 320)) {
         this.damageBoss(40);
       }
     }
@@ -1843,7 +1846,7 @@ export class GameEngine {
           this.addMangaFx('STRIKE!', en.x, en.y - 26, '#a855f7');
         }
       });
-      if (this.boss.active && this.boss.triggered && !te.hitIds.has(-999) && sweepTime(previous, te.vx, 0, this.boss) !== null) {
+      if (this.boss.active && this.boss.triggered && !te.hitIds.has(-999) && bossBodies(this.boss).some((body) => sweepTime(previous, te.vx, 0, body) !== null)) {
         te.hitIds.add(-999);
         this.damageBoss(te.damage);
       }
@@ -1862,18 +1865,20 @@ export class GameEngine {
 
     // Swept projectiles are processed in contact order; a non-piercing shot hits once.
     this.bullets.forEach((b) => {
+      b.vy += b.gravity ?? 0;
       const previous = { ...b };
       b.x += b.vx;
       b.y += b.vy;
       const wallTime = terrainHit(previous, b.vx, b.vy, solids);
       if (b.fromPlayer) {
         const targets = [...this.enemies.filter((enemy) => enemy.hp > 0),
-          ...(this.boss.active && this.boss.triggered ? [{ ...this.boss, id: -999 }] : [])];
+          ...(this.boss.active && this.boss.triggered ? bossBodies(this.boss).map((body) => ({ ...body, id: -999 })) : [])];
         const contacts = targets.map((target) => ({ target, time: sweepTime(previous, b.vx, b.vy, target) }))
           .filter((hit) => hit.time !== null && hit.time < wallTime && !b.hitIds?.has(hit.target.id))
           .sort((left, right) => left.time! - right.time!);
         for (const { target } of contacts) {
           if (b.dead) break;
+          if (b.hitIds?.has(target.id)) continue;
           if (target.id === -999) this.damageBoss(b.damage);
           else this.hitEnemy(target as Enemy, b.damage, b.vx > 0 ? 5 : -5, -4, 3);
           if (b.piercing) (b.hitIds ??= new Set()).add(target.id);
@@ -1889,7 +1894,7 @@ export class GameEngine {
       }
       if (wallTime !== Infinity) b.dead = true;
     });
-    this.bullets = this.bullets.filter((b) => !b.dead && Math.abs(b.x - p.x) < 1150);
+    this.bullets = this.bullets.filter((b) => !b.dead && Math.abs(b.x - p.x) < 1150 && b.y >= this.stage.boundsTop - 1200 && b.y <= this.stage.boundsBottom + 600);
 
     // Particles & Manga Texts
     this.particles.forEach((pt) => {
@@ -1963,10 +1968,12 @@ export class GameEngine {
     const p = this.player;
     for (const arena of this.ambushArenas) {
       if (arena.cleared) continue;
+      const members = new Set(this.stage.enemies.flatMap((origin, index) =>
+        origin.x >= arena.minX - 60 && origin.x <= arena.maxX + 60 ? [`${this.stage.substageId}:${index + 1}`] : []));
+      const hasSurvivors = () => this.enemies.some((enemy) => enemy.hp > 0 && (enemy.spawnId ? members.has(enemy.spawnId) :
+        enemy.x >= arena.minX - 60 && enemy.x <= arena.maxX + 60));
       if (!arena.active && p.x >= arena.triggerX) {
-        const hasEnemiesInside = this.enemies.some(
-          (en) => en.x >= arena.minX - 60 && en.x <= arena.maxX + 60
-        );
+        const hasEnemiesInside = hasSurvivors();
         if (hasEnemiesInside) {
           arena.active = true;
           sound.sfxAlarm();
@@ -1976,9 +1983,7 @@ export class GameEngine {
         }
       }
       if (arena.active) {
-        const aliveInside = this.enemies.some(
-          (en) => en.x >= arena.minX - 60 && en.x <= arena.maxX + 60
-        );
+        const aliveInside = hasSurvivors();
         if (!aliveInside) {
           arena.active = false;
           arena.cleared = true;
@@ -2108,118 +2113,41 @@ export class GameEngine {
   }
 
   private updateBoss() {
-    const b = this.boss;
-    const p = this.player;
-    const dx = p.x - b.x;
-    b.facing = dx >= 0 ? 1 : -1;
+    const b = this.boss, p = this.player;
+    const solids = enemySolids(this.platforms);
+    const minX = Math.max(10, this.stage.goalX - 700);
+    const maxX = Math.max(minX, this.stage.boundsWidth - b.w - 10);
+    const event = stepBoss(b, p);
+    const mind = b.mind!;
     b.orbitalAngle = (b.orbitalAngle ?? 0) + 0.08;
-
-    b.vx *= 0.86;
-    b.x += b.vx;
-    b.x = Math.max(this.stage.goalX - 560, Math.min(this.stage.boundsWidth - 140, b.x));
-
-    if (b.behavior !== 'valkyrie' && b.behavior !== 'oswald') {
-      b.vy += 0.6 * this.stage.gravityScale;
-      b.y += b.vy;
-      this.platforms.forEach((plat) => {
-        if (!plat.broken && plat.type !== 'acid' && plat.type !== 'laser_gate' && this.checkAABB(b, plat)) {
-          if (b.vy > 0) {
-            b.y = plat.y - b.h;
-            b.vy = 0;
-          }
-        }
-      });
-    } else {
-      const hoverY = p.y - 70 + Math.sin(this.tickCount * 0.05) * 40;
-      b.y += (hoverY - b.y) * 0.04;
-    }
-
-    b.attackTimer--;
-    b.telegraph = b.attackTimer <= 22 && b.attackTimer > 0 ? 1 : 0;
-    if (b.attackTimer <= 0) {
-      b.attackTimer = b.phase === 2 ? 56 : 82;
-      const spread = b.phase === 2 ? [-1.8, 0, 1.8] : [0];
-      spread.forEach((vyOffset) => {
-        this.bullets.push({
-          x: b.x + (b.facing === 1 ? b.w : -10),
-          y: b.y + b.h * 0.4,
-          vx: b.facing * (b.phase === 2 ? 9.5 : 7.5),
-          vy: vyOffset,
-          w: 14,
-          h: 6,
-          color: b.accentColor,
-          damage: 14,
-        });
-      });
-      sound.sfxShoot();
-    }
-
-    b.specialTimer--;
-    if (b.specialTimer <= 0) {
-      b.specialTimer = b.phase === 2 ? 120 : 170;
-      if (b.behavior === 'cipher') {
-        // Cipher-01 fires 3 orbiting psychic daggers at player
-        for (let i = -1; i <= 1; i++) {
-          this.bullets.push({
-            x: b.x + b.w / 2,
-            y: b.y + 20,
-            vx: b.facing * 8.5,
-            vy: i * 1.9,
-            w: 16,
-            h: 6,
-            color: '#c084fc',
-            damage: 15,
-          });
-        }
-        b.vx = b.facing * 12;
-        this.addMangaFx('ADAGAS PSÍQUICAS!', b.x, b.y - 24, '#c084fc');
-      } else if (b.behavior === 'goliath') {
-        b.vx = b.facing * 15;
-        this.addMangaFx('CHARGE!', b.x, b.y - 20, b.accentColor);
-      } else if (b.behavior === 'valkyrie' || b.behavior === 'kusanagi' || b.behavior === 'oswald') {
-        this.addParticle(b.x + b.w / 2, b.y + 30, b.accentColor, 16, 6);
-        b.x = Math.max(
-          this.stage.goalX - 520,
-          Math.min(this.stage.boundsWidth - 160, p.x + (Math.random() > 0.5 ? 140 : -140))
-        );
-        this.addMangaFx(
-          b.behavior === 'oswald' && b.phase === 2 ? 'OLHO CÓSMICO!' : 'WARP!',
-          b.x,
-          b.y - 20,
-          b.accentColor
-        );
-      } else if (b.behavior === 'twins') {
-        b.twinX = p.x + (p.x > b.x ? 120 : -120);
-        b.twinY = b.y;
-        this.bullets.push({
-          x: b.twinX,
-          y: b.y + 24,
-          vx: (p.x > b.twinX ? 1 : -1) * 9,
-          vy: 0,
-          w: 16,
-          h: 8,
-          color: '#facc15',
-          damage: 16,
-        });
-        this.addMangaFx('PORTAL!', b.twinX, b.y - 20, '#facc15');
-      } else {
-        for (let k = -1; k <= 1; k++) {
-          this.bullets.push({
-            x: b.x + b.w / 2,
-            y: b.y,
-            vx: b.facing * 6 + k * 2,
-            vy: -4 + Math.abs(k),
-            w: 12,
-            h: 12,
-            color: b.accentColor,
-            damage: 15,
-          });
+    if (event.started) this.addMangaFx(BOSS_MOVES[mind.attack].label, b.x, b.y - 28, b.accentColor);
+    if (event.fire) {
+      if (isBossCharge(event.fire)) {
+        const speed = event.fire === 'draw_cut' ? 15 : event.fire === 'charge' ? 14 : 12;
+        if (event.fire === 'dive') {
+          const dx = mind.aimX - b.x - b.w / 2, dy = mind.aimY - b.y - b.h / 2;
+          const length = Math.max(1, Math.hypot(dx, dy)); b.vx = dx / length * speed; b.vy = dy / length * speed;
+        } else b.vx = mind.facing * speed;
+      }
+      if (event.fire === 'portal') {
+        const twin = { x: b.x, y: b.y, w: b.w, h: b.h };
+        const targetX = Math.max(minX, Math.min(maxX, mind.aimX + mind.facing * 160));
+        moveAgainstSolids(twin, targetX - twin.x, 'x', solids);
+        // Never teleport a twin onto the player or inside terrain.
+        if (Math.abs(twin.x - p.x) >= 100 && !solids.some((solid) => overlaps(twin, solid))) {
+          b.twinX = twin.x; b.twinY = twin.y; b.twinVy = 0;
         }
       }
+      const shots = bossShots(b, event.fire);
+      this.bullets.push(...shots);
+      if (shots.length) sound.sfxShoot();
     }
-
-    if (Math.abs(b.vx) > 8 && this.checkAABB(p, b)) {
-      this.damagePlayer(18, b.facing * 9);
+    const previous = { x: b.x, y: b.y, w: b.w, h: b.h };
+    const charging = mind.state === 'active' && isBossCharge(mind.attack);
+    if (!charging) b.vx *= 0.86;
+    moveBoss(b, solids, minX, maxX, this.stage.gravityScale, p);
+    if (charging && sweepTime(previous, b.x - previous.x, b.y - previous.y, p) !== null) {
+      this.damagePlayer(mind.attack === 'charge' ? 22 : 18, mind.facing * 9);
     }
   }
 
@@ -2721,6 +2649,10 @@ export class GameEngine {
   }
 
   private drawBoss(ctx: CanvasRenderingContext2D, b: BossRuntime) {
+    ctx.save();
+    ctx.strokeStyle = '#fbbf24'; ctx.fillStyle = 'rgba(251,191,36,0.12)'; ctx.lineWidth = 2;
+    for (const zone of bossWarnings(b)) { ctx.fillRect(zone.x, zone.y, zone.w, zone.h); ctx.strokeRect(zone.x, zone.y, zone.w, zone.h); }
+    ctx.restore();
     // Stage 8 Phase 2 Cosmic One-Eyed Entity Zero!
     if (b.behavior === 'oswald' && b.phase === 2) {
       ctx.fillStyle = '#1e1b4b';
