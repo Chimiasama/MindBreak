@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "width": 96,
+  "height": 384,
+  "frameWidth": 24,
+  "frameHeight": 32,
+  "states": [
+    "idle",
+    "strideA",
+    "strideB",
+    "action"
+  ],
+  "types": [
+    {
+      "type": "mib_gunner",
+      "y": 0,
+      "frames": [
+        0,
+        24,
+        48,
+        72
+      ],
+      "source": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 32
+      }
+    },
+    {
+      "type": "mib_shield",
+      "y": 32,
+      "frames": [
+        0,
+        24,
+        48,
+        72
+      ],
+      "source": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 32
+      }
+    },
+    {
+      "type": "cyber_hound",
+      "y": 64,
+      "frames": [
+        0,
+        24,
+        48,
+        72
+      ],
+      "source": {
+        "x": 0,
+        "y": 10,
+        "w": 24,
+        "h": 22
+      }
+    },
+    {
+      "type": "jetpack",
+      "y": 96,
+      "frames": [
+        0,
+        24,
+        48,
+        72
+      ],
+      "source": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 32
+      }
+    },
+    {
+      "type": "drone",
+      "y": 128,
+      "frames": [
+        0,
+        24,
+        48,
+        72
+      ],
+      "source": {
+        "x": 0,
+        "y": 8,
+        "w": 24,
+        "h": 24
+      }
+    },
+    {
+      "type": "mutant",
+      "y": 160,
+      "frames": [
+        0,
+        24,
+        48,
+        72
+      ],
+      "source": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 32
+      }
+    },
+    {
+      "type": "sniper",
+      "y": 192,
+      "frames": [
+        0,
+        24,
+        48,
+        72
+      ],
+      "source": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 32
+      }
+    },
+    {
+      "type": "suit_martial",
+      "y": 224,
+      "frames": [
+        0,
+        24,
+        48,
+        72
+      ],
+      "source": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 32
+      }
+    },
+    {
+      "type": "samurai",
+      "y": 256,
+      "frames": [
+        0,
+        24,
+        48,
+        72
+      ],
+      "source": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 32
+      }
+    },
+    {
+      "type": "turret_engineer",
+      "y": 288,
+      "frames": [
+        0,
+        24,
+        48,
+        72
+      ],
+      "source": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 32
+      }
+    },
+    {
+      "type": "turret",
+      "y": 320,
+      "frames": [
+        0,
+        24,
+        48,
+        72
+      ],
+      "source": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 25
+      }
+    },
+    {
+      "type": "heavy_trooper",
+      "y": 352,
+      "frames": [
+        0,
+        24,
+        48,
+        72
+      ],
+      "source": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 32
+      }
+    }
+  ],
+  "note": "Visual only; engine controls dimensions, shields, mounts and aim."
+}

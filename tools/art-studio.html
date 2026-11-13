@@ -7,8 +7,10 @@
 <label>Quadro <input id="frame" type="range" min="0" value="0"></label><label><input id="bounds" type="checkbox">Caixa física de referência</label>
 <p id="status"></p><canvas id="preview" width="48" height="64"></canvas>
 <p><button id="png">Baixar atlas PNG</button><button id="json">Baixar metadados JSON</button></p><h2>Todos os quadros</h2><canvas id="sheet"></canvas>
+<h2>Inimigos: silhuetas e estados</h2><p>Repouso, dois apoios de locomoção e preparação/ação. Escudos, suportes, mira e projéteis são desenhados pelo motor.</p><canvas id="enemies"></canvas>
 <script type="module">
 import { HERO_ATLAS, HERO_CLIPS, clipFrame } from '/src/game/heroAnimation.ts';
+import { ENEMY_ART, getEnemyPixelSprite, enemySourceRect } from '/src/game/enemyArtwork.ts';
 import { getHeroAtlas } from '/src/game/heroArtwork.ts';
 const hero=document.querySelector('#hero'),pose=document.querySelector('#pose'),frame=document.querySelector('#frame'),play=document.querySelector('#play');
 for(const name of Object.keys(HERO_CLIPS)){const o=document.createElement('option');o.value=o.textContent=name;pose.append(o);}
@@ -21,5 +23,6 @@ function draw(now){if(play.checked)frame.value=clipFrame(pose.value,(now-epoch)*
 function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 document.querySelector('#png').onclick=()=>getHeroAtlas(hero.value).toBlob(b=>download(b,`${hero.value}-atlas.png`));
 document.querySelector('#json').onclick=()=>download(new Blob([JSON.stringify({hero:hero.value,...HERO_ATLAS},null,2)],{type:'application/json'}),`${hero.value}-atlas.json`);
-window.artStudio={getHeroAtlas,metadata:HERO_ATLAS,sheet};
+function enemySheet(){const c=document.querySelector('#enemies');c.width=960;c.height=Object.keys(ENEMY_ART).length*100;const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.fillStyle='#263449';x.fillRect(0,0,c.width,c.height);x.font='14px monospace';Object.entries(ENEMY_ART).forEach(([type,art],row)=>{x.fillStyle='#f1f5f9';x.fillText(type,8,row*100+25);x.fillText(art.label,8,row*100+47);for(let i=0;i<4;i++){x.drawImage(getEnemyPixelSprite(type,i),320+i*145,row*100+4,48,64);x.fillText(['repouso','apoio A','apoio B','ação'][i],320+i*145,row*100+87);}});}enemySheet();
+window.artStudio={ENEMY_ART,getEnemyPixelSprite,enemySourceRect,enemySheet,getHeroAtlas,metadata:HERO_ATLAS,sheet};
 </script></html>

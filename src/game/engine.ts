@@ -15,7 +15,7 @@ import { GROUND_ENEMY, enemySolids, enemyHome, hasSafeFooting, moveGroundEnemy }
 import { SpawnManager } from './spawns';
 import { viewportFor, cameraTarget, followCamera } from './camera';
 import { CHARACTER_ORDER, CHARACTERS } from './characters';
-import { getEnemyPixelSprite } from './pixelSprites';
+import { getEnemyPixelSprite, enemyVisualFrame, enemySourceRect } from './enemyArtwork';
 import { STAGES } from './stages';
 import { CAMPAIGN, adaptLegacy, getSubstage, SubstageDefinition, SubstageId, PlayerCarry, CampaignProgress } from './campaign';
 import {
@@ -2734,8 +2734,10 @@ export class GameEngine {
       else if (en.mount === 'wall-right') ctx.fillRect(en.x + en.w - 8, en.y, 8, en.h);
       else ctx.fillRect(en.x, en.y + en.h - 8, en.w, 8);
       const extension = !en.mount ? 1 : !en.ai || en.ai.state === 'patrol' ? 0 : en.ai.state === 'alert' ? 1 - en.ai.timer / 12 : 1;
-      ctx.fillStyle = en.deployedBy ? '#b45309' : '#475569';
-      ctx.fillRect(en.x + 5, en.y + 8, en.w - 10, en.h - 16);
+      ctx.imageSmoothingEnabled = false;
+      const source = enemySourceRect('turret');
+      ctx.drawImage(getEnemyPixelSprite('turret'),source.x,source.y,source.w,source.h, en.x + 4, en.y + 5, en.w - 8, en.h - 10);
+      if (en.deployedBy) { ctx.fillStyle = '#f59e0b'; ctx.fillRect(en.x + 6,en.y + 8,3,en.h - 16); }
       if (extension > 0) {
         const angle = en.ai ? Math.atan2(en.ai.aimY - cy, en.ai.aimX - cx) : en.mount === 'ceiling' ? Math.PI / 2 : en.facing === 1 ? 0 : Math.PI;
         ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle);
@@ -2744,26 +2746,23 @@ export class GameEngine {
       }
     } else {
       if (en.type === 'turret_engineer') {
-        ctx.fillStyle = '#f59e0b'; ctx.fillRect(en.x - 4, en.y + 18, 9, 24);
         if (en.ai?.action === 'deploy' && en.telegraph) {
           ctx.fillStyle = '#fbbf24'; ctx.fillRect(en.x, en.y + en.h + 3, en.w * (1 - en.ai.timer / 90), 4);
         }
       }
-      const sprite = getEnemyPixelSprite(en.type);
+      const sprite = getEnemyPixelSprite(en.type, enemyVisualFrame(en, this.visualTick));
       ctx.save();
       ctx.translate(en.x + en.w / 2, en.y + en.h / 2);
       ctx.scale(en.facing, 1);
-      ctx.drawImage(sprite, -en.w / 2, -en.h / 2, en.w, en.h);
+      ctx.imageSmoothingEnabled = false;
+      const source = enemySourceRect(en.type);
+      ctx.drawImage(sprite,source.x,source.y,source.w,source.h, -en.w / 2, -en.h / 2, en.w, en.h);
       ctx.restore();
 
       if ((en.type === 'mib_shield' || en.type === 'heavy_trooper') && !en.shieldBroken) {
         ctx.fillStyle = '#00f0ff';
         const sx = en.facing === 1 ? en.x + en.w - 4 : en.x - 8;
         ctx.fillRect(sx, en.y - 2, 10, en.h + 4);
-      }
-      if (en.type === 'jetpack') {
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(en.x + (en.facing === 1 ? -6 : en.w), en.y + 24, 6, 14);
       }
     }
 

@@ -307,3 +307,13 @@ Pivot nos pés, fonte 24 × 32 a escala 2 e atlas 192 × 224; caixas físicas/al
 Estúdio `/tools/art-studio.html` permite animar/inspecionar/exportar; script manual reproduz PNG/JSON/folhas em `docs/arte`, fora do bundle. Contrato, orçamento de aproximadamente 504 KiB RGBA para três atlas e pendências em [ARTE_E_ANIMACAO.md](ARTE_E_ANIMACAO.md). Arte inicial por código, não acabamento final aprovado no aparelho. Inimigos, chefes e ambientes continuam pendentes; a contagem do plano foi corrigida para 12 arquétipos.
 
 **390 testes**, TypeScript, builds web/assets Android e sync aprovados. Chromium horizontal com touch renderizou corrida/salto/ataque dos três heróis e verificou hitstop/pausa, sem erros JS; cenário/estados preparados para isolar o ensaio. Folhas de contato inspecionadas. Sem certificação física Android/DualShock 4. Nenhuma Action/APK, mudança de save ou nova alteração de áudio/exploração. Próximo bloco: silhuetas dos inimigos.
+
+## Incremento 21 — Silhuetas e posturas dos 12 inimigos
+
+Retomado 7.2.0.2: raster/paletas próprios para todos os arquétipos, substituindo o agente genérico recolorido. Armas, capacetes, capa, braços, ombreiras, mochila/ferramenta e proporções distinguem funções; cão/drone mantêm leitura não humanoide. Quatro posições por tipo para repouso/apoios/ação, sem anunciar quatro desenhos exclusivos. Seleção visual lê IA/velocidade e relógio visual, sem escrever na simulação. Caixas físicas, alcance, dano e instalação/respawn preservados.
+
+Torretas recebem carcaça pixelada e conservam mira, extensão e suportes nos quatro sentidos; faixa âmbar identifica instalação. Escudos permanecem overlays condicionais à quebra. Mochila/ferramenta do engenheiro e chama do jetpack passam à fonte, removendo retângulos duplicados. Recortes próprios impedem que áreas transparentes reduzam cão/drone. Removido `pixelSprites.ts` sem consumidores, incluindo antigos heróis estáticos.
+
+Estúdio e script manual exportam catálogo/atlas/JSON; cache nativo até 144 KiB RGBA, fora overhead. Contrato, tabela de identificação, imagens e limitações em [ARTE_DOS_INIMIGOS.md](ARTE_DOS_INIMIGOS.md). Arte de primeira passagem; chefes/transformações/retratos/cenários seguem pendentes.
+
+**395 testes**, TypeScript, builds web/assets Android e sync aprovados. Chromium horizontal com touch desenhou 48 combinações pelo renderizador real, quatro suportes de torreta, quebra de escudo e cache; sem mutação de entidades ou erros JS. Estado preparado, não campanha manual ou ensaio físico Android/DualShock 4. Fontes e render inspecionados. Bundle JS +3,22 kB (+1,38 kB gzip). Nenhuma Action/APK, migração de save ou mudança de música/exploração. Próximo bloco: identidade visual dos oito chefes e transformações.
