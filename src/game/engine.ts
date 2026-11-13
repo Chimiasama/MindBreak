@@ -29,6 +29,7 @@ import {
 } from './types';
 
 interface AreaState {
+  activated: string[];
   platforms: Platform[];
   props: DestructibleProp[];
   pickups: PickupItem[];
@@ -220,6 +221,7 @@ export class GameEngine {
 
   private get keys() { return this.input.keys; }
 
+  private activated = new Set<string>();
   private attackBuffered = false;
 
   private resetAttack() {
@@ -358,6 +360,7 @@ export class GameEngine {
     this.tickCount = 0;
     this.checkpointId = found.entryCheckpoint;
     this.stage = found;
+    this.activated = new Set();
     this.characterId = charId;
     const char = CHARACTERS[charId];
 
@@ -489,7 +492,7 @@ export class GameEngine {
     if (!this.campaignMode) return null;
     this.cacheArea();
     const areas: AreaSave[] = [...this.areaCache.entries()].map(([id, area]) => ({
-      id, tick: area.tick, leftAt: area.leftAt, checkpoint: area.checkpoint,
+      id, tick: area.tick, leftAt: area.leftAt, checkpoint: area.checkpoint, activated: [...area.activated],
       platforms: area.platforms.map((platform) => ({ x: platform.x, y: platform.y,
         broken: platform.broken ?? false, crumbleTimer: platform.crumbleTimer ?? 0 })),
       props: area.props.map((prop) => ({ id: prop.id, hp: Math.max(0, prop.hp), broken: prop.broken ?? false })),
@@ -524,6 +527,7 @@ export class GameEngine {
         platforms: definition.platforms.map((platform, index) => ({ ...platform,
           originX: platform.x, originY: platform.y, ...area.platforms[index] })),
         props: definition.props.map((prop, index) => ({ ...prop, ...area.props[index] })),
+        activated: [...area.activated],
         pickups: area.pickups.map((pickup) => ({ ...pickup })),
         arenas: (definition.ambushArenas ?? []).map((arena, index) => ({ ...arena,
           cleared: area.arenas[index].cleared, active: false })),
@@ -537,6 +541,7 @@ export class GameEngine {
       });
     }
     const current = this.areaCache.get(save.current)!;
+    this.activated = new Set(current.activated);
     this.platforms = current.platforms;
     this.props = current.props;
     this.pickups = current.pickups;
@@ -573,8 +578,32 @@ export class GameEngine {
     this.areaCache.set(this.stage.substageId, {
       platforms: this.platforms, props: this.props, pickups: this.pickups, arenas: this.ambushArenas,
       enemies: this.enemies, boss: this.boss, spawns: this.spawns, tick: this.tickCount,
-      checkpoint: this.checkpointId, leftAt: this.worldTick,
+      checkpoint: this.checkpointId, leftAt: this.worldTick, activated: [...this.activated],
     });
+  }
+
+  private routeComplete() {
+    return (this.stage.exploration?.nodes ?? []).every(node => this.activated.has(node.id));
+  }
+  private nextRouteNode() { return this.stage.exploration?.nodes.find(node => !this.activated.has(node.id)); }
+  /** The same local interaction is used by keyboard, touch and gamepad. */
+  inspectRouteNode(id: string) {
+    if (!this.canAct()) return false;
+    const node = this.stage.exploration?.nodes.find(node => node.id === id);
+    if (!node || !overlaps(this.player, node)) return false;
+    if (this.activated.has(id)) { this.showAlert(`${node.label}: ATIVO`, 80); return true; }
+    if (!node.requires.every(required => this.activated.has(required))) {
+      this.showAlert(`SEM SINAL: examine ${this.nextRouteNode()?.label}`, 120); return true;
+    }
+    const guardOrigin = node.guardIndex === undefined ? null : `${this.stage.substageId}:${node.guardIndex + 1}`;
+    if (guardOrigin && this.enemies.some(enemy => enemy.hp > 0 && enemy.spawnId === guardOrigin)) {
+      this.showAlert('POSTO PROTEGIDO: derrote o guarda do painel.', 120); return true;
+    }
+    this.activated.add(id);
+    if (this.routeComplete()) for (const platform of this.platforms) if (platform.gateId) platform.broken = true;
+    sound.sfxPickup(); this.addMangaFx('ATIVADO!', node.x, node.y - 18, '#22d3ee');
+    this.showAlert(this.routeComplete() ? (this.stage.boss ? 'ACESSO AO CONFRONTO LIBERADO.' : 'PASSAGEM LIBERADA — procure a saída superior.') : `SINAL ENVIADO — volte até ${this.nextRouteNode()?.label}`, 160);
+    this.emitHud(); this.callbacks.onSaveRequest?.(); return true;
   }
 
   /** Portal transitions preserve the same hero and resources; only continue may choose a new one. */
@@ -583,6 +612,9 @@ export class GameEngine {
       this.boss.active && this.boss.triggered) return false;
     const exit = this.stage.exits.find((door) => door.id === exitId);
     if (!exit || !overlaps(this.player, exit)) return false;
+    if (exit.x > this.stage.boundsWidth / 2 && !this.routeComplete()) {
+      this.showAlert(`PASSAGEM BLOQUEADA: ${this.nextRouteNode()?.label ?? 'explore o setor'}`, 140); this.emitHud(); return false;
+    }
     const target = getSubstage(exit.target);
     const point = target.checkpoints.find((checkpoint) => checkpoint.id === exit.targetCheckpoint);
     if (!point) return false;
@@ -591,6 +623,7 @@ export class GameEngine {
     const cached = this.areaCache.get(target.substageId);
     this.initializeArea(target, carry.characterId, carry.score, carry.lives, carry.nextOneUpScore, false);
     if (cached) {
+      this.activated = new Set(cached.activated);
       this.platforms = cached.platforms;
       this.props = cached.props;
       this.pickups = cached.pickups;
@@ -1864,8 +1897,12 @@ export class GameEngine {
         }
       }
       if (interactRequested) {
-        const door = this.stage.exits.find((exit) => overlaps(p, exit));
-        if (door && this.travel(door.id)) return;
+        const node = this.stage.exploration?.nodes.find(node => overlaps(p, node));
+        if (node) this.inspectRouteNode(node.id);
+        else {
+          const door = this.stage.exits.find((exit) => overlaps(p, exit));
+          if (door && this.travel(door.id)) return;
+        }
       }
     }
 
@@ -1888,7 +1925,7 @@ export class GameEngine {
     this.thrownEnemies = this.thrownEnemies.filter((te) => Math.abs(te.x - p.x) < 1000);
 
     // Boss trigger & update
-    if (this.boss.active && !this.boss.triggered && !this.ambushArenas.some((arena) => arena.active && !arena.cleared) && Math.abs(p.x - this.boss.x) < 540) {
+    if (this.boss.active && !this.boss.triggered && this.routeComplete() && !this.ambushArenas.some((arena) => arena.active && !arena.cleared) && Math.abs(p.x - this.boss.x) < 540) {
       this.boss.triggered = true;
       sound.sfxAlarm();
       this.showAlert(`CHEFE: ${this.boss.name} — ${this.boss.subtitle}`, 130);
@@ -2201,6 +2238,14 @@ export class GameEngine {
     const p = this.player;
     const arenaLocked = this.ambushArenas.some((a) => a.active && !a.cleared);
     this.callbacks.onHudUpdate({
+      routeObjective: (() => {
+        const node = this.nextRouteNode();
+        return node ? `${node.y < p.y - 70 ? '↑ ' : ''}${node.x < p.x - 80 ? '← ' : node.x > p.x + 80 ? '→ ' : ''}${node.label}` : this.stage.exploration ? this.stage.boss ? 'Acesso ao confronto liberado' : 'Passagem superior liberada' : null;
+      })(),
+      nearbyInteraction: (() => {
+        const node = this.stage.exploration?.nodes.find(node => overlaps(p, node));
+        return node ? `▲ Cima: examinar ${node.label}` : null;
+      })(),
       stageId: this.stage.id,
       substageId: this.stage.substageId,
       checkpoint: this.stage.checkpoints.find((point) => point.id === this.checkpointId)?.label ?? '',
@@ -2317,6 +2362,12 @@ export class GameEngine {
     // 3. Platforms, Conveyors & Hazards
     this.platforms.forEach((plat) => {
       if (plat.broken) return;
+      if (plat.gateId) {
+        ctx.fillStyle = '#78350f'; ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+        ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2; ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
+        ctx.fillStyle = '#fbbf24'; for (let y = plat.y + 5; y < plat.y + plat.h - 6; y += 18) ctx.fillRect(plat.x + 3, y, plat.w - 6, 5);
+        return;
+      }
       if (plat.type === 'acid') {
         ctx.fillStyle = this.stage.id === 7 ? '#0c4a6e' : '#16a34a';
         ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
@@ -2354,6 +2405,15 @@ export class GameEngine {
       ctx.lineWidth = 2;
       ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
     });
+
+    for (const node of this.stage.exploration?.nodes ?? []) {
+      const active = this.activated.has(node.id);
+      ctx.fillStyle = '#0f172a'; ctx.fillRect(node.x, node.y, node.w, node.h);
+      ctx.strokeStyle = active ? '#4ade80' : '#fbbf24'; ctx.lineWidth = 2; ctx.strokeRect(node.x, node.y, node.w, node.h);
+      ctx.fillStyle = active ? '#4ade80' : '#22d3ee'; ctx.fillRect(node.x + 5, node.y + 6, node.w - 10, 14);
+      ctx.font = 'bold 12px monospace'; ctx.fillText(active ? '✓' : '▲', node.x + 7, node.y - 10);
+      ctx.font = '11px monospace'; ctx.fillText(node.label, node.x - 10, node.y - 75);
+    }
 
     // 4. Destructible Props & Golden Secret Chests
     this.props.forEach((pr) => {

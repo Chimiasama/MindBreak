@@ -23,6 +23,8 @@ Data inicial: 13/11/2026. Documento de trabalho: atualizar os estados e registra
 
 - **0.1.0.13 — Saves durante desenvolvimento:** por orientação expressa do usuário, compatibilidade e preservação de saves entre versões não são requisitos nesta fase. Só ele instala o app e testa com instalação limpa. Alterações de mapas, modelos e formato podem invalidar saves sem migração; não investir em adaptadores, recuperação entre versões ou avisos de incompatibilidade a cada entrega. Reavaliar somente quando o usuário solicitar. Manter o salvamento funcional na versão corrente e a validação de dados para evitar falhas do app.
 
+- **0.1.0.14 — Revisão de exploração, prioridade atual:** por teste do usuário, a maior parte dos setores permitia passar reto. Pausar novas músicas e exigir caminhos elevados, verificação de lugares, mudança de direção e retorno; o trem pode ser mais linear. Não tratar plataformas opcionais ou portas bidirecionais como prova suficiente de exploração. Padrão e revisão em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md).
+
 ### 0.2 Forma de implantar cada incremento
 
 - **0.2.0.1:** manter mudanças pequenas por sistema, com testes do comportamento afetado; não misturar novos mapas, física e arte numa única entrega sem validação intermediária.
@@ -48,6 +50,8 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 **Incremento 16:** sequência de três golpes corrigida, janelas/buffer/recuperação e cobertura corpo a corpo. Infraestrutura sonora com quatro canais/volumes persistentes, scheduler pelo relógio de áudio, retomada de sequência e suspensão em background. 332 testes e Chromium aprovados; detalhes em [COMBOS_E_AUDIO.md](COMBOS_E_AUDIO.md). Próximo bloco autônomo: tema do distrito/chefe (6.2.0.1–2), mantendo pendentes ajustes de especiais/combate e aceites físicos. Não há tema final ou certificação Android/controle concluídos.
 
 **Incremento 17:** primeiro par de temas composto e integrado: distrito/Cipher, variações e transições no compasso, prévias Ogg e ferramenta de exportação WAV. 338 testes, renderização offline e Chromium aprovados; ainda falta escuta em aparelho. [TRILHA_DISTRITO_E_CIPHER.md](TRILHA_DISTRITO_E_CIPHER.md). Próximo bloco: estender a composição aos capítulos 2–8 e seus chefes, mantendo os ajustes/aceites de combate e de áudio físico pendentes. Não antecipar multiplayer/migração nem gerar APK sem pedido.
+
+**Incremento 18 — prioridade alterada pelo usuário:** composição adicional pausada. Revisados os 23 setores fora do trem: alas elevadas, guarda de painel, sinal/retorno, portão persistente e saída superior/confronto condicionado. Seis depósitos laterais e apoios adicionais; checkpoints/idas/retornos revalidados. 378 testes, incluindo 156 percursos de exploração/retorno/depósito dos três heróis, e Chromium aprovados. Padrão, mapas e limites em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md). Avaliação de acessos/dificuldade no celular e diversidade de mecanismos precedem retomar as demais músicas.
 
 ## Fase 1 — Base de física, colisão e movimentação
 
@@ -144,6 +148,15 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 - **3.3.0.1:** chefes e inimigos de emboscada obrigatória não reaparecem após conclusão; inimigos ordinários podem reaparecer. Uma arena concluída não deve voltar a trancar o jogador.
 - **3.3.0.2:** baús secretos, cura garantida e objetos únicos persistem coletados. Derrotas confirmadas por origem dão inicialmente 1.000, 500, 50 e depois zero pontos. Acertos comuns/guard crush sem derrota não pontuam nem consomem a curva. Captura telecinética conta como uma derrota. Desaparecer sem derrota atribuída não consome recompensa. Não há teto de vidas por fase; pontos continuam concedendo 1-UP internamente, sem expor valores ao jogador. Itens únicos continuam protegidos contra duplicação. Esta regra substitui a política anterior de zero pontos para toda reaparição.
 - **3.3.0.3 — Aceite:** afastamento curto não repõe inimigo; afastamento grande/tempo suficiente e retorno repõem; pausa não conta tempo; mapa vertical funciona; nenhum respawn visível, duplicado, em parede ou em arena concluída.
+
+### 3.4 Percurso exploratório obrigatório — IMPLEMENTADO no incremento 18; aceite físico/dificuldade pendentes
+
+- **3.4.0.1:** entrada/observação → ala elevada/guarda/comando → retorno a outra ala → liberação → saída/confronto. Preservar recursos e desvios opcionais; trem permanece exceção linear.
+- **3.4.0.2:** 23 rotas autorais com tetos/patamares, controles dependentes, 23 guardas não repetíveis e 23 portões. Reposicionar saídas/checkpoints em rotas elevadas, manter ascensões de 3B/8C e acesso bidirecional entre setores.
+- **3.4.0.3:** seis depósitos laterais acessíveis sem acionar o circuito. O voo pode facilitar deslocamento, mas não substituir inspeções. Não obrigar limpar cada inimigo comum.
+- **3.4.0.4:** progresso persistente por tentativa, inclusive depois de morte/retorno/carregamento; validar comandos, dependências, guardas e portões. Nenhuma migração entre versões requerida.
+- **3.4.0.5:** substituir a aceitação de corredor por navegação física dos três heróis: 69 idas com objetivos, 69 retornos e 18 depósitos; sem voo, dano, teleporte ou assistência móvel. Trem conserva regressões próprias. Ensaios de combate separados.
+- **3.4.0.6 — Próximo aceite:** testar em aparelho com inimigos/móveis ativos; avaliar leitura do HUD, acessos, repetição do circuito, guardas deslocados e ritmo. Diversificar os mecanismos ambientais por tema e só então retomar a expansão musical. Fonte/diagramas em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md).
 
 ## Fase 4 — Oito fases, 26 subfases
 

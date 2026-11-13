@@ -11,6 +11,7 @@ export interface ExitDefinition {
 }
 export interface SubstageDefinition extends Omit<StageDefinition, 'boss'> {
   substageId: SubstageId;
+  exploration?: { style: 'loop' | 'vertical'; nodes: { id: string; label: string; x: number; y: number; w: number; h: number; requires: string[]; guardIndex?: number }[] };
   boss?: BossConfig;
   exits: ExitDefinition[];
   checkpoints: CheckpointDefinition[];

@@ -1,3 +1,4 @@
+import { prepareForwardTravel } from './support/flow';
 import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { sound } from '../src/game/audio';
@@ -202,7 +203,8 @@ test('mounted turrets remain attached after melee knockback and aim down from ce
 test('engineer death cancels installation; a survivor deploys once and flees from the player', () => {
   for (const killed of [true, false]) {
     const { engine, state } = fixture(); engine.startCampaign(4, 'ren'); engine.setPaused(false);
-    Object.assign(state.player, { x: 2380, y: 664 }); assert.equal(engine.travel('esteiras'), true);
+    prepareForwardTravel(engine, state); const door = state.stage.exits.find((e: any) => e.id === 'esteiras');
+    Object.assign(state.player, { x: door.x, y: door.y }); assert.equal(engine.travel('esteiras'), true);
     engine.setPaused(false);
     const engineer = state.enemies.find((e: Enemy) => e.type === 'turret_engineer');
     Object.assign(state.player, { x: 1500, y: 604 });

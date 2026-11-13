@@ -129,3 +129,5 @@ Saves dos capítulos 1–5 mantêm sua identificação de conteúdo. Os saves da
 Chegar a 26 mapas não encerra a produção: dificuldade, rotas de segredo, acessibilidade, arte, áudio e teste físico seguem os aceites do plano. Os ensaios de fluxo final usam derrota disparada em teste para validar diálogos/interface/save; não representam uma campanha inteira vencida em tempo real.
 
 Incremento 15: os encontros industriais de 4A/4B/7A/7B incluem suportes de parede/teto e instaladores. Total atual: 132 inimigos inicialmente ativos e duas origens filhas dormentes; continuam 26 setores, 77 checkpoints e 78 objetos. Ver [TORRETAS_E_PROJETEIS.md](TORRETAS_E_PROJETEIS.md).
+
+Incremento 18: a travessia dos 23 setores fora do trem agora inclui alas obrigatórias e retorno; saídas/confrontos são condicionados ao circuito, com portões persistentes. Há seis depósitos laterais opcionais. Catálogo atual: 155 inimigos inicialmente ativos e duas origens dormentes, 77 checkpoints/78 objetos. Padrão, mapas e aceite físico em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md).

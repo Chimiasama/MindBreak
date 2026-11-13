@@ -65,3 +65,5 @@ No incremento 11, o formato versão 1 passou a aceitar também `Enemy.ai`, mante
 No incremento 14, a restauração foi verificada nos 26 setores. A vitória do capítulo 8 restaura diretamente a tela final, sem novo bônus. Os mapas originais das fases 6–8 ficaram incompatíveis com as novas geometrias; dados são retidos, enquanto as fases 1–5 mantêm a identificação anterior.
 
 No incremento 15, origens filhas de instaladores podem permanecer dormentes com geração -1, validadas pelo vínculo autoral. Instalações e flag de fuga persistem, e rajadas não reiniciam ao carregar. Os encontros alteram o conteúdo dos capítulos 4 e 7; saves anteriores desses capítulos ficam retidos como incompatíveis. Demais capítulos permanecem compatíveis. Detalhes em [TORRETAS_E_PROJETEIS.md](TORRETAS_E_PROJETEIS.md).
+
+Incremento 18: `activated` conserva comandos examinados por setor. A leitura valida dependências, guarda ausente e estado dos portões; morte e revisita não repetem o circuito. O formato corrente foi alterado sem migração, conforme a política de desenvolvimento. Ver [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md).

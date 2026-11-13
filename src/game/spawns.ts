@@ -39,7 +39,7 @@ export class SpawnManager {
       armed: false,
       defeats: 0,
       // Mandatory encounters never refill or lock an already cleared arena.
-      repeatable: template.deployedBy === undefined && !(stage.ambushArenas ?? []).some((arena) =>
+      repeatable: !template.requiredGuard && template.deployedBy === undefined && !(stage.ambushArenas ?? []).some((arena) =>
         template.x >= arena.minX - 60 && template.x <= arena.maxX + 60),
     }));
   }

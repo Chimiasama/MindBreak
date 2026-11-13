@@ -42,6 +42,7 @@ export type PlatformType =
   | 'conveyor';
 
 export interface Platform {
+  gateId?: string;
   x: number;
   y: number;
   w: number;
@@ -119,6 +120,7 @@ export interface Enemy {
   /** One-based authored engineer origin. Dormant until that engineer installs it. */
   deployedBy?: number;
   deployed?: boolean;
+  requiredGuard?: boolean;
   id: number;
   spawnId?: string;
   generation?: number;
@@ -263,6 +265,8 @@ export interface StageDefinition {
 }
 
 export interface HudSnapshot {
+  routeObjective?: string | null;
+  nearbyInteraction?: string | null;
   substageId: string;
   checkpoint: string;
   nearbyExit: string | null;

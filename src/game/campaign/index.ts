@@ -1,3 +1,4 @@
+import { withExploration } from './exploration';
 import { STAGES } from '../stages';
 import { overlaps } from '../collision';
 import { StageDefinition } from '../types';
@@ -17,7 +18,7 @@ export function adaptLegacy(stage: StageDefinition): SubstageDefinition {
     checkpoints: [{ id: 'entrada', label: 'Entrada do setor', x: stage.spawnX, y: stage.spawnY }] };
 }
 
-export const SUBSTAGES: SubstageDefinition[] = [...DISTRICT, ...MONORAIL, ...CONSTRUCTION, ...FACTORY, ...FINANCIAL, ...MUSEUM, ...BLACKSITE, ...TOWER];
+export const SUBSTAGES: SubstageDefinition[] = [...DISTRICT, ...MONORAIL, ...CONSTRUCTION, ...FACTORY, ...FINANCIAL, ...MUSEUM, ...BLACKSITE, ...TOWER].map(withExploration);
 export const CAMPAIGN: CampaignStage[] = STAGES.map((stage) => ({ id: stage.id, title: stage.title,
   entry: `${stage.id}A`, substages: SUBSTAGES.filter((area) => area.id === stage.id).map((area) => area.substageId),
   plannedCount: stage.id === 1 || stage.id === 8 ? 4 : 3 }));
@@ -47,6 +48,18 @@ export function validateCampaign(areas: SubstageDefinition[] = SUBSTAGES, chapte
         p.type !== 'acid' && p.type !== 'laser_gate' && (enemy.mount === 'ceiling' ? p.y + p.h === enemy.y && enemy.x >= p.x && enemy.x + enemy.w <= p.x + p.w :
           enemy.y >= p.y && enemy.y + enemy.h <= p.y + p.h && (enemy.mount === 'wall-left' ? p.x + p.w === enemy.x : p.x === enemy.x + enemy.w)))) errors.push(`${area.substageId}: torreta sem suporte`);
     }
+    const nodes = area.exploration?.nodes ?? [];
+    if (new Set(nodes.map(n => n.id)).size !== nodes.length) errors.push(`${area.substageId}: comandos duplicados`);
+    for (const node of nodes) {
+      if (![node.x,node.y,node.w,node.h].every(Number.isFinite) || node.w <= 0 || node.h <= 0 ||
+        !area.platforms.some(p => !p.gateId && p.type !== 'acid' && p.type !== 'laser_gate' && p.type !== 'moving' && p.type !== 'crumble' &&
+          p.y === node.y + node.h && p.x <= node.x && p.x + p.w >= node.x + node.w) || area.platforms.some(p => overlaps(node,p))) errors.push(`${area.substageId}: comando sem apoio seguro`);
+      if (node.guardIndex !== undefined && !area.enemies[node.guardIndex]?.requiredGuard) errors.push(`${area.substageId}: guarda obrigatório inválido`);
+      if (node.requires.some(id => id === node.id || !nodes.some(n => n.id === id))) errors.push(`${area.substageId}: dependência de comando inválida`);
+    }
+    const reached = new Set<string>();
+    for (let i = 0; i < nodes.length; i++) for (const node of nodes) if (node.requires.every(id => reached.has(id))) reached.add(node.id);
+    if (reached.size !== nodes.length) errors.push(`${area.substageId}: ciclo de comandos`);
     const geometry = [...area.platforms, ...area.exits];
     if (geometry.some((body) => ![body.x, body.y, body.w, body.h].every(Number.isFinite) || body.w <= 0 || body.h <= 0)) errors.push(`${area.substageId}: geometria inválida`);
     if (new Set(area.props.map((prop) => prop.id)).size !== area.props.length) errors.push(`${area.substageId}: objetos duplicados`);

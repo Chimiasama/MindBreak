@@ -1,3 +1,4 @@
+import { prepareForwardTravel } from './support/flow';
 import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { sound } from '../src/game/audio';
@@ -17,6 +18,7 @@ function fixture(chapter = 1, hero: 'ren' | 'maya' | 'leon' = 'ren') {
   return { engine, state: engine as any };
 }
 function through(engine: GameEngine, state: any, id: string) {
+  prepareForwardTravel(engine, state);
   const door = state.stage.exits.find((exit: any) => exit.id === id);
   Object.assign(state.player, { x: door.x, y: door.y + door.h - 56 });
   assert.equal(engine.travel(id), true);
@@ -89,7 +91,7 @@ test('elapsed wall clock never replenishes dead enemies or advances platform mot
   const saved = checked(engine.captureCampaignSave()!);
   saved.savedAt = 0;
   const fresh = fixture(); fresh.engine.restoreCampaignSave(saved);
-  assert.equal(fresh.state.enemies.length, 3);
+  assert.equal(fresh.state.enemies.length, state.stage.enemies.length - 1);
   assert.equal(fresh.state.tickCount, state.tickCount);
   assert.equal(fresh.state.worldTick, state.worldTick);
   assert.deepEqual(fresh.state.spawns.snapshot(), state.spawns.snapshot());
@@ -324,7 +326,7 @@ test('dormant and deployed turrets persist without duplication or loss of reward
   const dormant = engine.captureCampaignSave()!;
   through(engine, state, 'esteiras');
   let save = checked(engine.captureCampaignSave()!);
-  assert.equal(save.areas.find((a) => a.id === '4B')!.spawns.records.at(-1)!.generation, -1);
+  assert.equal(save.areas.find((a) => a.id === '4B')!.spawns.records.find((r) => r.id === `4B:${getSubstage('4B').enemies.findIndex((e) => e.deployedBy !== undefined) + 1}`)!.generation, -1);
   const engineer = state.enemies.find((enemy: any) => enemy.type === 'turret_engineer');
   const turret = state.spawns.deploy(engineer, state.enemies, state.platforms, state.player, state.tickCount);
   assert.ok(turret); state.enemies.push(turret);
@@ -335,7 +337,7 @@ test('dormant and deployed turrets persist without duplication or loss of reward
   assert.equal(fresh.state.enemies.find((e: any) => e.type === 'turret_engineer').deployed, true);
   state.hitEnemy(turret, 999, 0, 0); state.enemies = state.enemies.filter((e: any) => e.hp > 0);
   save = checked(engine.captureCampaignSave()!);
-  const record = save.areas.find((a) => a.id === '4B')!.spawns.records.at(-1)!;
+  const record = save.areas.find((a) => a.id === '4B')!.spawns.records.find((r) => r.id === `4B:${getSubstage('4B').enemies.findIndex((e) => e.deployedBy !== undefined) + 1}`)!;
   assert.equal(record.defeats, 1); assert.equal(record.activeId, null);
   assert.equal(fresh.engine.restoreCampaignSave(save), 'playing');
   fresh.state.spawns.advanceAway(100000);
@@ -350,7 +352,7 @@ test('a dormant child cannot forge an active entity, death or defeat history in 
   const save = checked(engine.captureCampaignSave()!);
   for (const mutation of [{ activeId: 1 }, { deadAt: 0 }, { defeats: 1 }, { armed: true }]) {
     const altered = structuredClone(save);
-    Object.assign(altered.areas.find((a) => a.id === '4B')!.spawns.records.at(-1)!, mutation);
+    Object.assign(altered.areas.find((a) => a.id === '4B')!.spawns.records.find((r) => r.id === `4B:${getSubstage('4B').enemies.findIndex((e) => e.deployedBy !== undefined) + 1}`)!, mutation);
     assert.equal(decodeCampaignSave(JSON.stringify(altered)).status, 'corrupt');
   }
   engine.stop();

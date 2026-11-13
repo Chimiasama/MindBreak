@@ -66,3 +66,5 @@ Torretas industriais de parede/teto e instaladores: comportamento, colisão de t
 Combos e controles de áudio: [docs/COMBOS_E_AUDIO.md](docs/COMBOS_E_AUDIO.md) descreve os tempos dos três golpes, cobertura, quatro volumes persistentes e scheduler musical.
 
 Primeiros temas originais: [distrito/Cipher, prévias para ouvir e parâmetros](docs/TRILHA_DISTRITO_E_CIPHER.md). Para renderizar e baixar WAV localmente, abrir `/tools/music-studio.html` com o servidor de desenvolvimento.
+
+Estrutura exploratória revisada: [padrão de fases, mapas e validação](docs/PADRAO_DE_FASES.md). Os 23 setores fora do trem exigem alas elevadas e retorno antes de liberar saída/confronto; CIMA examina painéis.

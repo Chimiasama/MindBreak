@@ -13,6 +13,7 @@ export interface AreaSave {
   tick: number;
   leftAt: number;
   checkpoint: string;
+  activated: string[];
   platforms: { x: number; y: number; broken: boolean; crumbleTimer: number }[];
   props: { id: number; hp: number; broken: boolean }[];
   pickups: PickupItem[];
@@ -84,13 +85,17 @@ function decodeArea(raw: unknown, chapterId: number, worldTick: number): AreaSav
   const leftAt = integer(area.leftAt, 0, worldTick);
   const checkpoint = string(area.checkpoint);
   if (!stage.checkpoints.some((point) => point.id === checkpoint)) throw new IncompatibleSave('ponto de apoio ausente');
+  const activated = array(area.activated, stage.exploration?.nodes.length ?? 0).map(string);
+  if (new Set(activated).size !== activated.length || activated.some(id => !stage.exploration?.nodes.some(node => node.id === id))) throw new Error('comando inválido');
+  for (const node of stage.exploration?.nodes ?? []) if (activated.includes(node.id) && !node.requires.every(id => activated.includes(id))) throw new Error('sequência inválida');
+  const complete = (stage.exploration?.nodes ?? []).every(node => activated.includes(node.id));
   const platforms = exactArray(area.platforms, stage.platforms.length).map((value, index) => {
     const p = object(value), base = stage.platforms[index];
     const range = base.type === 'moving' ? base.moveRange ?? 80 : 0;
     const x = number(p.x, base.x - (base.moveAxis === 'x' ? range : 0), base.x + (base.moveAxis === 'x' ? range : 0));
     const y = number(p.y, base.y - (base.moveAxis !== 'x' ? range : 0), base.y + (base.moveAxis !== 'x' ? range : 0));
     const broken = boolean(p.broken), crumbleTimer = integer(p.crumbleTimer, 0, 201);
-    if (base.type !== 'crumble' && (broken || crumbleTimer)) throw new Error('plataforma inválida');
+    if (base.gateId ? broken !== complete || crumbleTimer !== 0 : base.type !== 'crumble' && (broken || crumbleTimer)) throw new Error('plataforma inválida');
     return { x, y, broken, crumbleTimer };
   });
   const props = exactArray(area.props, stage.props.length).map((value, index) => {
@@ -163,10 +168,11 @@ function decodeArea(raw: unknown, chapterId: number, worldTick: number): AreaSav
       isFlanking: boolean(e.isFlanking ?? false), stealthAlpha: number(e.stealthAlpha ?? 1, 0, 1),
       patrolMinX: base.x - 120, patrolMaxX: base.x + 120 };
   });
+  for (const node of stage.exploration?.nodes ?? []) if (activated.includes(node.id) && node.guardIndex !== undefined && records[node.guardIndex]?.activeId !== null) throw new Error('comando protegido ainda ocupado');
   if (new Set(enemies.map((enemy) => enemy.id)).size !== enemies.length ||
     new Set(enemies.map((enemy) => enemy.spawnId)).size !== enemies.length ||
     records.filter((record) => record.activeId !== null).length !== enemies.length) throw new Error('entidades duplicadas ou ausentes');
-  return { id: stage.substageId, tick, leftAt, checkpoint, platforms, props, pickups, arenas, enemies,
+  return { id: stage.substageId, tick, leftAt, checkpoint, activated, platforms, props, pickups, arenas, enemies,
     spawns: { nextEntityId, records } };
 }
 
