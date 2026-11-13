@@ -2,6 +2,10 @@
 
 Implementado no incremento 7. O save é local ao navegador/WebView: não há conta, servidor ou sincronização entre o navegador e o APK.
 
+## Política atual de desenvolvimento
+
+O usuário testa sozinho e instala o app do zero. **Preservação e compatibilidade de saves entre versões não são requisitos**, até nova orientação expressa. Mudanças de conteúdo ou formato podem invalidar saves sem migração; não dedicar novos incrementos a adaptadores ou recuperação entre versões. O salvamento da versão corrente e a validação contra dados inválidos continuam necessários. Os mecanismos de backup e retenção descritos abaixo existem na implementação atual, mas não criam obrigação de compatibilidade futura.
+
 ## Experiência do jogador
 
 - O jogo salva ao começar uma campanha, atravessar uma porta, ativar um ponto de apoio, perder uma vida, entrar no continue, confirmar continue e concluir uma fase. Também salva a cada cinco segundos durante gameplay, ao pausar, voltar ao menu e receber os eventos de ocultação/saída/falta de foco.

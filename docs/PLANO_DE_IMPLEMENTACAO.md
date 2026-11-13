@@ -21,6 +21,8 @@ Data inicial: 13/11/2026. Documento de trabalho: atualizar os estados e registra
 
 - **0.1.0.12 — Torretas e projéteis:** incluir torretas de parede/teto nos setores industriais e instalador vulnerável antes de concluir; torreta instalada mais resistente. Bloquear tiros comuns no terreno e declarar separadamente exceções de penetração/reflexão. Implementado no incremento 15; balanceamento físico pendente.
 
+- **0.1.0.13 — Saves durante desenvolvimento:** por orientação expressa do usuário, compatibilidade e preservação de saves entre versões não são requisitos nesta fase. Só ele instala o app e testa com instalação limpa. Alterações de mapas, modelos e formato podem invalidar saves sem migração; não investir em adaptadores, recuperação entre versões ou avisos de incompatibilidade a cada entrega. Reavaliar somente quando o usuário solicitar. Manter o salvamento funcional na versão corrente e a validação de dados para evitar falhas do app.
+
 ### 0.2 Forma de implantar cada incremento
 
 - **0.2.0.1:** manter mudanças pequenas por sistema, com testes do comportamento afetado; não misturar novos mapas, física e arte numa única entrega sem validação intermediária.
@@ -174,7 +176,7 @@ Os nomes são propostas de produção e podem ser refinados sem alterar o total.
 ### 4.3 Persistência e continuidade — IMPLEMENTADO no incremento 7; ensaio físico Android pendente
 
 - **4.3.0.1 — Implementado:** gravar progresso local versionado: campanha, subfase, herói, checkpoint, vidas, score, flags únicas e preferências. Salvar só em pontos consistentes, nunca no meio de uma resolução de colisão.
-- **4.3.0.2 — Implementado; migrações de versões futuras pendentes:** validar dados na leitura, oferecer recuperação de save incompatível e migrações futuras. APK e navegador podem ter armazenamentos separados; não prometer sincronização entre eles.
+- **4.3.0.2 — Validação implementada; compatibilidade entre versões fora do escopo atual:** validar dados na leitura para evitar falhas. Não desenvolver migrações nem preservar saves antigos durante os testes com instalação limpa, conforme 0.1.0.13. O mecanismo existente de backup/recuperação pode permanecer, sem ser requisito para novos formatos. APK e navegador podem ter armazenamentos separados; não prometer sincronização entre eles.
 - **4.3.0.3 — Validado em testes e Chromium; Android físico pendente:** fechar/reabrir restaura checkpoint válido; continue mantém regra de personagem; dados inválidos não derrubam o app; atualizações compatíveis preservam progresso.
 
 ## Fase 5 — Android de testes e GitHub Actions
