@@ -1,5 +1,7 @@
 # Arte dos inimigos — incremento 21
 
+> **Atualização no incremento 23:** a construção em blocos, resolução, paletas e orçamento abaixo registram a V1. O renderer atual e as imagens vinculadas usam a [direção visual V2](DIRECAO_VISUAL_V2.md), com anatomia articulada, fontes maiores e sombreamento. Consultar esse contrato para os valores atuais.
+
 ## 1. Entrega e direção visual
 
 Primeira passagem de pixel art dos **12 arquétipos**, com silhuetas distintas mesmo sem cores. Substitui o agente genérico usado por oito tipos. Fonte autoral procedural em `src/game/enemyArtwork.ts`, sem imagens ou dependências externas novas. `pixelSprites.ts`, agora sem consumidores, foi removido junto com os sprites estáticos antigos dos heróis.

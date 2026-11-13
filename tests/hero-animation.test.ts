@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { HERO_ATLAS, HERO_CLIPS, HERO_FRAME, HeroAnimator, heroPose, clipFrame, type HeroVisualInput, type HeroPose } from '../src/game/heroAnimation';
-import { heroRows, HERO_PALETTES } from '../src/game/heroArtwork';
+import { heroRig, HERO_STYLES } from '../src/game/heroArtwork';
 import { SWINGS } from '../src/game/combat';
 const standing:HeroVisualInput={hp:100,vx:0,vy:0,grounded:true,onWall:0,hangingCeiling:false,isDashing:false,isSliding:false,isFlying:false,slashTimer:0,comboStep:0,stunTimer:0};
 test('pose priority handles interruption, traversal and recovery',()=>{
@@ -30,18 +30,18 @@ test('repeated render sampling cannot advance animation without simulation ticks
  for(let i=0;i<100;i++)assert.equal(a.sample(p,12).frame,0);
  assert.equal(a.sample(p,17).frame,1);assert.equal(a.sample(standing,18).frame,0);
 });
-test('all hero rasters have valid palette pixels, bounded atlas slots and stable physical reference',()=>{
+test('hero atlases preserve physical reference and anatomical poses stay finite',()=>{
  const slots=new Set();
  for(const pose of Object.keys(HERO_CLIPS) as HeroPose[])for(const[i,f]of HERO_ATLAS.clips[pose].frames.entries()){
   assert.ok(f.x+f.w<=HERO_ATLAS.width&&f.y+f.h<=HERO_ATLAS.height);assert.ok(f.duration>0);
   assert.ok(!slots.has(`${f.x},${f.y}`));slots.add(`${f.x},${f.y}`);
-  for(const hero of ['ren','maya','leon'] as const){const rows=heroRows(hero,pose,i);assert.equal(rows.length,32);assert.ok(rows.every(r=>r.length===24));
-   assert.ok(rows.join('').replaceAll('.','').length>80);for(const pixel of rows.join(''))assert.ok(pixel==='.'||HERO_PALETTES[hero][pixel]);}
+  for(const hero of ['ren','maya','leon'] as const){const rig=heroRig(hero,pose,i);for(const point of [rig.head,rig.chest,rig.hip,...rig.elbows,...rig.hands,...rig.knees,...rig.feet])assert.ok(point.every(Number.isFinite));assert.ok(HERO_STYLES[hero].body);}
+
  }
  assert.equal(slots.size,HERO_ATLAS.frameCount);
  assert.equal(HERO_FRAME.hurtbox.w*HERO_FRAME.scale,32);assert.equal(HERO_FRAME.hurtbox.h*HERO_FRAME.scale,56);
- assert.notDeepEqual(heroRows('ren','run',0),heroRows('ren','run',1));
- assert.notDeepEqual(heroRows('ren','idle',0),heroRows('maya','idle',0));
+ assert.notDeepEqual(heroRig('ren','run',0),heroRig('ren','run',1));
+ assert.notDeepEqual(heroRig('ren','idle',0),heroRig('maya','idle',0));
 });
 
 test('engine visual clock freezes for hitstop and cut-in, then resets on load',async()=>{

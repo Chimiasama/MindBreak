@@ -1,5 +1,5 @@
 import { SWINGS } from './combat';
-export const HERO_FRAME = { w:24, h:32, scale:2, pivot:{x:12,y:32}, hurtbox:{x:4,y:4,w:16,h:28}, columns:8 } as const;
+export const HERO_FRAME = { w:96, h:128, scale:0.5, pivot:{x:48,y:128}, hurtbox:{x:16,y:16,w:64,h:112}, columns:8 } as const;
 const clip=(durations:number[],loop=true)=>({durations,loop});
 export const HERO_CLIPS = {
  idle:clip([12,12,12,12]), run:clip([5,5,5,5,5,5]), jump:clip([6,8],false), fall:clip([8,8]),
@@ -44,7 +44,7 @@ export function heroAtlasMetadata(){
   const slot=index++;return{x:slot%HERO_FRAME.columns*HERO_FRAME.w,y:Math.floor(slot/HERO_FRAME.columns)*HERO_FRAME.h,w:HERO_FRAME.w,h:HERO_FRAME.h,duration,
    ...(pose.startsWith('attack')&&i===0?{event:'impact'}:{})};
  })}]));
- return{version:1,...HERO_FRAME,width:HERO_FRAME.columns*HERO_FRAME.w,height:Math.ceil(index/HERO_FRAME.columns)*HERO_FRAME.h,frameCount:index,clips};
+ return{version:2,...HERO_FRAME,width:HERO_FRAME.columns*HERO_FRAME.w,height:Math.ceil(index/HERO_FRAME.columns)*HERO_FRAME.h,frameCount:index,clips};
 }
 
 export const HERO_ATLAS = heroAtlasMetadata();

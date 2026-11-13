@@ -1,5 +1,7 @@
 # Arte dos chefes — incremento 22
 
+> **Atualização no incremento 23:** a construção em blocos, resolução, paletas e orçamento abaixo registram a V1. O renderer atual e as imagens vinculadas usam a [direção visual V2](DIRECAO_VISUAL_V2.md), com anatomia articulada, fontes maiores e sombreamento. Consultar esse contrato para os valores atuais.
+
 ## 1. Entrega
 
 Primeira passagem de sprites para os oito encontros de chefe, substituindo retângulos e o círculo genérico da Entidade Zero. Cada chefe possui duas variantes de fase e quatro poses ligadas à IA. Castor/Pólux têm desenhos e paletas separados, preservando duas áreas atingíveis e uma vida compartilhada.

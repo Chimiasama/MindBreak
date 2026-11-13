@@ -2735,7 +2735,7 @@ export class GameEngine {
       else if (en.mount === 'wall-right') ctx.fillRect(en.x + en.w - 8, en.y, 8, en.h);
       else ctx.fillRect(en.x, en.y + en.h - 8, en.w, 8);
       const extension = !en.mount ? 1 : !en.ai || en.ai.state === 'patrol' ? 0 : en.ai.state === 'alert' ? 1 - en.ai.timer / 12 : 1;
-      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingEnabled = true;
       const source = enemySourceRect('turret');
       ctx.drawImage(getEnemyPixelSprite('turret'),source.x,source.y,source.w,source.h, en.x + 4, en.y + 5, en.w - 8, en.h - 10);
       if (en.deployedBy) { ctx.fillStyle = '#f59e0b'; ctx.fillRect(en.x + 6,en.y + 8,3,en.h - 16); }
@@ -2755,7 +2755,7 @@ export class GameEngine {
       ctx.save();
       ctx.translate(en.x + en.w / 2, en.y + en.h / 2);
       ctx.scale(en.facing, 1);
-      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingEnabled = true;
       const source = enemySourceRect(en.type);
       ctx.drawImage(sprite,source.x,source.y,source.w,source.h, -en.w / 2, -en.h / 2, en.w, en.h);
       ctx.restore();

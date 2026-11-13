@@ -1,5 +1,7 @@
 # Arte e animação — incremento 20
 
+> **Atualização no incremento 23:** a construção em blocos, resolução, paletas e orçamento abaixo registram a V1. O renderer atual e as imagens vinculadas usam a [direção visual V2](DIRECAO_VISUAL_V2.md), com anatomia articulada, fontes maiores e sombreamento. Consultar esse contrato para os valores atuais.
+
 ## 1. Escopo entregue
 
 Primeira passagem de pixel art procedural dos três heróis, substituindo a imagem estática e as rotações/inversões usadas para slide e hang. São **18 clipes e 55 posições de quadro por herói**; quadros podem repetir componentes ou poses para sustentar uma ação. Isso não significa 55 desenhos exclusivos nem arte final aprovada no aparelho.

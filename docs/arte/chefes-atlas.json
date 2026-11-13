@@ -1,9 +1,9 @@
 {
-  "version": 1,
-  "width": 192,
-  "height": 1152,
-  "frameWidth": 48,
-  "frameHeight": 64,
+  "version": 2,
+  "width": 576,
+  "height": 3456,
+  "frameWidth": 144,
+  "frameHeight": 192,
   "states": [
     "ready",
     "windup",
@@ -18,213 +18,213 @@
       "y": 0,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     },
     {
       "kind": "cipher",
       "phase": 2,
       "twin": false,
-      "y": 64,
-      "frames": [
-        0,
-        48,
-        96,
-        144
-      ]
-    },
-    {
-      "kind": "valkyrie",
-      "phase": 1,
-      "twin": false,
-      "y": 128,
-      "frames": [
-        0,
-        48,
-        96,
-        144
-      ]
-    },
-    {
-      "kind": "valkyrie",
-      "phase": 2,
-      "twin": false,
       "y": 192,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     },
     {
-      "kind": "goliath",
-      "phase": 1,
-      "twin": false,
-      "y": 256,
-      "frames": [
-        0,
-        48,
-        96,
-        144
-      ]
-    },
-    {
-      "kind": "goliath",
-      "phase": 2,
-      "twin": false,
-      "y": 320,
-      "frames": [
-        0,
-        48,
-        96,
-        144
-      ]
-    },
-    {
-      "kind": "arisawa",
+      "kind": "valkyrie",
       "phase": 1,
       "twin": false,
       "y": 384,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
+      ]
+    },
+    {
+      "kind": "valkyrie",
+      "phase": 2,
+      "twin": false,
+      "y": 576,
+      "frames": [
+        0,
+        144,
+        288,
+        432
+      ]
+    },
+    {
+      "kind": "goliath",
+      "phase": 1,
+      "twin": false,
+      "y": 768,
+      "frames": [
+        0,
+        144,
+        288,
+        432
+      ]
+    },
+    {
+      "kind": "goliath",
+      "phase": 2,
+      "twin": false,
+      "y": 960,
+      "frames": [
+        0,
+        144,
+        288,
+        432
+      ]
+    },
+    {
+      "kind": "arisawa",
+      "phase": 1,
+      "twin": false,
+      "y": 1152,
+      "frames": [
+        0,
+        144,
+        288,
+        432
       ]
     },
     {
       "kind": "arisawa",
       "phase": 2,
       "twin": false,
-      "y": 448,
+      "y": 1344,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     },
     {
       "kind": "twins",
       "phase": 1,
       "twin": false,
-      "y": 512,
+      "y": 1536,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     },
     {
       "kind": "twins",
       "phase": 1,
       "twin": true,
-      "y": 576,
+      "y": 1728,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     },
     {
       "kind": "twins",
       "phase": 2,
       "twin": false,
-      "y": 640,
+      "y": 1920,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     },
     {
       "kind": "twins",
       "phase": 2,
       "twin": true,
-      "y": 704,
+      "y": 2112,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     },
     {
       "kind": "kusanagi",
       "phase": 1,
       "twin": false,
-      "y": 768,
+      "y": 2304,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     },
     {
       "kind": "kusanagi",
       "phase": 2,
       "twin": false,
-      "y": 832,
+      "y": 2496,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     },
     {
       "kind": "vane",
       "phase": 1,
       "twin": false,
-      "y": 896,
+      "y": 2688,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     },
     {
       "kind": "vane",
       "phase": 2,
       "twin": false,
-      "y": 960,
+      "y": 2880,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     },
     {
       "kind": "oswald",
       "phase": 1,
       "twin": false,
-      "y": 1024,
+      "y": 3072,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     },
     {
       "kind": "oswald",
       "phase": 2,
       "twin": false,
-      "y": 1088,
+      "y": 3264,
       "frames": [
         0,
-        48,
-        96,
-        144
+        144,
+        288,
+        432
       ]
     }
   ],
