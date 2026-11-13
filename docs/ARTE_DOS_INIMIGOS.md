@@ -59,4 +59,4 @@ Chromium em viewport horizontal com touch chamou o renderizador real para 48 com
 
 TypeScript, build web, build de assets Android e Capacitor sync aprovados. Bundle JS de produção: 462,74 kB / 142,59 kB gzip, cerca de +3,22 / +1,38 kB sobre o incremento 20. Não houve APK, Action, alteração de save, IA, dano, colisão, pontuação, respawn, música ou estrutura das fases.
 
-Próximo bloco: identidade visual dos oito chefes e transformações (7.2.0.2), seguida de cut-ins/retratos (7.2.0.3) e ambientes (7.3). Permanecem pendentes ensaio físico e refinamento dos ciclos/silhuetas; não marcar a fase 7 inteira como concluída.
+Atualização no incremento 22: primeira passagem dos oito chefes/duas fases integrada; ver [ARTE_DOS_CHEFES.md](ARTE_DOS_CHEFES.md). Próximos blocos: cut-ins/retratos (7.2.0.3) e ambientes (7.3). Permanecem pendentes ensaio físico e refinamento dos ciclos/silhuetas; não marcar a fase 7 inteira como concluída.

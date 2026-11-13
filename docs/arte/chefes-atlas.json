@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "width": 192,
+  "height": 1152,
+  "frameWidth": 48,
+  "frameHeight": 64,
+  "states": [
+    "ready",
+    "windup",
+    "active",
+    "recover"
+  ],
+  "rows": [
+    {
+      "kind": "cipher",
+      "phase": 1,
+      "twin": false,
+      "y": 0,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "cipher",
+      "phase": 2,
+      "twin": false,
+      "y": 64,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "valkyrie",
+      "phase": 1,
+      "twin": false,
+      "y": 128,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "valkyrie",
+      "phase": 2,
+      "twin": false,
+      "y": 192,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "goliath",
+      "phase": 1,
+      "twin": false,
+      "y": 256,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "goliath",
+      "phase": 2,
+      "twin": false,
+      "y": 320,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "arisawa",
+      "phase": 1,
+      "twin": false,
+      "y": 384,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "arisawa",
+      "phase": 2,
+      "twin": false,
+      "y": 448,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "twins",
+      "phase": 1,
+      "twin": false,
+      "y": 512,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "twins",
+      "phase": 1,
+      "twin": true,
+      "y": 576,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "twins",
+      "phase": 2,
+      "twin": false,
+      "y": 640,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "twins",
+      "phase": 2,
+      "twin": true,
+      "y": 704,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "kusanagi",
+      "phase": 1,
+      "twin": false,
+      "y": 768,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "kusanagi",
+      "phase": 2,
+      "twin": false,
+      "y": 832,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "vane",
+      "phase": 1,
+      "twin": false,
+      "y": 896,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "vane",
+      "phase": 2,
+      "twin": false,
+      "y": 960,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "oswald",
+      "phase": 1,
+      "twin": false,
+      "y": 1024,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    },
+    {
+      "kind": "oswald",
+      "phase": 2,
+      "twin": false,
+      "y": 1088,
+      "frames": [
+        0,
+        48,
+        96,
+        144
+      ]
+    }
+  ],
+  "note": "Visual only: runtime controls body rectangles, warnings, projectiles and shared twin HP."
+}

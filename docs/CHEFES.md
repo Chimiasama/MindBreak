@@ -43,3 +43,5 @@ Esses ensaios não são uma certificação de derrota de cada chefe em uma parti
 No incremento 14, o HUD dos gêmeos passou a indicar **VIDA COMPARTILHADA**. Os setores finais 6C/7C/8D integram os padrões de Kusanagi/Vane/Oswald; a prova de vitória/carregamento testa interface e integridade do save, não certifica balanceamento completo.
 
 Incremento 15: o Olho Cósmico de Oswald recebe `reflectable: false` e contorno branco. Ele continua bloqueado por sólidos, como todos os tiros atuais de chefes. Penetração de terreno só pode existir mediante declaração específica e teste; ver [TORRETAS_E_PROJETEIS.md](TORRETAS_E_PROJETEIS.md).
+
+Incremento 22: os retângulos dos oito chefes e o círculo genérico da Entidade Zero foram substituídos por sprites de duas fases/quatro poses. IA, corpos, avisos, escudo e dano permanecem os mesmos. Fonte, prévias e limites em [ARTE_DOS_CHEFES.md](ARTE_DOS_CHEFES.md). A validação artística/física final segue pendente.

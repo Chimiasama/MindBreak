@@ -257,13 +257,15 @@ Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; A
 
 Contrato, paletas, prévias reproduzíveis, orçamento e limites do fluxo de morte em [ARTE_E_ANIMACAO.md](ARTE_E_ANIMACAO.md).
 
-### 7.2 Personagens, inimigos e chefes — PARCIAL (heróis 20; inimigos 21)
+### 7.2 Personagens, inimigos e chefes — PARCIAL (heróis 20; inimigos 21; chefes 22)
 
 - **7.2.0.1 — Primeira passagem integrada nos três heróis; aprovação visual em aparelho pendente:** produzir heróis com idle, corrida, salto, queda, parede, escalada, hang, vault, dash, slide, combo, dano, stun, especial e morte; Maya inclui voo. Integrar um herói antes de produzir todas as variantes.
-- **7.2.0.2 — Primeira passagem dos 12 inimigos integrada; chefes/transformações pendentes:** diferenciar doze arquétipos inimigos por silhueta/arma/postura, sem depender só de cor; depois desenhar os oito chefes e transformações.
+- **7.2.0.2 — Primeira passagem dos 12 inimigos e oito chefes/duas fases integrada; revisão no aparelho pendente:** diferenciar doze arquétipos inimigos por silhueta/arma/postura, sem depender só de cor; depois desenhar os oito chefes e transformações.
 - **7.2.0.3:** criar cut-ins e retratos com coerência visual; sincronizar efeitos de impacto com hitstop, som e janela de dano.
 
 Silhuetas, estados, recortes, orçamento e prévias dos inimigos em [ARTE_DOS_INIMIGOS.md](ARTE_DOS_INIMIGOS.md).
+
+Chefes, transformações, contrato de estado e prévias em [ARTE_DOS_CHEFES.md](ARTE_DOS_CHEFES.md).
 
 ### 7.3 Ambientes — PENDENTE
 
@@ -324,6 +326,6 @@ Silhuetas, estados, recortes, orçamento e prévias dos inimigos em [ARTE_DOS_IN
 
 1. Ler este documento e o registro de execução.
 2. Verificar `git status`, preservar mudanças existentes e rodar a suíte da base.
-3. Manter 26 mapas, exploração do incremento 18 e catálogo sonoro do 19. O incremento 20 entrega pipeline e primeira passagem dos três heróis (7.1/7.2.0.1). O incremento 21 integra silhuetas dos 12 inimigos; retomar chefes/transformações (7.2.0.2), cut-ins/retratos e ambientes; depois fase 8. Consultar `ARTE_E_ANIMACAO.md`, `ARTE_DOS_INIMIGOS.md` e `EXECUCAO.md`. Permanecem aceites físicos de combate, rotas, som, dificuldade e leitura Android; catálogo ou suíte verde não equivalem à aprovação final.
+3. Manter 26 mapas, exploração do incremento 18 e catálogo sonoro do 19. O incremento 20 entrega pipeline e primeira passagem dos três heróis (7.1/7.2.0.1). O incremento 21 integra silhuetas dos 12 inimigos; o incremento 22 integra os oito chefes e duas fases. Retomar cut-ins/retratos (7.2.0.3) e ambientes (7.3); depois fase 8. Consultar `ARTE_E_ANIMACAO.md`, `ARTE_DOS_INIMIGOS.md`, `ARTE_DOS_CHEFES.md` e `EXECUCAO.md`. Permanecem aceites físicos de combate, rotas, som, dificuldade e leitura Android; catálogo ou suíte verde não equivalem à aprovação final.
 4. Atualizar status somente com evidência. Antes de avançar para cada lote de subfases, validar o lote anterior.
 5. Não confundir a publicação do ambiente de desenvolvimento com a publicação do jogo, commits remotos, GitHub Actions ou APK.

@@ -1,3 +1,4 @@
+import { drawBossSprite } from './bossArtwork';
 import { HeroAnimator } from './heroAnimation';
 import { drawHeroFrame } from './heroArtwork';
 import { COMBO, SWINGS, nextComboStep } from './combat';
@@ -2795,31 +2796,7 @@ export class GameEngine {
     ctx.strokeStyle = '#fbbf24'; ctx.fillStyle = 'rgba(251,191,36,0.12)'; ctx.lineWidth = 2;
     for (const zone of bossWarnings(b)) { ctx.fillRect(zone.x, zone.y, zone.w, zone.h); ctx.strokeRect(zone.x, zone.y, zone.w, zone.h); }
     ctx.restore();
-    // Stage 8 Phase 2 Cosmic One-Eyed Entity Zero!
-    if (b.behavior === 'oswald' && b.phase === 2) {
-      ctx.fillStyle = '#1e1b4b';
-      ctx.beginPath();
-      ctx.arc(b.x + b.w / 2, b.y + b.h / 2, b.w * 0.72, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#00f0ff';
-      ctx.lineWidth = 4;
-      ctx.stroke();
-      // Giant Glowing Single Cosmic Eye
-      ctx.fillStyle = '#ff007f';
-      ctx.beginPath();
-      ctx.arc(b.x + b.w / 2, b.y + b.h / 2, 16, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(b.x + b.w / 2 - 3, b.y + b.h / 2 - 6, 6, 12);
-    } else {
-      ctx.fillStyle = b.color;
-      ctx.fillRect(b.x, b.y, b.w, b.h);
-      ctx.strokeStyle = b.accentColor;
-      ctx.lineWidth = 3;
-      ctx.strokeRect(b.x, b.y, b.w, b.h);
-      ctx.fillStyle = b.accentColor;
-      ctx.fillRect(b.x + (b.facing === 1 ? b.w - 16 : 6), b.y + 14, 12, 5);
-    }
+    drawBossSprite(ctx,b);
 
     // Cipher-01 Orbiting Psychic Daggers
     if (b.behavior === 'cipher') {
@@ -2839,10 +2816,7 @@ export class GameEngine {
       ctx.fillRect(sx, b.y - 4, 8, b.h + 8);
     }
     if (b.behavior === 'twins' && b.twinX !== undefined && b.twinY !== undefined) {
-      ctx.fillStyle = '#0369a1';
-      ctx.fillRect(b.twinX, b.twinY, b.w, b.h);
-      ctx.strokeStyle = '#facc15';
-      ctx.strokeRect(b.twinX, b.twinY, b.w, b.h);
+      drawBossSprite(ctx,b,true);
     }
     if (b.telegraph) {
       ctx.fillStyle = '#facc15';

@@ -8,8 +8,10 @@
 <p id="status"></p><canvas id="preview" width="48" height="64"></canvas>
 <p><button id="png">Baixar atlas PNG</button><button id="json">Baixar metadados JSON</button></p><h2>Todos os quadros</h2><canvas id="sheet"></canvas>
 <h2>Inimigos: silhuetas e estados</h2><p>Repouso, dois apoios de locomoção e preparação/ação. Escudos, suportes, mira e projéteis são desenhados pelo motor.</p><canvas id="enemies"></canvas>
+<h2>Chefes: duas fases e estados</h2><canvas id="bosses"></canvas>
 <script type="module">
 import { HERO_ATLAS, HERO_CLIPS, clipFrame } from '/src/game/heroAnimation.ts';
+import { BOSS_ART, BOSS_FRAME, getBossSprite } from '/src/game/bossArtwork.ts';
 import { ENEMY_ART, getEnemyPixelSprite, enemySourceRect } from '/src/game/enemyArtwork.ts';
 import { getHeroAtlas } from '/src/game/heroArtwork.ts';
 const hero=document.querySelector('#hero'),pose=document.querySelector('#pose'),frame=document.querySelector('#frame'),play=document.querySelector('#play');
@@ -24,5 +26,6 @@ function download(blob,name){const url=URL.createObjectURL(blob),a=document.crea
 document.querySelector('#png').onclick=()=>getHeroAtlas(hero.value).toBlob(b=>download(b,`${hero.value}-atlas.png`));
 document.querySelector('#json').onclick=()=>download(new Blob([JSON.stringify({hero:hero.value,...HERO_ATLAS},null,2)],{type:'application/json'}),`${hero.value}-atlas.json`);
 function enemySheet(){const c=document.querySelector('#enemies');c.width=960;c.height=Object.keys(ENEMY_ART).length*100;const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.fillStyle='#263449';x.fillRect(0,0,c.width,c.height);x.font='14px monospace';Object.entries(ENEMY_ART).forEach(([type,art],row)=>{x.fillStyle='#f1f5f9';x.fillText(type,8,row*100+25);x.fillText(art.label,8,row*100+47);for(let i=0;i<4;i++){x.drawImage(getEnemyPixelSprite(type,i),320+i*145,row*100+4,48,64);x.fillText(['repouso','apoio A','apoio B','ação'][i],320+i*145,row*100+87);}});}enemySheet();
-window.artStudio={ENEMY_ART,getEnemyPixelSprite,enemySourceRect,enemySheet,getHeroAtlas,metadata:HERO_ATLAS,sheet};
+function bossSheet(){const c=document.querySelector('#bosses');c.width=960;c.height=18*150;const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.fillStyle='#263449';x.fillRect(0,0,c.width,c.height);x.font='14px monospace';let row=0;for(const kind of Object.keys(BOSS_ART))for(const phase of [1,2]){for(const twin of kind==='twins'?[false,true]:[false]){x.fillStyle='#f1f5f9';x.fillText(`${kind}${twin?' (Pólux)':''} · fase ${phase}`,8,row*150+25);for(let frame=0;frame<4;frame++){x.drawImage(getBossSprite(kind,phase,frame,twin),270+frame*170,row*150+4,96,128);x.fillText(BOSS_FRAME.states[frame],270+frame*170,row*150+146);}row++;}}}bossSheet();
+window.artStudio={BOSS_ART,BOSS_FRAME,getBossSprite,bossSheet,ENEMY_ART,getEnemyPixelSprite,enemySourceRect,enemySheet,getHeroAtlas,metadata:HERO_ATLAS,sheet};
 </script></html>
