@@ -95,10 +95,10 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 - **2.2.0.4 — Cooldown da armor corrigido; balanceamento geral pendente:** documentar HP, invulnerabilidade, armor e stun. Conferir Leon sem recuo mas com proteção adequada contra múltiplos projéteis simultâneos.
 - **2.2.0.5 — Aceite:** um ataque normal conta uma vez por alvo; WAV perfura mas não reaplica no mesmo alvo; telecinese não concede recompensa duplicada; combo e foco obedecem aos valores definidos.
 
-### 2.3 Inimigos e chefes — PENDENTE
+### 2.3 Inimigos e chefes — PARCIAL: estados dos inimigos comuns implementados; chefes/balanceamento pendentes
 
-- **2.3.0.1 — Limites/perigo de borda implementados no incremento 9; máquina de estados pendente:** separar IA em estados patrulha/alerta/ataque/recuperação/stun/morte; introduzir limites de perseguição e verificação de piso para não acumular inimigos em abismos.
-- **2.3.0.2:** conservar cooperação guarda/cão/atirador, com sinais legíveis e limites para stun encadeado.
+- **2.3.0.1 — Implementado nos incrementos 9/11:** separar IA em estados patrulha/alerta/ataque/recuperação/stun/morte; introduzir limites de perseguição e verificação de piso para não acumular inimigos em abismos.
+- **2.3.0.2 — Cooperação/telegrafia e proteção contra stun implementadas no incremento 11; balanceamento pendente:** conservar cooperação guarda/cão/atirador, com sinais legíveis e limites para stun encadeado.
 - **2.3.0.3:** individualizar os oito chefes com padrões, telegrafia e contra-ataques próprios; gêmeos devem ter regra clara de dois corpos/vida compartilhada. Arisawa e Vane deixam de usar somente especial genérico.
 - **2.3.0.4 — Aceite:** derrotar cada chefe com todos os personagens sem depender de bugs; fase 2 modifica o padrão com clareza; combates não geram softlock.
 

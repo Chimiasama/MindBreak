@@ -1,5 +1,6 @@
 # Documentação do MIND//BREAK
 
+- [IA e combate](IA_E_COMBATE.md): estados, preparação/recuperação, stun, visão e colisão de projéteis.
 - [Movimento e terreno](MOVIMENTACAO_E_TERRENO.md): perfis, medição dos saltos e regras físicas dos inimigos.
 - [Salvamento da campanha](SALVAMENTO.md): formato versionado, retomada, recuperação e limites.
 - [APK Android e Action manual](ANDROID_APK.md): construção, download, instalação, versões e limites da validação.

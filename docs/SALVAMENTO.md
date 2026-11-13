@@ -55,3 +55,5 @@ Os ticks são preservados; o tempo real com o app fechado não conta para respaw
 - Chromium horizontal: gravação automática, recarga da página e carregamento de outro setor, cancelamento da substituição, descarte confirmado, backup, incompatibilidade e falha de quota, sem erros JavaScript.
 
 Ainda pendentes: comportamento após encerramento forçado do processo Android, atualização de APK com a mesma assinatura e testes físicos de armazenamento/lifecycle. Um encerramento abrupto antes do próximo evento/intervalo pode perder os últimos segundos. Não foi gerado APK nem acionada Action neste incremento.
+
+No incremento 11, o formato versão 1 passou a aceitar também `Enemy.ai`, mantendo leitura dos saves sem esse campo. Mira e temporizadores são validados; um ataque/preparação salvo retorna em recuperação ao carregar no checkpoint. Ver [IA_E_COMBATE.md](IA_E_COMBATE.md).

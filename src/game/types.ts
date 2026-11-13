@@ -101,7 +101,18 @@ export type EnemyType =
   | 'turret'
   | 'heavy_trooper';
 
+export interface EnemyMind {
+  state: 'patrol' | 'alert' | 'chase' | 'windup' | 'attack' | 'recover' | 'stunned' | 'airborne' | 'return' | 'dead';
+  timer: number;
+  memory: number;
+  aimX: number;
+  aimY: number;
+  facing: 1 | -1;
+  action: 'shot' | 'melee' | 'flank';
+}
+
 export interface Enemy {
+  ai?: EnemyMind;
   id: number;
   spawnId?: string;
   generation?: number;

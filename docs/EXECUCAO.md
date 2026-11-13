@@ -199,3 +199,13 @@ Também corrigida a medição da distância de ataque depois de deslocar um inim
 TypeScript, build web e assets Android passaram. Chromium em 915×412 validou aceleração/frenagem pelo teclado, movimento+pulo com dois toques simultâneos via CDP, liberação dos comandos, portas 3A → 3B → 3C por CIMA, câmera na subida e carregamento de save no build de produção, sem overflow ou erros JavaScript. Fluxos de save e Voltar foram verificados novamente. Ensaio físico Android/DualShock 4 continua pendente; nenhuma Action acionada e nenhum APK gerado.
 
 Próximas pendências: acabamento do comportamento/combate de inimigos e chefes, expansão da fábrica e do distrito financeiro (4A–4C/5A–5C), depois demais capítulos. Música e arte permanecem após a base de gameplay; multiplayer/migração de engine seguem futuros. As Actions continuam exclusivamente manuais.
+
+## Incremento 11 — estados da IA, ataques legíveis e stun
+
+Inimigos comuns agora usam patrulha, alerta, perseguição, preparação, ataque, recuperação, stun, voo/queda, retorno e morte explícitos. Preparação trava a mira/direção; ataque emite um evento; recuperação abre resposta. Visão respeita sólidos, e perda de alvo conserva apenas uma memória limitada da posição vista. Giro lento do guarda, flanco do cão e cobertura do gunner permanecem com regras explícitas, sem pular preparação/recuperação.
+
+Corrigido stun do guarda por fora de dano bloqueado: dash/invulnerabilidade não são atordoados. Stun dura 24 ticks com graça de 90 contra repetição. Projéteis de ambos os lados passam a respeitar a primeira parede por varredura, com ordem de contato correta para WAV e alvos anteriores à parede.
+
+Save versão 1 preserva os novos estados e aceita inimigos antigos sem IA. Ataques em andamento restauram em recuperação no checkpoint. Recompensas e identificação de conteúdo das fases existentes não foram alteradas.
+
+177 testes passaram, incluindo os onze arquétipos e novas regressões. TypeScript, build e smoke de navegador de exploração/save passaram. Nenhuma Action ou APK. Chefes ainda usam lógica separada; o balanceamento completo continua pendente. Contrato em [IA_E_COMBATE.md](IA_E_COMBATE.md). Próximo lote: fábrica/financeiro, em 4A–4C e 5A–5C.

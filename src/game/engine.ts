@@ -6,6 +6,7 @@ import { moveAgainstSolids, depenetrate, overlaps, sweepTime } from './collision
 import { ALLOW_TEST_CHARACTER_SWITCH } from './rules';
 import { MOVEMENT } from './tuning';
 import { MOVEMENT_PROFILES, horizontalVelocity } from './movement';
+import { canSeeBody, ENEMY_COMBAT, isFlyingEnemy, stepEnemyAI, terrainHit } from './enemyAI';
 import { GROUND_ENEMY, enemySolids, enemyHome, hasSafeFooting, moveGroundEnemy } from './groundActors';
 import { SpawnManager } from './spawns';
 import { viewportFor, cameraTarget, followCamera } from './camera';
@@ -199,6 +200,7 @@ export class GameEngine {
     comboTimer: 0,
     invulnTimer: 0,
     stunTimer: 0,
+    stunGraceTimer: 0,
     pitfallCooldown: 0,
     lastGroundX: 100,
     lastGroundY: 600,
@@ -428,6 +430,7 @@ export class GameEngine {
       comboTimer: 0,
       invulnTimer: 45,
       stunTimer: 0,
+      stunGraceTimer: 0,
       pitfallCooldown: 0,
       lastGroundX: found.spawnX,
       lastGroundY: found.spawnY + 56,
@@ -475,7 +478,7 @@ export class GameEngine {
       props: area.props.map((prop) => ({ id: prop.id, hp: Math.max(0, prop.hp), broken: prop.broken ?? false })),
       pickups: area.pickups.map((pickup) => ({ ...pickup })),
       arenas: area.arenas.map((arena) => ({ id: arena.id, cleared: arena.cleared })),
-      enemies: area.enemies.filter((enemy) => enemy.hp > 0).map((enemy) => ({ ...enemy })),
+      enemies: area.enemies.filter((enemy) => enemy.hp > 0).map((enemy) => ({ ...enemy, ...(enemy.ai ? { ai: { ...enemy.ai } } : {}) })),
       spawns: area.spawns.snapshot(),
     }));
     return { version: 1, content: campaignContentId(this.stage.id), savedAt: Date.now(),
@@ -625,6 +628,7 @@ export class GameEngine {
     p.nextOneUpScore = 15000;
     p.invulnTimer = 180;
     p.stunTimer = 0;
+    p.stunGraceTimer = 90;
     p.vx = 0;
     p.vy = 0;
     this.respawnAtCheckpoint();
@@ -1277,6 +1281,7 @@ export class GameEngine {
     en.vx = kx;
     en.vy = ky;
     en.airborne = true;
+    if (en.ai) { en.ai.state = en.hp <= 0 ? 'dead' : 'stunned'; en.ai.timer = 12; en.telegraph = 0; }
     this.hitstop = Math.max(this.hitstop, hitstopFrames);
     this.screenShake(6);
     sound.sfxHit();
@@ -1330,9 +1335,9 @@ export class GameEngine {
   private damagePlayer(dmg: number, knockX: number, ignoreInvuln = false, isWeakBullet = false) {
     const p = this.player;
     const char = CHARACTERS[this.characterId];
-    if (this.stageClearTriggered || this.continueTriggered || this.gameOverTriggered) return;
-    if (p.gstTimer > 0 && !ignoreInvuln) return; // GST optical camouflage invulnerability
-    if (!ignoreInvuln && (p.invulnTimer > 0 || p.isDashing)) return;
+    if (this.stageClearTriggered || this.continueTriggered || this.gameOverTriggered) return false;
+    if (p.gstTimer > 0 && !ignoreInvuln) return false; // GST optical camouflage invulnerability
+    if (!ignoreInvuln && (p.invulnTimer > 0 || p.isDashing)) return false;
 
     // Leon Super Armor: absorbs knockback/flinch from weak bullets!
     if (char.superArmor && isWeakBullet) {
@@ -1356,6 +1361,7 @@ export class GameEngine {
         p.hp = p.maxHp;
         p.invulnTimer = 180; // 3 seconds I-Frames!
         p.stunTimer = 0;
+        p.stunGraceTimer = 90;
         p.vx = 0;
         p.vy = 0;
         this.respawnAtCheckpoint();
@@ -1374,6 +1380,7 @@ export class GameEngine {
         }, 450);
       }
     }
+    return true;
   }
 
   private registerHit(scorePoints: number) {
@@ -1461,6 +1468,7 @@ export class GameEngine {
     }
     if (p.invulnTimer > 0) p.invulnTimer--;
     if (p.stunTimer > 0) p.stunTimer--;
+    if (p.stunGraceTimer > 0) p.stunGraceTimer--;
     if (p.pitfallCooldown > 0) p.pitfallCooldown--;
     if (p.atkTimer > 0) p.atkTimer--;
     if (p.jmpTimer > 0) p.jmpTimer--;
@@ -1857,11 +1865,12 @@ export class GameEngine {
       const previous = { ...b };
       b.x += b.vx;
       b.y += b.vy;
+      const wallTime = terrainHit(previous, b.vx, b.vy, solids);
       if (b.fromPlayer) {
         const targets = [...this.enemies.filter((enemy) => enemy.hp > 0),
           ...(this.boss.active && this.boss.triggered ? [{ ...this.boss, id: -999 }] : [])];
         const contacts = targets.map((target) => ({ target, time: sweepTime(previous, b.vx, b.vy, target) }))
-          .filter((hit) => hit.time !== null && !b.hitIds?.has(hit.target.id))
+          .filter((hit) => hit.time !== null && hit.time < wallTime && !b.hitIds?.has(hit.target.id))
           .sort((left, right) => left.time! - right.time!);
         for (const { target } of contacts) {
           if (b.dead) break;
@@ -1871,13 +1880,14 @@ export class GameEngine {
           else b.dead = true;
         }
       } else {
-        if (p.gstTimer > 0) return;
         const playerBox = p.isSliding ? { x: p.x, y: p.y + 34, w: p.w + 12, h: 22 } : p;
-        if (sweepTime(previous, b.vx, b.vy, playerBox) !== null) {
+        const playerTime = sweepTime(previous, b.vx, b.vy, playerBox);
+        if (p.gstTimer <= 0 && playerTime !== null && playerTime < wallTime) {
           this.damagePlayer(b.damage, b.vx > 0 ? 5 : -5, false, b.damage <= 14);
           b.dead = true;
         }
       }
+      if (wallTime !== Infinity) b.dead = true;
     });
     this.bullets = this.bullets.filter((b) => !b.dead && Math.abs(b.x - p.x) < 1150);
 
@@ -1942,6 +1952,7 @@ export class GameEngine {
     p.isFlying = p.isDashing = p.isSliding = false;
     p.doubleJump = true;
     p.stunTimer = 0;
+    p.stunGraceTimer = 90;
     p.invulnTimer = Math.max(60, p.invulnTimer);
     this.standingPlatform = null;
     this.clearInput();
@@ -2013,179 +2024,84 @@ export class GameEngine {
 
   private updateEnemies() {
     const p = this.player;
-    const playerHidden = p.gstTimer > 0;
     const solids = enemySolids(this.platforms);
+    const guardEngaged = this.enemies.some((enemy) => enemy.hp > 0 && enemy.type === 'mib_shield' &&
+      !enemy.shieldBroken && Math.abs(enemy.x - p.x) < 160 && Math.abs(enemy.y - p.y) < 70 &&
+      (p.facing === 1 ? enemy.x > p.x : enemy.x < p.x) && canSeeBody(enemy, p, solids));
 
-    // Check if player is currently fighting a shield guard frontally (triggers Cyber Hound Flank Attack)
-    const activeShieldEngage = this.enemies.find(
-      (s) =>
-        s.hp > 0 && s.type === 'mib_shield' &&
-        !s.shieldBroken &&
-        Math.abs(s.x - p.x) < 160 &&
-        Math.abs(s.y - p.y) < 70 &&
-        ((p.facing === 1 && s.x > p.x) || (p.facing === -1 && s.x < p.x))
-    );
-
-    this.enemies.forEach((en) => {
-      if (en.hp <= 0 || en.y > this.stage.boundsBottom + 300) return;
-      if (en.stunTimer && en.stunTimer > 0) {
-        en.stunTimer--;
-        en.vx *= 0.8;
-        if (!moveGroundEnemy(en, solids, this.stage.gravityScale, this.platformDeltas)) en.hp = 0;
-        return;
+    for (const enemy of this.enemies) {
+      const flying = isFlyingEnemy(enemy), home = enemyHome(enemy), profile = ENEMY_COMBAT[enemy.type];
+      const stunned = (enemy.stunTimer ?? 0) > 0;
+      if (stunned) enemy.stunTimer!--;
+      if (enemy.hp > 0 && enemy.y <= this.stage.boundsBottom + 300 && (!flying || stunned)) {
+        enemy.vx *= stunned ? 0.8 : 1;
+        if (!moveGroundEnemy(enemy, solids, this.stage.gravityScale, this.platformDeltas)) enemy.hp = 0;
+        enemy.vx *= 0.86;
       }
-
-      let dx = p.x - en.x;
-      let dy = p.y - en.y;
-      let dist = Math.hypot(dx, dy);
-      const desiredFacing: 1 | -1 = dx >= 0 ? 1 : -1;
-
-      // Guard Turn Delay (~0.6s / 36 frames) so player can Dash behind for Backstab!
-      if ((en.type === 'mib_shield' || en.type === 'heavy_trooper') && !en.shieldBroken) {
-        if (desiredFacing !== en.facing) {
-          if (!en.turnTimer || en.turnTimer <= 0) {
-            en.turnTimer = 36;
-          } else {
-            en.turnTimer--;
-            if (en.turnTimer <= 0) {
-              en.facing = desiredFacing;
-            }
-          }
-        } else {
-          en.turnTimer = 0;
-        }
-      } else {
-        en.facing = desiredFacing;
+      const distance = Math.hypot(p.x - enemy.x, p.y - enemy.y);
+      const visible = p.gstTimer <= 0 && distance <= GROUND_ENEMY.detectionRadius && canSeeBody(enemy, p, solids);
+      const landingX = p.x - p.facing * 56;
+      const intent = stepEnemyAI(enemy, { player: p, visible, home, stunned,
+        coverFire: p.stunTimer > 10,
+        canFlank: guardEngaged && Math.abs(landingX - home) <= GROUND_ENEMY.leash &&
+          hasSafeFooting(enemy, landingX - enemy.x, this.platforms) });
+      if (enemy.hp <= 0 || enemy.y > this.stage.boundsBottom + 300) continue;
+      const mind = enemy.ai!;
+      if (mind.state === 'windup' || mind.state === 'attack' || mind.state === 'recover') enemy.facing = mind.facing;
+      else if (intent.move !== 0 || mind.state === 'chase' || mind.state === 'alert') {
+        const direction = mind.state === 'chase' || mind.state === 'alert' ? (mind.aimX >= enemy.x + enemy.w / 2 ? 1 : -1) : intent.move > 0 ? 1 : -1;
+        if ((enemy.type === 'mib_shield' || enemy.type === 'heavy_trooper') && !enemy.shieldBroken &&
+          enemy.facing !== direction && mind.state !== 'return') {
+          enemy.turnTimer = (enemy.turnTimer ?? 36) > 0 ? enemy.turnTimer! - 1 : 36;
+          if (enemy.turnTimer === 0) enemy.facing = direction;
+        } else { enemy.facing = direction; enemy.turnTimer = 36; }
       }
-
-      if (en.type === 'jetpack' || en.type === 'drone') {
-        if (playerHidden) return;
-        if (dist < 620) {
-          const targetX = en.type === 'drone' ? p.x + Math.cos(this.tickCount * 0.06 + en.id) * 90 : p.x + (en.x > p.x ? 180 : -180);
-          const targetY = (en.originY ?? p.y - 100) + Math.sin(this.tickCount * 0.06 + en.id) * 32;
-          en.x += (targetX - en.x) * 0.035 + en.vx;
-          en.y += (targetY - en.y) * 0.045 + en.vy;
-          en.vx *= 0.85;
-          en.vy *= 0.85;
-
-          // Micro-Drone contact interrupts jump/wall-climb!
-          if (en.type === 'drone' && this.checkAABB(en, p) && (!p.grounded || p.onWall !== 0 || p.hangingCeiling)) {
-            p.onWall = 0;
-            p.hangingCeiling = false;
-            p.hangingPipe = null;
-            p.vy = Math.max(p.vy, 3.5);
-            this.damagePlayer(6, (p.x >= en.x ? 1 : -1) * 4);
-            this.addMangaFx('INTERROMPIDO!', p.x, p.y - 20, '#ef4444');
-          }
-
-          en.shootTimer--;
-          en.telegraph = en.shootTimer <= 22 && en.shootTimer > 0 ? 1 : 0;
-          if (en.shootTimer <= 0) {
-            en.shootTimer = en.type === 'drone' ? 95 : 80;
-            const norm = Math.max(1, dist);
-            this.bullets.push({
-              x: en.x + en.w / 2,
-              y: en.y + 14,
-              vx: (dx / norm) * 6.5,
-              vy: (dy / norm) * 6.5,
-              w: 10,
-              h: 6,
-              shooterId: en.id,
-              color: '#00f0ff',
-              damage: 12,
-            });
-            sound.sfxShoot();
-          }
+      if (intent.coverWarning) this.addMangaFx('COBERTURA!', enemy.x, enemy.y - 22, '#facc15');
+      if (flying && !stunned && intent.move !== 0) {
+        const returning = mind.state === 'return' || mind.state === 'patrol';
+        const targetX = returning ? home : intent.targetX + (enemy.type === 'drone' ? Math.cos(this.tickCount * 0.06 + enemy.id) * 90 : enemy.x > intent.targetX ? 180 : -180);
+        const targetY = (enemy.originY ?? enemy.y) + Math.sin(this.tickCount * 0.06 + enemy.id) * 32;
+        enemy.x += (targetX - enemy.x) * 0.035 + enemy.vx;
+        enemy.y += (targetY - enemy.y) * 0.045 + enemy.vy;
+        enemy.vx *= 0.85; enemy.vy *= 0.85;
+      } else if (!flying && !enemy.airborne && intent.move !== 0 && enemy.facing === Math.sign(intent.move)) {
+        if (Math.abs(enemy.x + intent.move - home) <= GROUND_ENEMY.leash || mind.state === 'return') {
+          if (hasSafeFooting(enemy, intent.move, this.platforms)) moveAgainstSolids(enemy, intent.move, 'x', solids);
         }
-        return;
       }
-
-      // Physical impulses can knock actors off a ledge; voluntary pursuit cannot.
-      if (!moveGroundEnemy(en, solids, this.stage.gravityScale, this.platformDeltas)) {
-        en.hp = 0;
-        return;
-      }
-      en.vx *= 0.86;
-      dx = p.x - en.x;
-      dy = p.y - en.y;
-      dist = Math.hypot(dx, dy);
-      if (en.airborne) return;
-      const home = enemyHome(en);
-      const returning = Math.abs(en.x - home) > GROUND_ENEMY.leash;
-      if (returning) {
-        const direction = en.x < home ? 1 : -1;
-        const step = direction * 1.7;
-        en.facing = direction;
-        if (hasSafeFooting(en, step, this.platforms)) moveAgainstSolids(en, step, 'x', solids);
-        return;
-      }
-      if (playerHidden || dist > GROUND_ENEMY.detectionRadius) return;
-
-      // MIB Gunner Cover Fire when player is stunned!
-      if (en.type === 'mib_gunner' || en.type === 'sniper' || en.type === 'turret') {
-        if (en.type === 'mib_gunner' && p.stunTimer > 10 && en.shootTimer > 14) {
-          en.shootTimer = 10; // Cover Fire overrides wait!
-          this.addMangaFx('COVER FIRE!', en.x, en.y - 22, '#facc15');
+      if (intent.attack === 'shot') {
+        const x = enemy.x + enemy.w / 2, y = enemy.y + enemy.h / 2;
+        const dx = mind.aimX - x, dy = mind.aimY - y, length = Math.max(1, Math.hypot(dx, dy));
+        this.bullets.push({ x, y, w: enemy.type === 'sniper' ? 12 : 10, h: 6,
+          vx: flying ? dx / length * profile.bulletSpeed : mind.facing * profile.bulletSpeed,
+          vy: flying ? dy / length * profile.bulletSpeed : 0,
+          shooterId: enemy.id, color: enemy.type === 'sniper' ? '#ff007f' : '#facc15', damage: profile.damage });
+        sound.sfxShoot();
+      } else if (intent.attack === 'flank') {
+        if (hasSafeFooting(enemy, mind.aimX - enemy.x, this.platforms)) {
+          enemy.vx = mind.facing * 9.5; enemy.vy = -8.5; enemy.airborne = true;
+          enemy.isFlanking = true;
+          this.addMangaFx('FLANCO!', enemy.x, enemy.y - 22, '#ef4444');
         }
-        en.shootTimer--;
-        en.telegraph = en.shootTimer <= 25 && en.shootTimer > 0 ? 1 : 0;
-        if (en.shootTimer <= 0) {
-          en.shootTimer = en.type === 'sniper' ? 125 : en.type === 'turret' ? 75 : p.stunTimer > 0 ? 28 : 105;
-          this.bullets.push({
-            x: en.x + (en.facing === 1 ? en.w : -8),
-            y: en.y + 18,
-            vx: en.facing * (en.type === 'sniper' ? 11 : 7.2),
-            vy: 0,
-            w: 12,
-            h: 5,
-            shooterId: en.id,
-            color: en.type === 'sniper' ? '#ff007f' : '#facc15',
-            damage: en.type === 'sniper' ? 18 : 11,
-          });
-          sound.sfxShoot();
-        }
-      } else {
-        // Cyber Hound Cooperative Flank Leap!
-        if (en.type === 'cyber_hound' && activeShieldEngage && Math.abs(dx) < 280 && en.attackTimer <= 20 &&
-          Math.abs(p.x - p.facing * 56 - home) <= GROUND_ENEMY.leash &&
-          hasSafeFooting(en, p.x - p.facing * 56 - en.x, this.platforms)) {
-          const behindX = p.x - p.facing * 56;
-          const flankDir = behindX >= en.x ? 1 : -1;
-          en.vx = flankDir * 9.5;
-          en.vy = -8.5;
-          en.airborne = true;
-          en.isFlanking = true;
-          en.attackTimer = 65;
-          this.addMangaFx('FLANK BITE!', en.x, en.y - 22, '#ef4444');
-          return;
-        }
-
-        const moveSpd =
-          en.type === 'cyber_hound' ? 3.8 : en.type === 'samurai' || en.type === 'suit_martial' ? 3.1 : 1.7;
-        if (Math.abs(dx) > 38) {
-          const step = en.facing * moveSpd;
-          if (Math.abs(en.x + step - home) <= GROUND_ENEMY.leash && hasSafeFooting(en, step, this.platforms)) {
-            moveAgainstSolids(en, step, 'x', solids);
-          }
-        }
-        en.attackTimer--;
-        en.telegraph = en.attackTimer <= 18 && en.attackTimer > 0 && Math.abs(dx) < 85 ? 1 : 0;
-        if (en.attackTimer <= 0 && Math.abs(dx) < 60 && Math.abs(dy) < 60) {
-          en.attackTimer = en.type === 'cyber_hound' ? 50 : 72;
-          if (en.type === 'mib_shield' && !en.shieldBroken) {
-            // Shield Shove Stun!
-            p.stunTimer = Math.max(p.stunTimer, 42);
-            sound.sfxStun();
-            this.damagePlayer(12, en.facing * 11);
-            this.addMangaFx('SHIELD SHOVE!', en.x, en.y - 24, '#00f0ff');
-          } else {
-            this.damagePlayer(en.type === 'heavy_trooper' ? 18 : 13, en.facing * 7);
+      } else if (intent.attack === 'melee') {
+        const dx = p.x + p.w / 2 - enemy.x - enemy.w / 2;
+        const dy = p.y + p.h / 2 - enemy.y - enemy.h / 2;
+        if (Math.abs(dx) <= profile.range && Math.abs(dy) < 60 && dx * mind.facing >= 0 && visible && canSeeBody(enemy, p, solids)) {
+          const guardShove = enemy.type === 'mib_shield' && !enemy.shieldBroken;
+          const damaged = this.damagePlayer(profile.damage, mind.facing * (guardShove ? 11 : 7));
+          if (damaged && guardShove && p.hp > 0 && p.stunGraceTimer === 0) {
+            p.stunTimer = 24; p.stunGraceTimer = 90;
+            sound.sfxStun(); this.addMangaFx('STUN!', p.x, p.y - 24, '#00f0ff');
           }
         }
       }
-    });
-
-    this.enemies = this.enemies.filter((en) => en.hp > 0 && en.y < this.stage.boundsBottom + 300);
+      if (enemy.type === 'drone' && mind.state === 'chase' && !stunned && visible && this.checkAABB(enemy, p) &&
+        (!p.grounded || p.onWall !== 0 || p.hangingCeiling) && this.damagePlayer(6, (p.x >= enemy.x ? 1 : -1) * 4)) {
+        p.onWall = 0; p.hangingCeiling = false; p.hangingPipe = null; p.vy = Math.max(p.vy, 3.5);
+        this.addMangaFx('INTERROMPIDO!', p.x, p.y - 20, '#ef4444');
+      }
+    }
+    this.enemies = this.enemies.filter((enemy) => enemy.hp > 0 && enemy.y < this.stage.boundsBottom + 300);
   }
 
   private updateBoss() {
@@ -2792,6 +2708,10 @@ export class GameEngine {
 
     ctx.fillStyle = 'rgba(0,0,0,0.65)';
     ctx.fillRect(en.x, en.y - 9, en.w, 4);
+    if (en.ai?.state === 'alert') {
+      ctx.globalAlpha = 1; ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 18px monospace';
+      ctx.fillText('!', en.x + en.w / 2 - 4, en.y - 16);
+    }
     ctx.fillStyle = '#ff007f';
     ctx.fillRect(en.x, en.y - 9, Math.max(0, (en.hp / en.maxHp) * en.w), 4);
     ctx.restore();

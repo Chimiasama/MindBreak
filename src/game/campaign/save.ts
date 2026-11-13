@@ -1,5 +1,6 @@
 import { CHARACTERS } from '../characters';
-import { Enemy, PickupItem } from '../types';
+import { Enemy, EnemyMind, PickupItem } from '../types';
+import { ENEMY_COMBAT, ENEMY_STATES } from '../enemyAI';
 import { SpawnSnapshot } from '../spawns';
 import { CAMPAIGN, getSubstage, SUBSTAGES } from './index';
 import { PlayerCarry, SubstageId } from './types';
@@ -135,7 +136,18 @@ function decodeArea(raw: unknown, chapterId: number, worldTick: number): AreaSav
     const facing = e.facing === -1 ? -1 : e.facing === 1 ? 1 : null;
     const targetFacing = e.targetFacing === -1 ? -1 : e.targetFacing === 1 ? 1 : facing;
     if (facing === null || targetFacing === null) throw new Error('direção inválida');
-    return { ...base, id, spawnId: record.id, generation: record.generation,
+    let ai: EnemyMind | undefined;
+    if (e.ai !== undefined) {
+      const raw = object(e.ai);
+      const state = ENEMY_STATES.find((state) => state === raw.state);
+      const action = (['shot', 'melee', 'flank'] as const).find((action) => action === raw.action);
+      if (!state || state === 'dead' || !action || raw.facing !== -1 && raw.facing !== 1) throw new Error('estado de inimigo inválido');
+      ai = { state, action, facing: raw.facing, timer: integer(raw.timer, 0, 10000),
+        memory: integer(raw.memory, 0, 90), aimX: number(raw.aimX, -1e6, 1e6), aimY: number(raw.aimY, -1e6, 1e6) };
+      // Checkpoint restoration never executes an attack prepared for the old player position.
+      if (state === 'windup' || state === 'attack') { ai.state = 'recover'; ai.timer = ENEMY_COMBAT[base.type].recovery; }
+    }
+    return { ...base, ...(ai ? { ai } : {}), id, spawnId: record.id, generation: record.generation,
       x: number(e.x, -1e6, 1e6), y: number(e.y, -1e6, 1e6),
       hp: number(e.hp, Number.MIN_VALUE, base.maxHp),
       vx: number(e.vx, -10000, 10000), vy: number(e.vy, -10000, 10000),
