@@ -5,6 +5,8 @@ import { GameInput, GameAction, InputKey, InputSource } from './input';
 import { moveAgainstSolids, depenetrate, overlaps, sweepTime } from './collision';
 import { ALLOW_TEST_CHARACTER_SWITCH } from './rules';
 import { MOVEMENT } from './tuning';
+import { MOVEMENT_PROFILES, horizontalVelocity } from './movement';
+import { GROUND_ENEMY, enemySolids, enemyHome, hasSafeFooting, moveGroundEnemy } from './groundActors';
 import { SpawnManager } from './spawns';
 import { viewportFor, cameraTarget, followCamera } from './camera';
 import { CHARACTER_ORDER, CHARACTERS } from './characters';
@@ -120,6 +122,7 @@ export class GameEngine {
   private transitionTimers = new Set<ReturnType<typeof setTimeout>>();
   private wallKickLock = 0;
   private standingPlatform: Platform | null = null;
+  private platformDeltas = new Map<Platform, { x: number; y: number }>();
   private input = new GameInput();
   private jumpBuffer = 0;
   private coyoteTicks = 0;
@@ -333,6 +336,7 @@ export class GameEngine {
     this.clock.reset();
     this.wallKickLock = 0;
     this.standingPlatform = null;
+    this.platformDeltas.clear();
     this.hitstop = 0;
     this.tickCount = 0;
     this.checkpointId = found.entryCheckpoint;
@@ -811,7 +815,7 @@ export class GameEngine {
     if (p.hangingCeiling && p.hangingPipe) {
       p.hangingCeiling = false;
       p.y = p.hangingPipe.y - p.h - 2;
-      p.vy = -jumpForce * 0.42;
+      p.vy = -jumpForce * MOVEMENT.vaultJump;
       p.hangingPipe = null;
       p.doubleJump = true;
       sound.sfxJump();
@@ -833,8 +837,8 @@ export class GameEngine {
 
       p.lastWallSide = p.onWall;
       p.lastWallX = p.x;
-      p.vy = -jumpForce * 0.96;
-      p.vx = -p.onWall * (char.speed * 1.45);
+      p.vy = -jumpForce * MOVEMENT.wallKickJump;
+      p.vx = -p.onWall * (char.speed * MOVEMENT.wallKickSpeed);
       this.wallKickLock = MOVEMENT.wallKickLockTicks;
       p.facing = (-p.onWall) as 1 | -1;
       p.doubleJump = true;
@@ -855,7 +859,7 @@ export class GameEngine {
     }
 
     if (p.doubleJump || p.jmpTimer > 0) {
-      p.vy = -jumpForce * 0.88;
+      p.vy = -jumpForce * MOVEMENT.aerialJump;
       if (p.jmpTimer <= 0) p.doubleJump = false;
       sound.sfxDoubleJump();
       this.addParticle(p.x + p.w / 2, p.y + p.h, char.accentColor, 12, 5);
@@ -885,7 +889,7 @@ export class GameEngine {
       p.isSliding = true;
       p.slideTimer = 22;
       this.slideHitIds.clear();
-      p.vx = p.facing * (char.speed * 2.05);
+      p.vx = p.facing * (char.speed * MOVEMENT.slideSpeed);
       sound.sfxSlide();
       this.addMangaFx('SLIDE!', p.x, p.y - 10, char.trailColor);
       return;
@@ -896,7 +900,7 @@ export class GameEngine {
       p.dashTimer = 12;
       p.dashCooldown = 26;
       p.vy = 0;
-      p.vx = p.facing * (char.speed * 2.35);
+      p.vx = p.facing * (char.speed * MOVEMENT.dashSpeed);
       sound.sfxDash();
       this.addParticle(p.x + p.w / 2, p.y + 28, char.trailColor, 10, 5);
       this.addMangaFx('DASH!', p.x, p.y - 14, char.trailColor);
@@ -1465,6 +1469,7 @@ export class GameEngine {
     if (this.shakeAmount > 0) this.shakeAmount *= 0.85;
 
     // Update moving & crumbling platforms
+    this.platformDeltas.clear();
     this.platforms.forEach((plat) => {
       if (plat.type === 'moving' && plat.originX !== undefined && plat.originY !== undefined) {
         const previousX = plat.x;
@@ -1472,6 +1477,7 @@ export class GameEngine {
         const offset = Math.sin(this.tickCount * (plat.moveSpeed ?? 0.03)) * (plat.moveRange ?? 80);
         if (plat.moveAxis === 'x') plat.x = plat.originX + offset;
         else plat.y = plat.originY + offset;
+        this.platformDeltas.set(plat, { x: plat.x - previousX, y: plat.y - previousY });
         if (this.standingPlatform === plat && p.grounded) {
           const obstacles = this.platforms.filter((other) => other !== plat && !other.broken && other.type !== 'acid' && other.type !== 'laser_gate');
           moveAgainstSolids(p, plat.x - previousX, 'x', obstacles);
@@ -1593,15 +1599,12 @@ export class GameEngine {
     // Horizontal movement
     if (!p.isDashing && !p.isSliding && this.wallKickLock === 0) {
       if (p.stunTimer > 0) {
-        p.vx *= 0.85;
-      } else if (this.keys.left) {
-        p.vx = -char.speed * (p.isFlying ? 1.1 : 1);
-        p.facing = -1;
-      } else if (this.keys.right) {
-        p.vx = char.speed * (p.isFlying ? 1.1 : 1);
-        p.facing = 1;
+        p.vx *= MOVEMENT.stunDrag;
       } else {
-        p.vx *= 0.72;
+        const direction = this.keys.left ? -1 : this.keys.right ? 1 : 0;
+        p.vx = horizontalVelocity(p.vx, direction, char.speed * (p.isFlying ? MOVEMENT.flightSpeedX : 1),
+          MOVEMENT_PROFILES[this.characterId], p.grounded, p.isFlying);
+        if (direction) p.facing = direction;
       }
       if (!p.grounded && !p.hangingCeiling && !p.isFlying) {
         p.vx += this.stage.windForce;
@@ -1628,30 +1631,30 @@ export class GameEngine {
     // Vertical physics: Ceiling Hang / Maya 8-Dir Flight / Active Wall Climb / Gravity
     if (p.hangingCeiling) {
       p.vy = 0;
-      if (this.keys.left) p.vx = -char.speed * 0.85;
-      else if (this.keys.right) p.vx = char.speed * 0.85;
+      if (this.keys.left) p.vx = -char.speed * MOVEMENT.hangSpeed;
+      else if (this.keys.right) p.vx = char.speed * MOVEMENT.hangSpeed;
       else p.vx = 0;
     } else if (p.isFlying) {
       p.psyEnergy = Math.max(0, p.psyEnergy - MOVEMENT.flightDrain);
-      if (this.keys.up) p.vy = -char.speed * 0.95;
-      else if (this.keys.down) p.vy = char.speed * 0.95;
+      if (this.keys.up) p.vy = -char.speed * MOVEMENT.flightSpeedY;
+      else if (this.keys.down) p.vy = char.speed * MOVEMENT.flightSpeedY;
       else p.vy *= 0.75;
       if (this.tickCount % 5 === 0) {
         this.addParticle(p.x + p.w / 2, p.y + p.h, '#00f0ff', 2, 2.5);
       }
     } else if (p.onWall !== 0 && !p.grounded && this.keys.up && p.stunTimer <= 0) {
       // Active Wall Climb!
-      p.vy = -3.6;
+      p.vy = -MOVEMENT.wallClimbSpeed;
       if (this.tickCount % 6 === 0) {
         this.addParticle(p.x + (p.onWall === 1 ? p.w : 0), p.y + 22, char.trailColor, 3, 2);
       }
     } else {
       let gravity = MOVEMENT.gravity * this.stage.gravityScale;
       if (p.onWall !== 0 && p.vy > 0) {
-        gravity = 0.2;
+        gravity = MOVEMENT.wallSlideGravity;
       }
       p.vy += gravity;
-      if (p.onWall !== 0 && p.vy > 2.4) p.vy = 2.4;
+      if (p.onWall !== 0 && p.vy > MOVEMENT.wallSlideTerminal) p.vy = MOVEMENT.wallSlideTerminal;
     }
 
     if (p.isFlying && (this.keys.left || this.keys.right) && (this.keys.up || this.keys.down)) {
@@ -2011,6 +2014,7 @@ export class GameEngine {
   private updateEnemies() {
     const p = this.player;
     const playerHidden = p.gstTimer > 0;
+    const solids = enemySolids(this.platforms);
 
     // Check if player is currently fighting a shield guard frontally (triggers Cyber Hound Flank Attack)
     const activeShieldEngage = this.enemies.find(
@@ -2027,17 +2031,7 @@ export class GameEngine {
       if (en.stunTimer && en.stunTimer > 0) {
         en.stunTimer--;
         en.vx *= 0.8;
-        en.vy = (en.vy || 0) + 0.6 * this.stage.gravityScale;
-        en.y += en.vy;
-        this.platforms.forEach((plat) => {
-          if (!plat.broken && plat.type !== 'acid' && plat.type !== 'laser_gate' && this.checkAABB(en, plat)) {
-            if (en.vy > 0) {
-              en.y = plat.y - en.h;
-              en.vy = 0;
-              en.airborne = false;
-            }
-          }
-        });
+        if (!moveGroundEnemy(en, solids, this.stage.gravityScale, this.platformDeltas)) en.hp = 0;
         return;
       }
 
@@ -2106,27 +2100,23 @@ export class GameEngine {
         return;
       }
 
-      // Grounded enemies physics
-      en.vy = (en.vy || 0) + 0.6 * this.stage.gravityScale;
-      en.x += en.vx;
-      en.y += en.vy;
+      // Physical impulses can knock actors off a ledge; voluntary pursuit cannot.
+      if (!moveGroundEnemy(en, solids, this.stage.gravityScale, this.platformDeltas)) {
+        en.hp = 0;
+        return;
+      }
       en.vx *= 0.86;
-
-      this.platforms.forEach((plat) => {
-        if (plat.broken || plat.type === 'acid' || plat.type === 'laser_gate') return;
-        if (this.checkAABB(en, plat)) {
-          if (en.vy > 0) {
-            en.y = plat.y - en.h;
-            en.vy = 0;
-            en.airborne = false;
-            if (plat.type === 'conveyor' && plat.conveyorSpeed) {
-              en.x += plat.conveyorSpeed;
-            }
-          }
-        }
-      });
-
-      if (playerHidden || dist > 660 || en.airborne) return;
+      if (en.airborne) return;
+      const home = enemyHome(en);
+      const returning = Math.abs(en.x - home) > GROUND_ENEMY.leash;
+      if (returning) {
+        const direction = en.x < home ? 1 : -1;
+        const step = direction * 1.7;
+        en.facing = direction;
+        if (hasSafeFooting(en, step, this.platforms)) moveAgainstSolids(en, step, 'x', solids);
+        return;
+      }
+      if (playerHidden || dist > GROUND_ENEMY.detectionRadius) return;
 
       // MIB Gunner Cover Fire when player is stunned!
       if (en.type === 'mib_gunner' || en.type === 'sniper' || en.type === 'turret') {
@@ -2153,7 +2143,9 @@ export class GameEngine {
         }
       } else {
         // Cyber Hound Cooperative Flank Leap!
-        if (en.type === 'cyber_hound' && activeShieldEngage && Math.abs(dx) < 280 && en.attackTimer <= 20) {
+        if (en.type === 'cyber_hound' && activeShieldEngage && Math.abs(dx) < 280 && en.attackTimer <= 20 &&
+          Math.abs(p.x - p.facing * 56 - home) <= GROUND_ENEMY.leash &&
+          hasSafeFooting(en, p.x - p.facing * 56 - en.x, this.platforms)) {
           const behindX = p.x - p.facing * 56;
           const flankDir = behindX >= en.x ? 1 : -1;
           en.vx = flankDir * 9.5;
@@ -2168,7 +2160,10 @@ export class GameEngine {
         const moveSpd =
           en.type === 'cyber_hound' ? 3.8 : en.type === 'samurai' || en.type === 'suit_martial' ? 3.1 : 1.7;
         if (Math.abs(dx) > 38) {
-          en.x += en.facing * moveSpd;
+          const step = en.facing * moveSpd;
+          if (Math.abs(en.x + step - home) <= GROUND_ENEMY.leash && hasSafeFooting(en, step, this.platforms)) {
+            moveAgainstSolids(en, step, 'x', solids);
+          }
         }
         en.attackTimer--;
         en.telegraph = en.attackTimer <= 18 && en.attackTimer > 0 && Math.abs(dx) < 85 ? 1 : 0;

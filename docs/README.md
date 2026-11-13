@@ -1,5 +1,6 @@
 # Documentação do MIND//BREAK
 
+- [Movimento e terreno](MOVIMENTACAO_E_TERRENO.md): perfis, medição dos saltos e regras físicas dos inimigos.
 - [Salvamento da campanha](SALVAMENTO.md): formato versionado, retomada, recuperação e limites.
 - [APK Android e Action manual](ANDROID_APK.md): construção, download, instalação, versões e limites da validação.
 - [Campanha e subfases](CAMPANHA_E_SUBFASES.md): mapas disponíveis, portas, checkpoints e preservação de estado nesta sessão.

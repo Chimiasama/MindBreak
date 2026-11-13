@@ -64,13 +64,13 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 - **1.4.0.1 — Implementado:** extrair `moveAgainstSolids()` para `collision.ts`, escolher a face sólida mais próxima cruzada em X/Y e bloquear atravessamento de plataforma fina. Limitar velocidade de queda a 22 unidades/tick neste ajuste inicial.
 - **1.4.0.2 — Implementado:** acompanhar plataforma móvel de apoio e transportar o jogador pelo deslocamento dela. Preservar impulso externo do wall-kick por seis ticks antes de aceitar novamente o controle horizontal normal.
 - **1.4.0.3 — Implementado com testes; ajuste de esmagamento em aparelho PENDENTE:** tratar sobreposição inicial e esmagamento entre plataforma móvel/teto, verificar deslocamento de esteira contra paredes e revalidar checkpoint quando o piso seguro deixar de existir. Definir explicitamente dano/resgate em esmagamento; não teletransportar silenciosamente para dentro de sólidos.
-- **1.4.0.4 — Implementado para projéteis/corpos lançados contra alvos:** aplicar varredura aos projéteis e corpos lançados, com colisão por segmento/tempo de impacto. A primeira versão alterou apenas sólidos contra o jogador; o incremento 2 adiciona varredura de projéteis/corpos contra alvos. Inimigos terrestres contra sólidos ainda usam resolução discreta.
+- **1.4.0.4 — Implementado para projéteis/corpos lançados contra alvos:** aplicar varredura aos projéteis e corpos lançados, com colisão por segmento/tempo de impacto. A primeira versão alterou apenas sólidos contra o jogador; o incremento 2 adiciona varredura de projéteis/corpos contra alvos. O incremento 9 acrescenta varredura dos inimigos terrestres contra sólidos, incluindo stun, esteiras e apoio móvel.
 - **1.4.0.5 — Aceite:** queda rápida, dash contra parede, teto baixo, cantos, retorno de abismo, parede alternada, plataforma ascendente/descendente e esteiras não atravessam sólidos nem deixam o jogador preso. Rodar nas oito fases e três personagens.
 
-### 1.5 Ajuste de movimento e câmera — PARCIAL: câmera implementada; perfis/aceleração pendentes
+### 1.5 Ajuste de movimento e câmera — PARCIAL: perfis/aceleração/câmera implementados; acabamento e ensaio físico pendentes
 
-- **1.5.0.1:** reunir gravidade, aceleração, velocidade terminal, arrasto, controle aéreo e impulsos em perfis versionados, com unidades documentadas e referências ao passo de 60 Hz.
-- **1.5.0.2:** definir aceleração/desaceleração em vez de atribuição instantânea de velocidade; conservar a agilidade arcade. Medir altura/distância de salto para Ren/Maya/Leon antes e depois.
+- **1.5.0.1 — Implementado no incremento 9:** reunir gravidade, aceleração, velocidade terminal, arrasto, controle aéreo e impulsos em perfis versionados, com unidades documentadas e referências ao passo de 60 Hz.
+- **1.5.0.2 — Implementado e medido no incremento 9:** definir aceleração/desaceleração em vez de atribuição instantânea de velocidade; conservar a agilidade arcade. Medir altura/distância de salto para Ren/Maya/Leon antes e depois.
 - **1.5.0.3 — Normalização implementada; rotas e ajuste de foco pendentes:** normalizar voo diagonal de Maya, revisar consumo/recarga de foco e garantir que cada rota principal continue acessível aos personagens sem voo.
 - **1.5.0.4 — Área de overdrive e viewport com altura lógica implementadas; ensaio físico pendente:** usar altura lógica de 540 unidades (aproximada no incremento 6, antes 900): a mesma proporção de tela mostra a mesma área do mundo em resoluções diferentes. No navegador, retrato mantém altura lógica e vê menos largura; Android fica bloqueado em horizontal; não comprimir um cenário inteiro em sprites minúsculos. A área do overdrive é independente da resolução. DPR e escala inteira ainda exigem acabamento visual.
 - **1.5.0.5 — Antecipação, limites e zona morta implementados; ajustes de shake/opções pendentes:** implementar look-ahead com limites por sala, antecipação vertical, zona morta e opção de intensidade do shake. Ajustar HUD/controles sem cobrir pontos de pouso.
@@ -95,7 +95,7 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 
 ### 2.3 Inimigos e chefes — PENDENTE
 
-- **2.3.0.1:** separar IA em estados patrulha/alerta/ataque/recuperação/stun/morte; introduzir limites de perseguição e verificação de piso para não acumular inimigos em abismos.
+- **2.3.0.1 — Limites/perigo de borda implementados no incremento 9; máquina de estados pendente:** separar IA em estados patrulha/alerta/ataque/recuperação/stun/morte; introduzir limites de perseguição e verificação de piso para não acumular inimigos em abismos.
 - **2.3.0.2:** conservar cooperação guarda/cão/atirador, com sinais legíveis e limites para stun encadeado.
 - **2.3.0.3:** individualizar os oito chefes com padrões, telegrafia e contra-ataques próprios; gêmeos devem ter regra clara de dois corpos/vida compartilhada. Arisawa e Vane deixam de usar somente especial genérico.
 - **2.3.0.4 — Aceite:** derrotar cada chefe com todos os personagens sem depender de bugs; fase 2 modifica o padrão com clareza; combates não geram softlock.

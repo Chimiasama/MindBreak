@@ -177,3 +177,11 @@ Verificações: **128 testes passaram**, incluindo geometria de ida/volta do mon
 TypeScript, build web e build dos assets Android passaram. Chromium em 915×412 atravessou 2A → 2B → 2C pelo controle de toque e o build de produção carregou o save dos três setores, retornou ao menu e ofereceu retomada, sem overflow ou erros JavaScript. O fluxo Android de Voltar continuou passando nos testes de interface com ponte simulada. Nenhuma Action foi acionada e nenhum APK foi gerado.
 
 Próximas pendências de jogabilidade: perfis de aceleração/frenagem e colisão terrestre dos inimigos, seguidas da expansão do canteiro em 3A/3B/3C. A meta continua em 26 subfases; música e arte seguem depois da base de gameplay. Multiplayer/migração de engine permanecem futuros.
+
+## Incremento 9 — aceleração e terreno dos inimigos
+
+Implementados os perfis de movimento versão 1: arranque/frenagem curtos por herói, controle aéreo ágil, aproximação sem ultrapassar a velocidade alvo e precedência preservada para dash/rasteira/wall-kick/stun. Fatores de impulso, canos, voo e escalada foram centralizados sem alterar os valores verticais. Medição real antes/depois confirmou o mesmo envelope dos saltos em corrida; dados em [MOVIMENTACAO_E_TERRENO.md](MOVIMENTACAO_E_TERRENO.md).
+
+Inimigos terrestres usam varredura contra sólidos em X/Y, incluindo knockback/stun, transporte por plataforma e esteira com parede. A perseguição verifica piso/borda/perigo, respeita limite à origem e evita flanco sem aterrissagem segura. Queda causada por impulso continua possível; desaparecimento ambiental não passa a conceder recompensa. Navegação aérea, física dos chefes e a futura máquina de estados completa permanecem separadas.
+
+144 testes passaram, incluindo as rotas anteriores e a nova cobertura de movimento/terreno. TypeScript, build web e smoke de navegador passaram. Sem Action remota ou APK. Próximo bloco: canteiro em 3A/3B/3C, usando a nova base e verificando percurso e retorno com os três heróis.
