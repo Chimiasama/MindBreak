@@ -525,6 +525,7 @@ export class GameEngine {
     const { characterId: _, ...resources } = save.player;
     Object.assign(this.player, resources);
     this.respawnAtCheckpoint();
+    this.mangaTexts = [];
     this.stageClearTriggered = save.mode === 'chapter-clear';
     this.continueTriggered = save.mode === 'continue';
     this.gameOverTriggered = save.mode === 'game-over';

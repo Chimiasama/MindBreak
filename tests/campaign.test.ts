@@ -9,10 +9,10 @@ import { SpawnManager } from '../src/game/spawns';
 import { STAGES } from '../src/game/stages';
 
 Object.defineProperty(globalThis, 'window', { configurable: true, value: { setInterval, clearInterval } });
-function fixture(hero: 'ren' | 'maya' | 'leon' = 'ren', onStageClear = () => {}) {
+function fixture(hero: 'ren' | 'maya' | 'leon' = 'ren', onStageClear = () => {}, chapter = 1) {
   const canvas = { width: 1280, height: 720, getContext: () => ({ imageSmoothingEnabled: false }) } as unknown as HTMLCanvasElement;
   const engine = new GameEngine(canvas, { onHudUpdate() {}, onStageClear, onGameOver() {}, onContinueCountdown() {} });
-  engine.startCampaign(1, hero); engine.setPaused(false);
+  engine.startCampaign(chapter, hero); engine.setPaused(false);
   const state: any = engine;
   return { engine, state };
 }
@@ -27,7 +27,7 @@ test('campaign graph, checkpoint placement, exits and unique final encounters va
   assert.deepEqual(validateCampaign(), []);
   assert.equal(CAMPAIGN.length, 8);
   assert.equal(CAMPAIGN.reduce((total, chapter) => total + chapter.plannedCount, 0), 26);
-  assert.equal(SUBSTAGES.length, 11, 'four new district maps plus seven legacy adapters');
+  assert.equal(SUBSTAGES.length, 13, 'seven authored district/monorail maps plus six legacy adapters');
   assert.deepEqual(CAMPAIGN[0].substages, ['1A', '1B', '1C', '1D']);
   assert.equal(SUBSTAGES.filter((area) => area.id === 1 && area.boss).length, 1);
 });
@@ -114,11 +114,11 @@ test('extra-life death returns to the activated checkpoint rather than the lates
   engine.stop();
 });
 
-test('legacy loadStage remains available and each main chapter still has a runnable adapter', () => {
+test('legacy loadStage remains available while chapters 3–8 retain their original adapters', () => {
   const { engine, state } = fixture();
   engine.loadStage(1, 'ren'); assert.equal(state.stage.title, STAGES[0].title);
   assert.equal(state.campaignMode, false);
-  for (let main = 2; main <= 8; main++) {
+  for (let main = 3; main <= 8; main++) {
     engine.startCampaign(main, 'ren');
     assert.equal(state.stage.substageId, `${main}A`);
     assert.equal(state.boss.active, true);
@@ -138,16 +138,22 @@ test('absence in another area counts toward respawn only after sufficient simula
 });
 
 for (const hero of ['ren', 'maya', 'leon'] as const) {
-  for (const id of ['1A', '1B', '1C', '1D'] as const) {
+  for (const id of ['1A', '1B', '1C', '1D', '2A', '2B', '2C'] as const) {
     test(`${hero} can traverse the primary geometry of ${id} without flight or teleport`, (t) => {
-      const { engine, state } = fixture(hero);
-      if (id !== '1A') {
+      const chapter = Number(id[0]);
+      const { engine, state } = fixture(hero, () => {}, chapter);
+      if (chapter === 1 && id !== '1A') {
         through(engine, state, 'telhados');
         if (id === '1C' || id === '1D') through(engine, state, 'esgotos');
         if (id === '1D') through(engine, state, 'avenida');
       }
+      if (chapter === 2 && id !== '2A') {
+        through(engine, state, 'manutencao');
+        if (id === '2C') through(engine, state, 'teto');
+      }
       t.after(() => engine.stop());
       // Geometry-only acceptance: combat/arena outcomes are tested separately.
+      state.stage = { ...state.stage, hasLowCeilingHazard: false };
       state.enemies = []; state.spawns.update = () => [];
       state.boss.active = false; state.ambushArenas = [];
       state.updateEnemies = () => {};
@@ -160,7 +166,7 @@ for (const hero of ['ren', 'maya', 'leon'] as const) {
       const damage = state.damagePlayer.bind(state);
       state.damagePlayer = (...args: unknown[]) => { touchedHazard = true; hazardPositions.push([state.player.x, state.player.y, state.player.vy]); return damage(...args); };
       let previousX = state.player.x;
-      const goal = id === '1D' ? 2580 : state.stage.exits.find((exit: any) => exit.x > 1000).x;
+      const goal = state.stage.boss ? state.stage.goalX - 40 : state.stage.exits.find((exit: any) => exit.x > 1000).x;
       for (let tick = 0; tick < 2400 && state.player.x < goal - 24; tick++) {
         const p = state.player;
         if (p.grounded) {
@@ -275,3 +281,91 @@ test('long backtracking restores eligible distant enemies before revealing the a
   assert.equal(state.spawns.claimDefeatReward(replacement), 500);
   engine.stop();
 });
+
+
+test('monorail backtracking and reload preserve service rooms without activating the boss early', () => {
+  const { engine, state } = fixture('maya', () => {}, 2);
+  assert.equal(state.boss.active, false);
+  Object.assign(state.props[0], { hp: 0, broken: true });
+  through(engine, state, 'manutencao');
+  assert.equal(state.stage.substageId, '2B'); assert.equal(state.boss.active, false);
+  const save = engine.captureCampaignSave()!;
+  engine.restoreCampaignSave(save); engine.setPaused(false);
+  through(engine, state, 'vagoes'); assert.equal(state.props[0].broken, true);
+  through(engine, state, 'manutencao'); through(engine, state, 'teto');
+  assert.equal(state.stage.substageId, '2C');
+  assert.equal(state.boss.active, true); assert.equal(state.boss.triggered, false);
+  assert.equal(state.characterId, 'maya'); engine.stop();
+});
+
+test('Valkyrie waits for the escort arena and is the only monorail chapter completion', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let completions = 0;
+  const { engine, state } = fixture('ren', () => { completions++; }, 2);
+  through(engine, state, 'manutencao'); through(engine, state, 'teto');
+  Object.assign(state.player, { x: 2160, y: 594, invulnTimer: 100000 });
+  state.ambushArenas[0].active = true;
+  state.update(); assert.equal(state.boss.triggered, false);
+  assert.equal(completions, 0);
+  state.ambushArenas[0].active = false; state.ambushArenas[0].cleared = true;
+  state.update(); assert.equal(state.boss.triggered, true);
+  state.damageBoss(10000); t.mock.timers.tick(1200);
+  assert.equal(completions, 1); engine.stop();
+});
+
+test('a rooftop low gantry damages a standing hero while a timed slide avoids it', () => {
+  for (const slide of [false, true]) {
+    const { engine, state } = fixture('leon', () => {}, 2);
+    through(engine, state, 'manutencao'); through(engine, state, 'teto');
+    state.enemies = []; state.spawns.update = () => [];
+    Object.assign(state.player, { x: 300, y: 594, grounded: true, invulnTimer: 0 });
+    state.lowCeilingActive = true; state.lowCeilingX = 316; state.lowCeilingTimer = 100;
+    if (slide) { engine.setKey('down', true); engine.triggerDashOrSlide(); }
+    state.update();
+    assert.equal(state.player.hp, slide ? 150 : 128);
+    engine.stop();
+  }
+});
+
+for (const hero of ['ren', 'maya', 'leon'] as const) {
+  for (const id of ['2A', '2B', '2C'] as const) {
+    test(`${hero} can backtrack through ${id} without flight, hazards or rescue`, () => {
+      const { engine, state } = fixture(hero, () => {}, 2);
+      if (id !== '2A') through(engine, state, 'manutencao');
+      if (id === '2C') through(engine, state, 'teto');
+      state.checkpointId = state.stage.checkpoints.at(-1).id;
+      engine.restoreCampaignSave(engine.captureCampaignSave()!);
+      engine.setPaused(false);
+      state.stage = { ...state.stage, hasLowCeilingHazard: false };
+      state.enemies = []; state.spawns.update = () => []; state.boss.active = false;
+      state.ambushArenas = []; state.updateEnemies = () => {};
+      let rescued = false, hurt = false;
+      const recover = state.recoverPlayer.bind(state);
+      state.recoverPlayer = () => { rescued = true; recover(); };
+      const damage = state.damagePlayer.bind(state);
+      state.damagePlayer = (...args: unknown[]) => { hurt = true; damage(...args); };
+      engine.setKey('left', true);
+      let airborneTicks = 0;
+      const goal = id === '2A' ? 140 : 40;
+      for (let tick = 0; tick < 2400 && state.player.x > goal + 24; tick++) {
+        const p = state.player;
+        if (p.grounded) {
+          airborneTicks = 0;
+          const wall = state.platforms.some((platform: any) => !platform.broken && platform.type !== 'acid' &&
+            platform.x + platform.w <= p.x + 1 && platform.x + platform.w > p.x - 55 &&
+            platform.y < p.y + p.h && platform.y + platform.h > p.y);
+          const floor = state.platforms.some((platform: any) => !platform.broken && platform.type !== 'acid' &&
+            p.x - 55 >= platform.x && p.x - 55 <= platform.x + platform.w && Math.abs(platform.y - p.y - p.h) < 10);
+          if (wall || !floor) engine.queueAction('jump');
+        } else {
+          airborneTicks++;
+          if (airborneTicks === 13 && p.doubleJump) engine.queueAction('jump');
+        }
+        engine.setKey('jumpHeld', false); state.update();
+      }
+      assert.equal(rescued, false); assert.equal(hurt, false);
+      assert.ok(state.player.x <= goal + 24, `stopped at ${state.player.x}, expected ${goal}`);
+      engine.stop();
+    });
+  }
+}

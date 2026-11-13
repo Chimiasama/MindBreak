@@ -165,3 +165,15 @@ A interface permite carregar após recarga da página, pede confirmação para s
 Evidências: 106 testes passaram; TypeScript e build web passaram. Chromium horizontal validou save de outro setor com recursos próprios, recarga/carregamento, cancelamento de substituição, descarte, recuperação de backup, arquivo incompatível e quota esgotada, sem erros JavaScript. Ensaios de processo/atualização em Android físico continuam pendentes. Nenhuma Action acionada e nenhum APK gerado. Contrato completo em [SALVAMENTO.md](SALVAMENTO.md).
 
 Próximo bloco: expansão do monotrilho em 2A/2B/2C, mantendo o grafo exploratório e verificando rotas com os três heróis antes de expandir outros capítulos.
+
+## Incremento 8 — monotrilho em três setores
+
+A fase 2 passou a ter três mapas próprios: **2A Vagões e Embarque**, **2B Cabos e Manutenção** e **2C Teto e Pórticos**, com 15 inimigos iniciais, nove checkpoints e nove objetos entre recursos/segredos. Há portas de ida/volta e posições de chegada separadas; recursos, objetos e histórico de respawn continuam preservados, inclusive no save. A arena obrigatória e Valkyrie-7 ficam apenas no último setor, com o chefe aguardando a escolta. O perigo de pórtico foi restrito a 2C; há teste de dano em pé e proteção por rasteira.
+
+A campanha tem agora **13 mapas**: quatro do distrito, três do monotrilho e seis adaptadores das fases 3–8. O mapa original do monotrilho permanece como ferramenta de teste, sem substituir o save da campanha. A seleção do menu descreve a nova distribuição. Arte e trilha atuais foram reaproveitadas; não são apresentadas como produção nova.
+
+Verificações: **128 testes passaram**, incluindo geometria de ida/volta do monotrilho com os três heróis, sem voo, dano, teletransporte durante percurso ou resgate. Os primeiros ensaios encontraram tetos interferindo em saltos; a geometria foi ajustada antes do aceite. Os testes de rota isolam combate e pórticos, que têm verificações separadas; não certificam o balanceamento integral dos confrontos. Acrescentado teste de compatibilidade do save: mudar outra fase não invalida a tentativa corrente, enquanto alterar a geometria da fase salva sinaliza incompatibilidade.
+
+TypeScript, build web e build dos assets Android passaram. Chromium em 915×412 atravessou 2A → 2B → 2C pelo controle de toque e o build de produção carregou o save dos três setores, retornou ao menu e ofereceu retomada, sem overflow ou erros JavaScript. O fluxo Android de Voltar continuou passando nos testes de interface com ponte simulada. Nenhuma Action foi acionada e nenhum APK foi gerado.
+
+Próximas pendências de jogabilidade: perfis de aceleração/frenagem e colisão terrestre dos inimigos, seguidas da expansão do canteiro em 3A/3B/3C. A meta continua em 26 subfases; música e arte seguem depois da base de gameplay. Multiplayer/migração de engine permanecem futuros.

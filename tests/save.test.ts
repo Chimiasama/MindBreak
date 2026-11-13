@@ -272,7 +272,7 @@ test('snapshots remain valid during real simulation across every chapter, includ
 test('restoring a save cancels delayed completion callbacks from the previous run', (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   let completions = 0;
-  const { engine, state } = fixture(2);
+  const { engine, state } = fixture(3);
   const save = checked(engine.captureCampaignSave()!);
   state.callbacks.onStageClear = () => { completions++; };
   state.damageBoss(10000);
@@ -282,4 +282,18 @@ test('restoring a save cancels delayed completion callbacks from the previous ru
   assert.equal(state.stageClearTriggered, false);
   assert.equal(state.bullets.length, 0); assert.equal(state.thrownEnemies.length, 0);
   engine.stop();
+});
+
+test('expanding another chapter preserves compatible saves while changed current geometry is rejected', () => {
+  const district = fixture(1), monorail = fixture(2);
+  const first = district.engine.captureCampaignSave()!, second = monorail.engine.captureCampaignSave()!;
+  const platform = getSubstage('2A').platforms[0], width = platform.w;
+  try {
+    platform.w += 1;
+    assert.equal(decodeCampaignSave(JSON.stringify(first)).status, 'ready');
+    assert.equal(decodeCampaignSave(JSON.stringify(second)).status, 'incompatible');
+  } finally {
+    platform.w = width;
+    district.engine.stop(); monorail.engine.stop();
+  }
 });

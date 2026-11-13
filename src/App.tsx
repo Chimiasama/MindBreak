@@ -772,7 +772,9 @@ export default function App() {
                   <p className="mt-3 text-sm leading-relaxed text-slate-200">
                     {selectedStageId === 1
                       ? 'Explore laboratório, telhados e esgotos conectados; volte para buscar segredos e enfrente Cipher-01 na avenida. Use CIMA nas portas para mudar de setor.'
-                      : currentStageDef.description}
+                      : selectedStageId === 2
+                        ? 'Atravesse vagões, cabos de manutenção e o teto do trem. Explore os compartimentos superiores, use CIMA nas escotilhas e enfrente Valkyrie-7 no último setor.'
+                        : currentStageDef.description}
                   </p>
 
                   <div className="mt-4 rounded-lg bg-slate-950/80 p-3 border border-slate-800">
@@ -792,10 +794,10 @@ export default function App() {
                   <Play className="h-5 w-5 fill-current" />
                   Iniciar Fase {selectedStageId}
                 </button>
-                {ALLOW_TEST_CHARACTER_SWITCH && selectedStageId === 1 && (
-                  <button type="button" onClick={() => startStage(1, selectedChar, 0, true, 3, 15000, true)}
+                {ALLOW_TEST_CHARACTER_SWITCH && selectedStageId <= 2 && (
+                  <button type="button" onClick={() => startStage(selectedStageId, selectedChar, 0, true, 3, 15000, true)}
                     className="mt-2 min-h-[44px] text-xs text-slate-400 underline">
-                    Jogar mapa original do distrito (teste)
+                    Jogar mapa original {selectedStageId === 1 ? 'do distrito' : 'do monotrilho'} (teste)
                   </button>
                 )}
               </div>
@@ -803,7 +805,7 @@ export default function App() {
 
             <div className="space-y-3 pb-4">
               <h2 className="font-display text-2xl font-bold text-white">
-                02. Selecionar Fase (Campanha Completa — 8 Fases)
+                02. Selecionar Fase (8 Fases)
               </h2>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {STAGES.map((st) => {
