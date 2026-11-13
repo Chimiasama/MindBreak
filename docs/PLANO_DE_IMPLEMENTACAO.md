@@ -249,16 +249,18 @@ Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; A
 
 ## Fase 7 — Arte, animação e cenários
 
-### 7.1 Direção e pipeline — PENDENTE
+### 7.1 Direção e pipeline — PARCIAL (heróis, incremento 20)
 
-- **7.1.0.1:** registrar paletas, resolução base dos sprites, proporções, pivôs, tamanho de tiles, nomenclatura e política de escala inteira. Priorizar silhueta e contraste, não só brilho neon.
-- **7.1.0.2:** criar atlas/spritesheets com metadados de animação: frame, duração, pivot, hurtbox, hitbox e eventos de som. Trocar frame por estado real, sem alterar colisão arbitrariamente ao trocar imagem.
+- **7.1.0.1 — Heróis implementados; tiles/ambientes pendentes:** registrar paletas, resolução base dos sprites, proporções, pivôs, tamanho de tiles, nomenclatura e política de escala inteira. Priorizar silhueta e contraste, não só brilho neon.
+- **7.1.0.2 — Pipeline de heróis implementado:** criar atlas/spritesheets com metadados de animação: frame, duração, pivot, hurtbox, hitbox e eventos de som. Trocar frame por estado real, sem alterar colisão arbitrariamente ao trocar imagem.
 - **7.1.0.3:** arte gerada por imagem pode servir de conceito/recurso, mas será revisada quanto à consistência entre frames, transparência e tamanho. Manter arquivos fonte e exportações reproduzíveis.
 
-### 7.2 Personagens, inimigos e chefes — PENDENTE
+Contrato, paletas, prévias reproduzíveis, orçamento e limites do fluxo de morte em [ARTE_E_ANIMACAO.md](ARTE_E_ANIMACAO.md).
 
-- **7.2.0.1:** produzir heróis com idle, corrida, salto, queda, parede, escalada, hang, vault, dash, slide, combo, dano, stun, especial e morte; Maya inclui voo. Integrar um herói antes de produzir todas as variantes.
-- **7.2.0.2:** diferenciar onze arquétipos inimigos por silhueta/arma/postura, sem depender só de cor; depois desenhar os oito chefes e transformações.
+### 7.2 Personagens, inimigos e chefes — PARCIAL (heróis, incremento 20)
+
+- **7.2.0.1 — Primeira passagem integrada nos três heróis; aprovação visual em aparelho pendente:** produzir heróis com idle, corrida, salto, queda, parede, escalada, hang, vault, dash, slide, combo, dano, stun, especial e morte; Maya inclui voo. Integrar um herói antes de produzir todas as variantes.
+- **7.2.0.2:** diferenciar doze arquétipos inimigos por silhueta/arma/postura, sem depender só de cor; depois desenhar os oito chefes e transformações.
 - **7.2.0.3:** criar cut-ins e retratos com coerência visual; sincronizar efeitos de impacto com hitstop, som e janela de dano.
 
 ### 7.3 Ambientes — PENDENTE
@@ -320,6 +322,6 @@ Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; A
 
 1. Ler este documento e o registro de execução.
 2. Verificar `git status`, preservar mudanças existentes e rodar a suíte da base.
-3. Não expandir novamente a contagem: 26 mapas e os padrões dos oito chefes estão implementados. Retomar os aceites de combate/balanceamento (2.2/2.3.0.4), rotas de segredos e ensaio físico. Em seguida avançar áudio (6.1: buses, preferências e scheduler; 6.2: primeiro tema do distrito/chefe), depois arte/interface. Consultar incrementos 13–14 em `EXECUCAO.md`, `CHEFES.md` e `CAMPANHA_E_SUBFASES.md`; não tratar catálogo completo como aprovação final.
+3. Manter 26 mapas, exploração do incremento 18 e catálogo sonoro do 19. O incremento 20 entrega pipeline e primeira passagem dos três heróis (7.1/7.2.0.1). Retomar diferenciação visual dos 12 arquétipos inimigos (7.2.0.2), chefes/cut-ins e ambientes; depois fase 8. Consultar `ARTE_E_ANIMACAO.md` e `EXECUCAO.md`. Permanecem aceites físicos de combate, rotas, som, dificuldade e leitura Android; catálogo ou suíte verde não equivalem à aprovação final.
 4. Atualizar status somente com evidência. Antes de avançar para cada lote de subfases, validar o lote anterior.
 5. Não confundir a publicação do ambiente de desenvolvimento com a publicação do jogo, commits remotos, GitHub Actions ou APK.

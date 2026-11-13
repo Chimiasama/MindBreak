@@ -1,0 +1,25 @@
+<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MindBreak — estúdio de sprites</title>
+<style>body{background:#101827;color:#f1f5f9;font:16px system-ui;max-width:1000px;margin:auto;padding:20px}label{display:inline-block;margin:8px}button,select,input{font:inherit;padding:8px}canvas{image-rendering:pixelated;max-width:100%}#preview{width:288px;height:384px;background:#263449}#sheet{display:block;width:960px}button{margin:8px}</style>
+<h1>Estúdio de sprites</h1><p>Fonte raster local. Os quadros não controlam colisão nem dano. Tempos em ticks de 60 Hz.</p>
+<label>Herói <select id="hero"><option>ren</option><option>maya</option><option>leon</option></select></label>
+<label>Pose <select id="pose"></select></label><label><input id="play" type="checkbox" checked>Animar</label>
+<label>Quadro <input id="frame" type="range" min="0" value="0"></label><label><input id="bounds" type="checkbox">Caixa física de referência</label>
+<p id="status"></p><canvas id="preview" width="48" height="64"></canvas>
+<p><button id="png">Baixar atlas PNG</button><button id="json">Baixar metadados JSON</button></p><h2>Todos os quadros</h2><canvas id="sheet"></canvas>
+<script type="module">
+import { HERO_ATLAS, HERO_CLIPS, clipFrame } from '/src/game/heroAnimation.ts';
+import { getHeroAtlas } from '/src/game/heroArtwork.ts';
+const hero=document.querySelector('#hero'),pose=document.querySelector('#pose'),frame=document.querySelector('#frame'),play=document.querySelector('#play');
+for(const name of Object.keys(HERO_CLIPS)){const o=document.createElement('option');o.value=o.textContent=name;pose.append(o);}
+let epoch=performance.now();
+function sheet(){const c=document.querySelector('#sheet');c.width=960;c.height=Object.keys(HERO_CLIPS).length*88;const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.fillStyle='#101827';x.fillRect(0,0,c.width,c.height);x.font='14px monospace';
+Object.entries(HERO_ATLAS.clips).forEach(([name,clip],row)=>{x.fillStyle='#e2e8f0';x.fillText(name,8,row*88+24);clip.frames.forEach((f,i)=>{x.drawImage(getHeroAtlas(hero.value),f.x,f.y,f.w,f.h,140+i*115,row*88+4,48,64);x.fillText(`${i}: ${f.duration}t`,140+i*115,row*88+82);});});}
+function reset(){epoch=performance.now();frame.max=HERO_CLIPS[pose.value].durations.length-1;frame.value=0;sheet();}
+hero.onchange=pose.onchange=reset;frame.oninput=()=>{play.checked=false;};play.onchange=()=>{epoch=performance.now();};reset();
+function draw(now){if(play.checked)frame.value=clipFrame(pose.value,(now-epoch)*60/1000);const f=HERO_ATLAS.clips[pose.value].frames[Number(frame.value)],c=document.querySelector('#preview'),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.imageSmoothingEnabled=false;x.drawImage(getHeroAtlas(hero.value),f.x,f.y,f.w,f.h,0,0,48,64);if(document.querySelector('#bounds').checked){x.strokeStyle='#00ff00';x.lineWidth=1;x.strokeRect(8.5,8.5,31,55);}document.querySelector('#status').textContent=`${pose.value} · quadro ${frame.value} · ${f.duration} ticks`;requestAnimationFrame(draw);}requestAnimationFrame(draw);
+function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+document.querySelector('#png').onclick=()=>getHeroAtlas(hero.value).toBlob(b=>download(b,`${hero.value}-atlas.png`));
+document.querySelector('#json').onclick=()=>download(new Blob([JSON.stringify({hero:hero.value,...HERO_ATLAS},null,2)],{type:'application/json'}),`${hero.value}-atlas.json`);
+window.artStudio={getHeroAtlas,metadata:HERO_ATLAS,sheet};
+</script></html>

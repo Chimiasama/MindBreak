@@ -297,3 +297,13 @@ Catálogo de 30 sinais com cooldown/prioridades: passos/aterrissagem, combo, mat
 **385 testes**, TypeScript, builds web/assets Android e sync aprovados. Chromium percorreu os oito pares de tema/fase 2, pausa/background e fluxos de menu/game over/vitória, além do estúdio. Houve preparo dos cenários/estado concluído para o ensaio; não certificação auditiva ou campanha inteira vencida. Renderizadas 28 prévias finitas/sem silêncio acidental/clipping; cerca de 5,08 MiB somente na documentação, fora do bundle/APK. Estúdio exporta WAV e script/manifesto reproduzem o catálogo. Autoria, BPM, instrumentos, sinais e limitações em [TRILHA_E_EFEITOS.md](TRILHA_E_EFEITOS.md).
 
 Nenhuma Action/APK. Permanecem escuta e latência no Android/DualShock 4, ajuste de mixagem/repetição sob carga, ambiências/efeitos legados e eventual produção gravada. Estrutura exploratória do incremento 18 conservada; não foram criadas migrações de saves.
+
+## Incremento 20 — Pipeline de sprites e animação dos três heróis
+
+Retomada fase 7 após catálogo sonoro. Atlas procedural editável de Ren, Maya e Leon, 18 clipes/55 posições de quadro por herói, paletas e proporções próprias. Render passa a usar quadros de corrida, salto, queda, parede/escalada, hang/vault, dash/slide, três ataques, dano/stun/especial, voo e morte. Retiradas rotação do idle no slide e inversão vertical no hang; cachecol e efeitos existentes preservados.
+
+Pivot nos pés, fonte 24 × 32 a escala 2 e atlas 192 × 224; caixas físicas/alcance/tempos de combate preservados. Relógio visual congela no hitstop/cut-in e pausa. Combo amostra o relógio físico; evento documental não repete dano/som. Reset visual em área/resgate/troca de teste. Morte tem sequência no atlas, mas o continue imediato pausa na primeira pose; não se anuncia reprodução completa no fluxo atual.
+
+Estúdio `/tools/art-studio.html` permite animar/inspecionar/exportar; script manual reproduz PNG/JSON/folhas em `docs/arte`, fora do bundle. Contrato, orçamento de aproximadamente 504 KiB RGBA para três atlas e pendências em [ARTE_E_ANIMACAO.md](ARTE_E_ANIMACAO.md). Arte inicial por código, não acabamento final aprovado no aparelho. Inimigos, chefes e ambientes continuam pendentes; a contagem do plano foi corrigida para 12 arquétipos.
+
+**390 testes**, TypeScript, builds web/assets Android e sync aprovados. Chromium horizontal com touch renderizou corrida/salto/ataque dos três heróis e verificou hitstop/pausa, sem erros JS; cenário/estados preparados para isolar o ensaio. Folhas de contato inspecionadas. Sem certificação física Android/DualShock 4. Nenhuma Action/APK, mudança de save ou nova alteração de áudio/exploração. Próximo bloco: silhuetas dos inimigos.

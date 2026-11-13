@@ -1,3 +1,5 @@
+import { HeroAnimator } from './heroAnimation';
+import { drawHeroFrame } from './heroArtwork';
 import { COMBO, SWINGS, nextComboStep } from './combat';
 import { bossBodies, bossShots, bossWarnings, BOSS_MOVES, isBossCharge, moveBoss, stepBoss } from './bosses';
 import { sound } from './audio';
@@ -13,7 +15,7 @@ import { GROUND_ENEMY, enemySolids, enemyHome, hasSafeFooting, moveGroundEnemy }
 import { SpawnManager } from './spawns';
 import { viewportFor, cameraTarget, followCamera } from './camera';
 import { CHARACTER_ORDER, CHARACTERS } from './characters';
-import { getEnemyPixelSprite, getHeroPixelSprite } from './pixelSprites';
+import { getEnemyPixelSprite } from './pixelSprites';
 import { STAGES } from './stages';
 import { CAMPAIGN, adaptLegacy, getSubstage, SubstageDefinition, SubstageId, PlayerCarry, CampaignProgress } from './campaign';
 import {
@@ -136,6 +138,9 @@ export class GameEngine {
   private slideHitIds = new Set<number>();
   private spawns = new SpawnManager(STAGES[0]);
   private tickCount = 0;
+  private visualTick = 0;
+  private heroAnimator = new HeroAnimator();
+  private heroVisualTimers = { hurt:0, vault:0, special:0 };
   private hitstop = 0;
 
   private stage: SubstageDefinition = adaptLegacy(STAGES[0]);
@@ -359,6 +364,7 @@ export class GameEngine {
     this.platformDeltas.clear();
     this.hitstop = 0;
     this.tickCount = 0;
+    this.visualTick = 0; this.heroAnimator.reset(); this.heroVisualTimers = { hurt:0, vault:0, special:0 };
     this.checkpointId = found.entryCheckpoint;
     this.stage = found;
     this.activated = new Set();
@@ -720,6 +726,8 @@ export class GameEngine {
     this.player.maxHp = profile.maxHp;
     this.player.hp = Math.max(1, Math.floor(profile.maxHp * oldRatio));
     this.player.isFlying = false;
+    this.heroVisualTimers = { hurt:0, vault:0, special:0 };
+    this.heroAnimator.reset(this.visualTick);
     this.addParticle(this.player.x + 16, this.player.y + 28, profile.accentColor, 14, 6);
     this.addMangaFx(`TAG: ${profile.name.toUpperCase()}!`, this.player.x, this.player.y - 24, profile.accentColor);
     sound.sfxAssist();
@@ -877,6 +885,7 @@ export class GameEngine {
 
     // Ceiling Hang -> Vault Over!
     if (p.hangingCeiling && p.hangingPipe) {
+      this.heroVisualTimers.vault = 10;
       p.hangingCeiling = false;
       p.y = p.hangingPipe.y - p.h - 2;
       p.vy = -jumpForce * MOVEMENT.vaultJump;
@@ -1201,6 +1210,7 @@ export class GameEngine {
     if (p.psyEnergy >= 95) {
       p.psyEnergy = 0;
       this.superCutinTimer = 46;
+      this.heroVisualTimers.special = 24;
       this.superLabel = char.overdriveName;
       this.screenShake(24);
       sound.sfxOverdrive(this.characterId);
@@ -1416,6 +1426,7 @@ export class GameEngine {
       sound.sfxBlock();
     } else {
       this.resetAttack();
+      this.heroVisualTimers.hurt = 12;
       p.hp = Math.max(0, p.hp - dmg);
       p.vx = knockX;
       p.invulnTimer = 42;
@@ -1515,6 +1526,8 @@ export class GameEngine {
       return;
     }
 
+    this.visualTick++;
+    for (const key of ['hurt','vault','special'] as const) this.heroVisualTimers[key] = Math.max(0,this.heroVisualTimers[key]-1);
     const p = this.player;
     const char = CHARACTERS[this.characterId];
     this.coyoteTicks = p.grounded ? MOVEMENT.coyoteTicks : Math.max(0, this.coyoteTicks - 1);
@@ -2009,6 +2022,7 @@ export class GameEngine {
     this.camera.x = followCamera(this.camera.x, target.x);
     this.camera.y = followCamera(this.camera.y, target.y);
 
+    this.heroAnimator.sample(this.heroVisualInput(),this.visualTick);
     if (this.tickCount % 4 === 0) {
       this.emitHud();
     }
@@ -2046,7 +2060,7 @@ export class GameEngine {
     p.invulnTimer = Math.max(60, p.invulnTimer);
     this.standingPlatform = null;
     this.clearInput();
-    this.resetAttack();
+    this.resetAttack(); this.heroVisualTimers = { hurt:0, vault:0, special:0 }; this.heroAnimator.reset(this.visualTick);
     this.addMangaFx('RESGATE!', p.x, p.y - 20, '#38bdf8');
   }
 
@@ -2612,6 +2626,11 @@ export class GameEngine {
     }
   }
 
+  private heroVisualInput() {
+    return { ...this.player, climbHeld:this.keys.up, hurtTicks:this.heroVisualTimers.hurt,
+      specialTicks:this.heroVisualTimers.special, vaultTicks:this.heroVisualTimers.vault };
+  }
+
   private drawPlayer(ctx: CanvasRenderingContext2D) {
     const p = this.player;
     const char = CHARACTERS[this.characterId];
@@ -2660,25 +2679,9 @@ export class GameEngine {
       ctx.fillRect(p.x - p.vx * 1.4, p.y, p.w, p.h);
     }
 
-    const sprite = getHeroPixelSprite(this.characterId);
-
-    ctx.save();
-    if (p.isSliding) {
-      ctx.translate(p.x + p.w / 2, p.y + p.h - 14);
-      ctx.scale(p.facing, 1);
-      ctx.rotate(-0.95);
-      ctx.drawImage(sprite, -p.w / 2, -p.h / 2, p.w, p.h);
-    } else if (p.hangingCeiling) {
-      ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
-      ctx.scale(p.facing, -1);
-      ctx.drawImage(sprite, -p.w / 2, -p.h / 2, p.w, p.h);
-    } else {
-      ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
-      ctx.scale(p.facing, 1);
-      const bobY = p.grounded && Math.abs(p.vx) > 0.6 ? Math.sin(this.tickCount * 0.35) * 2 : 0;
-      ctx.drawImage(sprite, -p.w / 2, -p.h / 2 + bobY, p.w, p.h);
-    }
-    ctx.restore();
+    const sample = this.heroAnimator.sample(this.heroVisualInput(),this.visualTick);
+    const facing = sample.pose === 'wall' || sample.pose === 'climb' ? p.onWall : p.facing;
+    drawHeroFrame(ctx,this.characterId,sample.pose,sample.frame,p.x+p.w/2,p.y+p.h,facing);
 
     // Wall Claws
     if (p.onWall !== 0 && !p.grounded) {
