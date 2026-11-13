@@ -114,7 +114,7 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 - **3.2.0.4:** não apagar nem duplicar inimigo ainda vivo ao sair da câmera. Aplicar teto inicial de 24 inimigos comuns ativos por subfase, com prioridade aos encontros obrigatórios e orçamento de atualização por distância.
 - **3.2.0.5 — Implementado na sessão:** guardar estado por subfase durante a sessão; atravessar uma porta de ida e volta não deve rearmar imediatamente tudo. Após ausência elegível, preparar o retorno antes de revelar o setor, sempre mantendo segurança, cooldown e população máxima.
 
-### 3.3 Exceções, recompensas e testes — IMPLEMENTADO para arenas atuais; preservação entre subfases IMPLEMENTADA na sessão; save persistente pendente
+### 3.3 Exceções, recompensas e testes — IMPLEMENTADO; estado incluído no save persistente no incremento 7
 
 - **3.3.0.1:** chefes e inimigos de emboscada obrigatória não reaparecem após conclusão; inimigos ordinários podem reaparecer. Uma arena concluída não deve voltar a trancar o jogador.
 - **3.3.0.2:** baús secretos, cura garantida e objetos únicos persistem coletados. Derrotas confirmadas por origem dão inicialmente 1.000, 500, 50 e depois zero pontos. Acertos comuns/guard crush sem derrota não pontuam nem consomem a curva. Captura telecinética conta como uma derrota. Desaparecer sem derrota atribuída não consome recompensa. Não há teto de vidas por fase; pontos continuam concedendo 1-UP internamente, sem expor valores ao jogador. Itens únicos continuam protegidos contra duplicação. Esta regra substitui a política anterior de zero pontos para toda reaparição.
@@ -122,7 +122,7 @@ No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, 
 
 ## Fase 4 — Oito fases, 26 subfases
 
-Estado após o incremento 4: quatro mapas novos conectados no distrito e sete adaptadores dos mapas originais, totalizando 11 mapas na campanha. O distrito original fica como ferramenta de teste. Ver `CAMPANHA_E_SUBFASES.md` para os contratos executáveis, regras de portas e limites da retomada em memória. Não há save após recarregar a página ainda.
+Estado após o incremento 4: quatro mapas novos conectados no distrito e sete adaptadores dos mapas originais, totalizando 11 mapas na campanha. O distrito original fica como ferramenta de teste. Ver `CAMPANHA_E_SUBFASES.md` para os contratos executáveis, regras de portas e limites da retomada em memória. O incremento 7 acrescenta save local versionado e restauração no checkpoint; detalhes em `SALVAMENTO.md`.
 
 ### 4.1 Contratos de campanha — IMPLEMENTADO para o distrito e adaptadores das fases 2–8
 
@@ -152,11 +152,11 @@ Os nomes são propostas de produção e podem ser refinados sem alterar o total.
 - **4.2.0.4:** elaborar diálogos por entrada e evento, evitando repetir texto a cada retorno; reservar chefes para a última subfase e encontros intermediários onde contribuírem para ritmo.
 - **4.2.0.5 — Aceite:** 26 IDs únicos alcançáveis; todos os caminhos principais sem softlock; conclusão da campanha validada com Ren/Maya/Leon; contagem 24–28 verificada por ferramenta de validação de dados.
 
-### 4.3 Saves e checkpoints — PARCIAL: pontos de apoio e retomada em memória; persistência local pendente
+### 4.3 Persistência e continuidade — IMPLEMENTADO no incremento 7; ensaio físico Android pendente
 
-- **4.3.0.1:** gravar progresso local versionado: campanha, subfase, herói, checkpoint, vidas, score, flags únicas e preferências. Salvar só em pontos consistentes, nunca no meio de uma resolução de colisão.
-- **4.3.0.2:** validar dados na leitura, oferecer recuperação de save incompatível e migrações futuras. APK e navegador podem ter armazenamentos separados; não prometer sincronização entre eles.
-- **4.3.0.3 — Aceite:** fechar/reabrir restaura checkpoint válido; continue mantém regra de personagem; dados inválidos não derrubam o app; atualizações compatíveis preservam progresso.
+- **4.3.0.1 — Implementado:** gravar progresso local versionado: campanha, subfase, herói, checkpoint, vidas, score, flags únicas e preferências. Salvar só em pontos consistentes, nunca no meio de uma resolução de colisão.
+- **4.3.0.2 — Implementado; migrações de versões futuras pendentes:** validar dados na leitura, oferecer recuperação de save incompatível e migrações futuras. APK e navegador podem ter armazenamentos separados; não prometer sincronização entre eles.
+- **4.3.0.3 — Validado em testes e Chromium; Android físico pendente:** fechar/reabrir restaura checkpoint válido; continue mantém regra de personagem; dados inválidos não derrubam o app; atualizações compatíveis preservam progresso.
 
 ## Fase 5 — Android de testes e GitHub Actions
 
@@ -280,6 +280,6 @@ Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; A
 
 1. Ler este documento e o registro de execução.
 2. Verificar `git status`, preservar mudanças existentes e rodar a suíte da base.
-3. Retomar os itens pendentes de jogabilidade/campanha: balanceamento, save versionado e próximos lotes de mapas. A câmera lógica e os contratos de subfase já foram implementados, e o distrito tem quatro mapas conectados. O incremento 2 adicionou fila, buffer/coyote, repopulação e correções adicionais de combate/colisão. O incremento 3 corrige a recompensa por persistência, oculta pontos e implementa altura lógica/antecipação/zona morta da câmera.
+3. Retomar os itens pendentes de jogabilidade/campanha: balanceamento e próximos lotes de mapas. O incremento 7 implementa o save local versionado, validado antes de restaurar, com cópia anterior e preservação da exploração/recompensas. A câmera lógica e os contratos de subfase já foram implementados, e o distrito tem quatro mapas conectados. O incremento 2 adicionou fila, buffer/coyote, repopulação e correções adicionais de combate/colisão. O incremento 3 corrige a recompensa por persistência, oculta pontos e implementa altura lógica/antecipação/zona morta da câmera.
 4. Atualizar status somente com evidência. Antes de avançar para cada lote de subfases, validar o lote anterior.
 5. Não confundir a publicação do ambiente de desenvolvimento com a publicação do jogo, commits remotos, GitHub Actions ou APK.

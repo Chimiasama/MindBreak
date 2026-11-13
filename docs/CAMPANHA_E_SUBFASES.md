@@ -31,7 +31,7 @@ O grafo de portas só liga áreas da mesma fase principal. Avançar para a fase 
 - `GameEngine.startCampaign()`: começa uma tentativa na entrada da fase principal.
 - `GameEngine.loadStage()`: API de compatibilidade para os mapas originais, sem navegação entre áreas.
 - `GameEngine.travel()`: aplica uma porta válida próxima ao personagem e preserva recursos/estado da sessão.
-- `GameEngine.getCampaignProgress()`: retorna uma cópia da identificação de fase, setor, checkpoint, áreas visitadas e recursos do jogador. É contrato de sessão em memória, não um save em disco.
+- `GameEngine.getCampaignProgress()`: retorna uma cópia da identificação de fase, setor, checkpoint, áreas visitadas e recursos do jogador. É contrato resumido de sessão. O save completo é produzido por `captureCampaignSave()` e validado/restaurado por `restoreCampaignSave()`; ver `SALVAMENTO.md`.
 
 IDs de subfase são estáveis, como `1A`. Um spawn usa namespace da subfase, por exemplo `1B:3`; seu identificador de entidade muda a cada aparição. Objetos podem reutilizar números em subfases diferentes porque o estado é separado por área.
 
@@ -69,7 +69,7 @@ Bandeiras marcam pontos de apoio. Aproximar-se andando ativa o ponto e mostra um
 
 **Reiniciar Fase** começa novamente a fase principal, voltando ao seu primeiro setor e reinicializando a tentativa. **Retomar exploração** no menu mantém a sessão atual: não é reinício e não recria objetos/inimigos.
 
-A retomada atual funciona apenas enquanto a página/processo continua aberto. **Recarregar ou fechar a página ainda não salva a campanha.** O formato versionado, a validação de dados armazenados e a restauração persistente continuam na etapa 4.3; um simples ID de checkpoint não preservaria corretamente baús e recompensas e por isso não foi usado como substituto de um save completo.
+A retomada exata funciona enquanto a sessão está aberta. O incremento 7 acrescenta **Carregar campanha salva** depois de recarregar/fechar: restaura no ponto de apoio com recursos, objetos, inimigos e histórico de recompensas, validando todo o arquivo antes de alterar o motor. Emboscadas em andamento rearmam ao chegar ao gatilho e chefes não concluídos reiniciam o confronto; conclusão e game over permanecem como tais. Ver [SALVAMENTO.md](SALVAMENTO.md) para política, formato, recuperação e limites.
 
 ## Validação e limites
 
@@ -77,4 +77,4 @@ A retomada atual funciona apenas enquanto a página/processo continua aberto. **
 
 A geometria principal de 1A–1D foi atravessada por simulação para os três heróis, sem voo/teletransporte, sem resgate de abismo e sem contato com ácido ou dependência de imunidade. Os testes de rota isolam combate/arena para avaliar deslocamento; não representam uma certificação de dificuldade de todos os confrontos ou segredos. Há testes separados para bloqueios, derrota final, morte/continue e preservação de estado.
 
-Os cenários continuam usando a arte provisória e o sistema sonoro existente. Salvamento persistente, produção das demais subfases, polimento de encontros e validação Android/DualShock 4 físico continuam pendentes. Nenhuma Action automática ou geração de APK faz parte desta etapa.
+Os cenários continuam usando a arte provisória e o sistema sonoro existente. Produção das demais subfases, polimento de encontros e validação Android/DualShock 4 físico continuam pendentes. Nenhuma Action automática ou geração de APK faz parte desta etapa.

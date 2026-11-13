@@ -155,3 +155,13 @@ Android fixado em horizontal reversível (`sensorLandscape`), com barras de sist
 Voltar abre confirmação: retornar ao menu durante a sessão ou fechar estando no menu. Um callback Android encaminha ao React, que pausa simulação/entradas/contador durante o diálogo. Fechamento só ocorre pelo plugin nativo após confirmação; repetição de Voltar não encerra. A retomada em memória segue as regras existentes.
 
 91 testes passaram, TypeScript e compilação Java Android passaram. Chromium horizontal validou confirmação nas duas telas, repetição, cancelamento, retorno e retomada sem erros; uma ponte nativa simulada só recebeu `exitApp` após confirmação. Não foi gerado novo APK nem acionada Action. Validação física de orientação/barras/gestos/fechamento ainda pendente. Guia atualizado em [ANDROID_APK.md](ANDROID_APK.md).
+
+## Incremento 7 — save versionado e retomada persistente
+
+Concluída a base da etapa 4.3: save local versão 1, validação completa antes da restauração, identificação do conteúdo por fase principal e cópia anterior de recuperação. Mantém os setores visitados, recursos, plataformas, objetos, itens, arenas concluídas, inimigos vivos e histórico de derrotas/recompensas. Restauração volta ao ponto de apoio, sem avançar relógios pelo tempo real fechado; chefes em andamento reiniciam o confronto. Continue, game over e fase concluída têm estados próprios, sem concessão indevida de vidas/bônus.
+
+A interface permite carregar após recarga da página, pede confirmação para substituir/apagar o save, informa incompatibilidade/recuperação e segue jogável quando armazenamento falha. Apagar o save desativa novas gravações da sessão antiga até uma ação explícita de retomada/nova campanha. O mapa original de teste não substitui o progresso. Confirmações compartilham componente com foco e cancelamento por Escape; o tratamento Android de Voltar foi preservado.
+
+Evidências: 106 testes passaram; TypeScript e build web passaram. Chromium horizontal validou save de outro setor com recursos próprios, recarga/carregamento, cancelamento de substituição, descarte, recuperação de backup, arquivo incompatível e quota esgotada, sem erros JavaScript. Ensaios de processo/atualização em Android físico continuam pendentes. Nenhuma Action acionada e nenhum APK gerado. Contrato completo em [SALVAMENTO.md](SALVAMENTO.md).
+
+Próximo bloco: expansão do monotrilho em 2A/2B/2C, mantendo o grafo exploratório e verificando rotas com os três heróis antes de expandir outros capítulos.

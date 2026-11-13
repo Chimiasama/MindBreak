@@ -56,3 +56,7 @@ Options/Start é lido mesmo em pausa. O mapeamento padrão do DualShock 4 está 
 - [Diagnóstico técnico original](docs/DOCUMENTO_TECNICO.md)
 
 As alterações de jogabilidade atuais estão no registro; o diagnóstico original é histórico. Multiplayer e migração de engine estão fora do escopo ativo.
+
+## Progresso local
+
+A campanha agora salva automaticamente e pode ser carregada na tela inicial após fechar/reabrir o jogo. A restauração volta ao ponto de apoio, preservando recursos e exploração. Começar outra campanha ou apagar o save pede confirmação. O mapa original de teste não substitui a campanha salva. [Formato, recuperação e limites](docs/SALVAMENTO.md).

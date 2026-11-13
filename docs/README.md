@@ -1,5 +1,6 @@
 # Documentação do MIND//BREAK
 
+- [Salvamento da campanha](SALVAMENTO.md): formato versionado, retomada, recuperação e limites.
 - [APK Android e Action manual](ANDROID_APK.md): construção, download, instalação, versões e limites da validação.
 - [Campanha e subfases](CAMPANHA_E_SUBFASES.md): mapas disponíveis, portas, checkpoints e preservação de estado nesta sessão.
 - [Plano técnico de implantação](PLANO_DE_IMPLEMENTACAO.md): requisitos, etapas numeradas, estratégia para 26 subfases, respawn, áudio, arte e Android/GitHub Actions.

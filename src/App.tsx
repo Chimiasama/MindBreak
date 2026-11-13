@@ -10,6 +10,8 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
+import { ConfirmationDialog } from './components/ConfirmationDialog';
+import { readCampaignSave, writeCampaignSave, discardCampaignSave } from './game/campaign/storage';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { TouchControls } from './components/TouchControls';
 import { sound } from './game/audio';
@@ -19,7 +21,13 @@ import { STAGES } from './game/stages';
 import { ALLOW_TEST_CHARACTER_SWITCH } from './game/rules';
 import { KeyboardState, KEY_BINDINGS } from './game/input';
 import { CharacterId, GameState, HudSnapshot } from './game/types';
-import { CAMPAIGN } from './game/campaign';
+import { CAMPAIGN, getSubstage } from './game/campaign';
+import type { CampaignSave } from './game/campaign/save';
+
+function getSavedCheckpointLabel(save: CampaignSave) {
+  const area = save.areas.find((area) => area.id === save.current)!;
+  return getSubstage(save.current).checkpoints.find((point) => point.id === area.checkpoint)!.label;
+}
 
 const GameShell = registerPlugin<{ exitApp(): Promise<void> }>('GameShell');
 
@@ -27,6 +35,14 @@ export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<GameEngine | null>(null);
 
+  const [storedCampaign, setStoredCampaign] = useState(readCampaignSave);
+  const [saveWarning, setSaveWarning] = useState<string | null>(null);
+  const [pendingSaveAction, setPendingSaveAction] = useState<{ title: string; message: string; label: string; execute: () => void } | null>(null);
+  const pendingSaveActionRef = useRef(pendingSaveAction);
+  pendingSaveActionRef.current = pendingSaveAction;
+  const persistCampaignRef = useRef<(() => void) | null>(null);
+  const saveQueuedRef = useRef(false);
+  const saveEnabledRef = useRef(false);
   const [backConfirmation, setBackConfirmation] = useState(false);
   const backConfirmationRef = useRef(false);
   const [gameState, setGameState] = useState<GameState>('TITLE_MENU');
@@ -72,6 +88,35 @@ export default function App() {
     arenaLocked: false,
   });
 
+  const persistCampaign = useCallback(() => {
+    try {
+      if (!saveEnabledRef.current) return;
+      const save = engineRef.current?.captureCampaignSave(muted);
+      if (!save) return; // Original test maps never replace campaign progress.
+      const result = writeCampaignSave(save);
+      if (result === 'saved') {
+        setStoredCampaign({ status: 'ready', save });
+        setSaveWarning(null);
+      } else {
+        setSaveWarning('Não foi possível salvar. Mantenha o aplicativo aberto para preservar esta sessão.');
+      }
+    } catch {
+      setSaveWarning('Não foi possível salvar. Mantenha o aplicativo aberto para preservar esta sessão.');
+    }
+  }, [muted]);
+
+  useEffect(() => { persistCampaignRef.current = persistCampaign; }, [persistCampaign]);
+
+  useEffect(() => {
+    if (gameState !== 'PLAYING') return;
+    const timer = window.setInterval(persistCampaign, 5000);
+    return () => window.clearInterval(timer);
+  }, [gameState, persistCampaign]);
+
+  useEffect(() => {
+    if (gameState === 'PAUSED') persistCampaign();
+  }, [gameState, persistCampaign]);
+
   const handleStageClear = useCallback((stageId: number) => {
     const stageDef = STAGES.find((s) => s.id === stageId);
     if (stageDef && stageDef.outroDialogue.length > 0) {
@@ -101,6 +146,15 @@ export default function App() {
     if (!canvas) return;
 
     const engine = new GameEngine(canvas, {
+      onSaveRequest: () => {
+        if (saveQueuedRef.current) return;
+        saveQueuedRef.current = true;
+        // Complete the entire frame/tick transaction before taking a disk snapshot.
+        queueMicrotask(() => {
+          saveQueuedRef.current = false;
+          persistCampaignRef.current?.();
+        });
+      },
       onPauseRequest: () => {
         if (backConfirmationRef.current) return;
         setGameState((current) =>
@@ -134,10 +188,12 @@ export default function App() {
 
   useEffect(() => {
     const onAndroidBack = () => {
+      if (pendingSaveActionRef.current) { setPendingSaveAction(null); return; }
       if (backConfirmationRef.current) return;
       backConfirmationRef.current = true;
       engineRef.current?.clearInput();
       engineRef.current?.setPaused(true);
+      persistCampaignRef.current?.();
       setBackConfirmation(true);
     };
     window.addEventListener('mindbreak:android-back', onAndroidBack);
@@ -146,14 +202,17 @@ export default function App() {
 
   useEffect(() => {
     const suspend = () => {
+      persistCampaignRef.current?.();
       engineRef.current?.clearInput();
       setGameState((current) => current === 'PLAYING' ? 'PAUSED' : current);
       engineRef.current?.setPaused(true);
     };
     const onVisibility = () => { if (document.hidden) suspend(); };
+    window.addEventListener('pagehide', suspend);
     window.addEventListener('blur', suspend);
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
+      window.removeEventListener('pagehide', suspend);
       window.removeEventListener('blur', suspend);
       document.removeEventListener('visibilitychange', onVisibility);
     };
@@ -234,15 +293,25 @@ export default function App() {
     showIntro = true,
     carryLives = 3,
     carryNextOneUp = 15000,
-    legacy = false
+    legacy = false,
+    replaceConfirmed = false
   ) => {
     const engine = engineRef.current;
     if (!engine) return;
+    if (!legacy && !replaceConfirmed && gameState === 'TITLE_MENU' &&
+      storedCampaign.status !== 'missing' && storedCampaign.status !== 'unavailable') {
+      setPendingSaveAction({ title: 'Começar outra partida?',
+        message: 'O progresso salvo será substituído pela nova partida.', label: 'Começar nova partida',
+        execute: () => { setPendingSaveAction(null); startStage(stageId, charId, carryScore,
+          showIntro, carryLives, carryNextOneUp, legacy, true); } });
+      return;
+    }
     sound.init();
     setSelectedStageId(stageId);
     setSelectedChar(charId);
     setLegacyMode(legacy);
     setResumeAvailable(false);
+    saveEnabledRef.current = !legacy;
     if (legacy) engine.loadStage(stageId, charId, carryScore, carryLives, carryNextOneUp);
     else engine.startCampaign(stageId, charId, carryScore, carryLives, carryNextOneUp);
     engine.start();
@@ -302,10 +371,51 @@ export default function App() {
   };
 
   const returnToMenu = () => {
+    persistCampaign();
     setResumeAvailable(engineRef.current?.canResume() ?? false);
     engineRef.current?.stop();
     setGameState('TITLE_MENU');
   };
+
+  const loadSavedCampaign = () => {
+    const stored = readCampaignSave();
+    setStoredCampaign(stored);
+    if (!('save' in stored)) return;
+    const engine = engineRef.current;
+    if (!engine) return;
+    try {
+      sound.init();
+      sound.setMuted(stored.save.preferences.muted);
+      setMuted(stored.save.preferences.muted);
+      const mode = engine.restoreCampaignSave(stored.save);
+      saveEnabledRef.current = true;
+      setSelectedStageId(stored.save.chapterId);
+      setSelectedChar(stored.save.player.characterId);
+      setContinueChar(stored.save.player.characterId);
+      setLegacyMode(false);
+      setResumeAvailable(false);
+      setDialogueQueue([]);
+      setContinueTimer(9);
+      engine.start();
+      setGameState(mode === 'chapter-clear' ? (stored.save.chapterId === 8 ? 'CAMPAIGN_VICTORY' : 'STAGE_CLEAR') :
+        mode === 'continue' ? 'CONTINUE_COUNTDOWN' : mode === 'game-over' ? 'GAME_OVER' : 'PLAYING');
+      if (mode === 'playing') engine.setPaused(false);
+    } catch {
+      setSaveWarning('Não foi possível retomar este progresso. Você pode começar outra partida.');
+    }
+  };
+
+  const requestDiscardSave = () => setPendingSaveAction({ title: 'Apagar progresso salvo?',
+    message: 'A campanha salva e a cópia de recuperação serão apagadas deste dispositivo.', label: 'Apagar progresso',
+    execute: () => {
+      setPendingSaveAction(null);
+      if (discardCampaignSave()) {
+        saveEnabledRef.current = false;
+        setStoredCampaign({ status: 'missing' });
+        setSaveWarning(null);
+      }
+      else setSaveWarning('Não foi possível apagar o progresso neste dispositivo.');
+    } });
 
   const dismissBackConfirmation = () => {
     backConfirmationRef.current = false;
@@ -338,38 +448,15 @@ export default function App() {
 
   return (
     <div className="relative h-full w-full bg-[#070510] text-slate-100 font-sans overflow-hidden">
-      {backConfirmation && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-6"
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') {
-              event.preventDefault();
-              event.stopPropagation();
-              dismissBackConfirmation();
-            }
-            if (event.key === 'Tab') {
-              const buttons = event.currentTarget.querySelectorAll('button');
-              const next = document.activeElement === buttons[0] ? buttons[1] : buttons[0];
-              event.preventDefault();
-              next.focus();
-            }
-          }}>
-          <section role="alertdialog" aria-modal="true" aria-labelledby="android-back-title"
-            className="w-full max-w-md rounded-2xl border border-cyan-400/40 bg-slate-950 p-6 text-center shadow-xl">
-            <h2 id="android-back-title" className="text-xl font-bold">
-              {gameState === 'TITLE_MENU' ? 'Fechar o aplicativo?' : 'Voltar à tela inicial?'}
-            </h2>
-            <p className="mt-3 text-sm text-slate-300">
-              {gameState === 'TITLE_MENU' ? 'Deseja encerrar o MIND//BREAK?' : 'O jogo será interrompido para voltar à tela inicial.'}
-            </p>
-            <div className="mt-6 flex justify-center gap-4">
-              <button autoFocus onClick={dismissBackConfirmation} className="rounded-lg border border-slate-500 px-5 py-3">Cancelar</button>
-              <button onClick={() => void confirmBack()} className="rounded-lg bg-cyan-400 px-5 py-3 font-bold text-slate-950">
-                {gameState === 'TITLE_MENU' ? 'Fechar' : 'Tela inicial'}
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
+      {backConfirmation && <ConfirmationDialog
+        title={gameState === 'TITLE_MENU' ? 'Fechar o aplicativo?' : 'Voltar à tela inicial?'}
+        message={gameState === 'TITLE_MENU' ? 'Deseja encerrar o MIND//BREAK?' : 'O jogo será interrompido para voltar à tela inicial.'}
+        confirmLabel={gameState === 'TITLE_MENU' ? 'Fechar' : 'Tela inicial'}
+        onCancel={dismissBackConfirmation} onConfirm={() => void confirmBack()} />}
+      {pendingSaveAction && <ConfirmationDialog title={pendingSaveAction.title}
+        message={pendingSaveAction.message} confirmLabel={pendingSaveAction.label}
+        onCancel={() => setPendingSaveAction(null)} onConfirm={pendingSaveAction.execute} />}
+      {saveWarning && <p role="status" className="pointer-events-none fixed inset-x-6 top-24 z-[90] rounded-lg bg-amber-950 p-3 text-center text-sm text-amber-100">{saveWarning}</p>}
       {/* Main Full-Viewport Canvas */}
       <canvas ref={canvasRef} className="block h-full w-full" style={{ imageRendering: 'pixelated' }} />
 
@@ -570,6 +657,7 @@ export default function App() {
                   onClick={() => {
                     const engine = engineRef.current;
                     if (!engine?.canResume()) { setResumeAvailable(false); return; }
+                    saveEnabledRef.current = true;
                     engine.start();
                     engine.setPaused(false);
                     setGameState('PLAYING');
@@ -585,6 +673,25 @@ export default function App() {
                 </button>
               </div>
             </div>
+
+            {storedCampaign.status !== 'missing' && (
+              <section aria-label="Campanha salva" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-700/60 bg-slate-900 p-4">
+                <div>
+                  <h2 className="font-bold">{'save' in storedCampaign ? `Progresso salvo · Setor ${storedCampaign.save.current}` : 'Progresso salvo indisponível'}</h2>
+                  <p className="mt-1 text-sm text-slate-300">
+                    {'save' in storedCampaign ? `${CHARACTERS[storedCampaign.save.player.characterId].name} · ${getSavedCheckpointLabel(storedCampaign.save)}` :
+                      storedCampaign.status === 'incompatible' ? 'Este progresso pertence a uma versão diferente da campanha.' :
+                      storedCampaign.status === 'unavailable' ? 'O armazenamento está indisponível. Você ainda pode jogar nesta sessão.' :
+                      'Não foi possível ler o progresso. Você pode apagá-lo ou começar outra partida.'}
+                  </p>
+                  {storedCampaign.status === 'recovered' && <p className="mt-1 text-sm text-amber-300">A cópia anterior foi recuperada. Os últimos avanços podem não estar nela.</p>}
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {'save' in storedCampaign && <button onClick={loadSavedCampaign} className="min-h-[44px] rounded-lg bg-cyan-400 px-4 py-2 font-bold text-slate-950">Carregar campanha salva</button>}
+                  {storedCampaign.status !== 'unavailable' && <button onClick={requestDiscardSave} className="min-h-[44px] rounded-lg border border-slate-600 px-4 py-2 text-sm">Apagar progresso salvo</button>}
+                </div>
+              </section>
+            )}
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-stretch">
               <div className="lg:col-span-7 space-y-3">

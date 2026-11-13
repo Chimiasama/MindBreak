@@ -15,6 +15,11 @@ interface SpawnRecord {
   defeats: number;
 }
 
+export interface SpawnSnapshot {
+  nextEntityId: number;
+  records: Pick<SpawnRecord, 'id' | 'activeId' | 'generation' | 'deadAt' | 'farTicks' | 'armed' | 'defeats'>[];
+}
+
 export class SpawnManager {
   private records: SpawnRecord[];
   private nextEntityId = 1;
@@ -37,6 +42,20 @@ export class SpawnManager {
       repeatable: !(stage.ambushArenas ?? []).some((arena) =>
         template.x >= arena.minX - 60 && template.x <= arena.maxX + 60),
     }));
+  }
+
+  snapshot(): SpawnSnapshot {
+    return { nextEntityId: this.nextEntityId, records: this.records.map((record) => ({
+      id: record.id, activeId: record.activeId, generation: record.generation,
+      deadAt: record.deadAt, farTicks: record.farTicks, armed: record.armed, defeats: record.defeats,
+    })) };
+  }
+
+  /** Receives a snapshot already checked by the campaign save codec. */
+  restore(snapshot: SpawnSnapshot) {
+    this.nextEntityId = snapshot.nextEntityId;
+    this.records.forEach((record, index) => Object.assign(record, snapshot.records[index]));
+    this.rewarded = new WeakSet<Enemy>();
   }
 
   private materialize(record: SpawnRecord): Enemy {

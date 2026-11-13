@@ -1,4 +1,5 @@
 import { sound } from './audio';
+import { AreaSave, CampaignSave, campaignContentId, decodeCampaignSave } from './campaign/save';
 import { FixedStepClock } from './simulation';
 import { GameInput, GameAction, InputKey, InputSource } from './input';
 import { moveAgainstSolids, depenetrate, overlaps, sweepTime } from './collision';
@@ -100,6 +101,7 @@ interface ScarfNode {
 }
 
 export interface EngineCallbacks {
+  onSaveRequest?: () => void;
   onPauseRequest?: () => void;
   onHudUpdate: (hud: HudSnapshot) => void;
   onStageClear: (stageId: number, score: number) => void;
@@ -321,6 +323,7 @@ export class GameEngine {
     this.areaCache.clear();
     this.worldTick = 0;
     this.initializeArea(getSubstage(chapter.entry), charId, score, lives, nextOneUp);
+    this.callbacks.onSaveRequest?.();
   }
 
   private initializeArea(found: SubstageDefinition, charId: CharacterId, preserveScore = 0,
@@ -457,6 +460,87 @@ export class GameEngine {
       visited: [...new Set([...this.areaCache.keys(), this.stage.substageId])], player: this.getPlayerCarry() };
   }
 
+  /** Captured between complete ticks; transient attacks/effects are intentionally not saved. */
+  captureCampaignSave(muted = false): CampaignSave | null {
+    if (!this.campaignMode) return null;
+    this.cacheArea();
+    const areas: AreaSave[] = [...this.areaCache.entries()].map(([id, area]) => ({
+      id, tick: area.tick, leftAt: area.leftAt, checkpoint: area.checkpoint,
+      platforms: area.platforms.map((platform) => ({ x: platform.x, y: platform.y,
+        broken: platform.broken ?? false, crumbleTimer: platform.crumbleTimer ?? 0 })),
+      props: area.props.map((prop) => ({ id: prop.id, hp: Math.max(0, prop.hp), broken: prop.broken ?? false })),
+      pickups: area.pickups.map((pickup) => ({ ...pickup })),
+      arenas: area.arenas.map((arena) => ({ id: arena.id, cleared: arena.cleared })),
+      enemies: area.enemies.filter((enemy) => enemy.hp > 0).map((enemy) => ({ ...enemy })),
+      spawns: area.spawns.snapshot(),
+    }));
+    return { version: 1, content: campaignContentId(this.stage.id), savedAt: Date.now(),
+      chapterId: this.stage.id, current: this.stage.substageId, worldTick: this.worldTick,
+      mode: this.stageClearTriggered ? 'chapter-clear' : this.gameOverTriggered ? 'game-over' :
+        this.continueTriggered ? 'continue' : 'playing',
+      player: { ...this.getPlayerCarry(), psyEnergy: Math.min(100, this.player.psyEnergy) },
+      preferences: { muted }, areas };
+  }
+
+  /** Validate before changing the current run, then resume paused on a revalidated checkpoint. */
+  restoreCampaignSave(candidate: CampaignSave) {
+    const decoded = decodeCampaignSave(JSON.stringify(candidate));
+    if (decoded.status !== 'ready') throw new Error(`Save ${decoded.status}`);
+    const save = decoded.save;
+    this.campaignMode = true;
+    this.areaCache.clear();
+    this.worldTick = save.worldTick;
+    this.initializeArea(getSubstage(save.current), save.player.characterId,
+      save.player.score, save.player.lives, save.player.nextOneUpScore, false);
+    for (const area of save.areas) {
+      const definition = getSubstage(area.id);
+      const spawns = new SpawnManager(definition, area.id);
+      spawns.restore(area.spawns);
+      this.areaCache.set(area.id, {
+        platforms: definition.platforms.map((platform, index) => ({ ...platform,
+          originX: platform.x, originY: platform.y, ...area.platforms[index] })),
+        props: definition.props.map((prop, index) => ({ ...prop, ...area.props[index] })),
+        pickups: area.pickups.map((pickup) => ({ ...pickup })),
+        arenas: (definition.ambushArenas ?? []).map((arena, index) => ({ ...arena,
+          cleared: area.arenas[index].cleared, active: false })),
+        enemies: area.enemies.map((enemy) => ({ ...enemy })), spawns,
+        // A boss cannot be left through a portal. Checkpoint restores restart that encounter.
+        boss: { ...this.boss, ...(definition.boss ?? {}), active: !!definition.boss,
+          triggered: false, hp: definition.boss?.maxHp ?? this.boss.maxHp,
+          phase: 1, vx: 0, vy: 0, twinX: (definition.boss?.x ?? 0) + 120,
+          twinY: definition.boss?.y ?? 0, shieldActive: definition.boss?.behavior === 'cipher' },
+        tick: area.tick, checkpoint: area.checkpoint, leftAt: area.leftAt,
+      });
+    }
+    const current = this.areaCache.get(save.current)!;
+    this.platforms = current.platforms;
+    this.props = current.props;
+    this.pickups = current.pickups;
+    this.ambushArenas = current.arenas;
+    this.enemies = current.enemies;
+    this.spawns = current.spawns;
+    this.boss = current.boss;
+    this.tickCount = current.tick;
+    this.checkpointId = current.checkpoint;
+    const { characterId: _, ...resources } = save.player;
+    Object.assign(this.player, resources);
+    this.respawnAtCheckpoint();
+    this.stageClearTriggered = save.mode === 'chapter-clear';
+    this.continueTriggered = save.mode === 'continue';
+    this.gameOverTriggered = save.mode === 'game-over';
+    if (this.stageClearTriggered) { this.boss.active = false; this.boss.hp = 0; }
+    this.paused = true;
+    this.clearInput();
+    this.clock.reset();
+    this.shakeAmount = 0;
+    sound.stopMusic();
+    this.initScarf(this.player.x, this.player.y);
+    this.camera = cameraTarget(this.player, this.viewport,
+      { top: this.stage.boundsTop, bottom: this.stage.boundsBottom, width: this.stage.boundsWidth });
+    this.emitHud();
+    return save.mode;
+  }
+
   getIntroDialogue() { return this.stage.introDialogue; }
 
   private cacheArea() {
@@ -506,6 +590,7 @@ export class GameEngine {
       this.enemies.push(...this.spawns.update(this.player, null, this.tickCount, this.enemies, solids, true));
     }
     this.emitHud();
+    this.callbacks.onSaveRequest?.();
     return true;
   }
 
@@ -547,6 +632,7 @@ export class GameEngine {
     this.addMangaFx('CONTINUE!', p.x, p.y - 30, '#00f0ff');
     this.showAlert(`${profile.name.toUpperCase()} ENTROU EM AÇÃO!`, 100);
     this.emitHud();
+    if (this.campaignMode) this.callbacks.onSaveRequest?.();
   }
 
   triggerFinalGameOver() {
@@ -557,6 +643,7 @@ export class GameEngine {
     this.paused = true;
     sound.stopMusic();
     this.callbacks.onGameOver(this.stage.id, this.player.score);
+    if (this.campaignMode) this.callbacks.onSaveRequest?.();
   }
 
   switchCharacter(nextId?: CharacterId) {
@@ -1228,6 +1315,7 @@ export class GameEngine {
       this.addMangaFx('STAGE CLEAR!', this.boss.x, this.boss.y - 40, '#00f0ff');
       sound.sfxStageClear();
       this.emitHud();
+      if (this.campaignMode) this.callbacks.onSaveRequest?.();
       this.scheduleTransition(() => {
         this.callbacks.onStageClear(this.stage.id, this.player.score);
       }, 1150);
@@ -1269,11 +1357,13 @@ export class GameEngine {
         this.addMangaFx('RESPAWN! 3s I-FRAMES', p.x, p.y - 30, '#00f0ff');
         this.showAlert(`VIDAS RESTANTES: ${p.lives}`, 90);
         this.emitHud();
+        if (this.campaignMode) this.callbacks.onSaveRequest?.();
       } else if (!this.continueTriggered) {
         p.lives = 0;
         this.continueTriggered = true;
         this.setPaused(true);
         this.emitHud();
+        if (this.campaignMode) this.callbacks.onSaveRequest?.();
         this.scheduleTransition(() => {
           this.callbacks.onContinueCountdown(this.stage.id, p.score);
         }, 450);
@@ -1720,6 +1810,7 @@ export class GameEngine {
       for (const point of this.stage.checkpoints) {
         if (point.id !== this.checkpointId && p.grounded && Math.hypot(p.x - point.x, p.y - point.y) < 64) {
           this.checkpointId = point.id;
+          this.callbacks.onSaveRequest?.();
           this.showAlert(`PONTO DE APOIO: ${point.label.toUpperCase()}`, 100);
         }
       }
