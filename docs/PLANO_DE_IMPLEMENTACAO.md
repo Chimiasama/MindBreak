@@ -256,10 +256,11 @@ Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; A
 - **7.1.0.1 — Heróis implementados; tiles/ambientes pendentes:** registrar paletas, resolução base dos sprites, proporções, pivôs, tamanho de tiles, nomenclatura e política de escala inteira. Priorizar silhueta e contraste. Revisão 23 adota ilustração 2D com anatomia articulada e antialias; contratos atuais em `DIRECAO_VISUAL_V2.md`, superando a escala inteira/paleta restrita da V1.
 - **7.1.0.2 — Pipeline de heróis implementado:** criar atlas/spritesheets com metadados de animação: frame, duração, pivot, hurtbox, hitbox e eventos de som. Trocar frame por estado real, sem alterar colisão arbitrariamente ao trocar imagem.
 - **7.1.0.3:** arte gerada por imagem pode servir de conceito/recurso, mas será revisada quanto à consistência entre frames, transparência e tamanho. Manter arquivos fonte e exportações reproduzíveis.
+- **7.1.0.4 — Ren/Maya implementados no incremento 27; demais personagens nas próximas revisões:** usar imagens próprias para esquerda/direita, preservando o lado anatômico de acessórios. Seleção por direção, sem espelhar a pintura no runtime; manter pivôs, colisões e timings. Aplicar a regra a Leon, inimigos e chefes em seus lotes de arte. Fontes, atlas compactados, prévias e orçamento em [VISTAS_DIRECIONAIS.md](VISTAS_DIRECIONAIS.md).
 
 Contrato, paletas, prévias reproduzíveis, orçamento e limites do fluxo de morte em [ARTE_E_ANIMACAO.md](ARTE_E_ANIMACAO.md).
 
-### 7.2 Personagens, inimigos e chefes — PARCIAL (Ren/Maya pintados 24–25; Leon V2)
+### 7.2 Personagens, inimigos e chefes — PARCIAL (Ren/Maya pintados com vistas direcionais 27; Leon V2)
 
 - **7.2.0.1 — Ren/Maya com pinturas integradas e orientação corrigida; Leon V2, intermediários e aprovação em aparelho pendentes:** produzir heróis com idle, corrida, salto, queda, parede, escalada, hang, vault, dash, slide, combo, dano, stun, especial e morte; Maya inclui voo. Integrar um herói antes de produzir todas as variantes.
 - **7.2.0.2 — Primeira passagem dos 12 inimigos e oito chefes/duas fases integrada; revisão no aparelho pendente:** diferenciar doze arquétipos inimigos por silhueta/arma/postura, sem depender só de cor; depois desenhar os oito chefes e transformações.
@@ -328,6 +329,6 @@ Chefes, transformações, contrato de estado e prévias em [ARTE_DOS_CHEFES.md](
 
 1. Ler este documento e o registro de execução.
 2. Verificar `git status`, preservar mudanças existentes e rodar a suíte da base.
-3. Manter 26 mapas, áudio do incremento 19 e Ren/Maya pintados dos 24–25. A prioridade atual é a revisão 26 de exploração: ler `PADRAO_DE_FASES.md` e o atlas. Rotas geométricas dos 23 complexos passaram nos três heróis; retomar playtest com combate, orientação/tempo, recursos e individualização dos mecanismos, além dos ensaios Android. O trem continua linear e não há retorno entre capítulos. Arte do Leon/cut-ins/ambientes e fase 8 permanecem previstos, sem gerar APK ou disparar Actions automaticamente.
+3. Manter 26 mapas, áudio do incremento 19 e Ren/Maya pintados dos 24–25 e vistas independentes do 27. Não voltar ao espelhamento ao revisar os demais personagens. A prioridade atual é a revisão 26 de exploração: ler `PADRAO_DE_FASES.md` e o atlas. Rotas geométricas dos 23 complexos passaram nos três heróis; retomar playtest com combate, orientação/tempo, recursos e individualização dos mecanismos, além dos ensaios Android. O trem continua linear e não há retorno entre capítulos. Arte do Leon/cut-ins/ambientes e fase 8 permanecem previstos, sem gerar APK ou disparar Actions automaticamente.
 4. Atualizar status somente com evidência. Antes de avançar para cada lote de subfases, validar o lote anterior.
 5. Não confundir a publicação do ambiente de desenvolvimento com a publicação do jogo, commits remotos, GitHub Actions ou APK.

@@ -1,5 +1,7 @@
 # Maya pintada e orientação do Ren — incremento 25
 
+> **Incremento 27 — contrato atual de direção:** Ren e Maya agora usam vistas autorais independentes para esquerda/direita, sem reflexão de runtime. A regra anterior de espelhamento fica como histórico. Fontes, prévias e orçamento atualizados em [VISTAS_DIRECIONAIS.md](VISTAS_DIRECIONAIS.md).
+
 ## 1. Correção da orientação
 
 O usuário percebeu Ren olhando para um lado e virando durante o ataque. A revisão da fonte confirmou que **o repouso foi pintado olhando para a esquerda**, enquanto corrida e cortes olham para a direita. A recuperação usa a pintura de repouso, tornando a inversão aparente ao fim do golpe.

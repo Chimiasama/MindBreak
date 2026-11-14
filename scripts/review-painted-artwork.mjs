@@ -10,7 +10,7 @@ for(const hero of ['ren','maya']){
  const cases=[['idle',0,'repouso'],['run',0,'corrida'],['attack1',0,'ataque'],['attack1',2,'recuperação']];let transforms=0;
  for(const[row,[pose,frame,label]]of cases.entries())for(const facing of [-1,1]){
   const cx=facing===1?750:250,feet=245+row*190;b.save();b.translate(cx,feet);b.scale(2,2);a.drawHeroFrame(b,hero,pose,frame,0,0,facing);b.restore();b.fillStyle='#acc2d7';b.fillText(label,cx-65,feet+20);
-  let actual;const spy={save(){},restore(){},translate(){},scale(x){actual=x;},drawImage(){},imageSmoothingEnabled:true};a.drawHeroFrame(spy,hero,pose,frame,0,0,facing);if(actual!==facing)throw Error('Runtime reversed direction');transforms++;
+  let actual;const spy={save(){},restore(){},translate(){},scale(x){actual=x;},drawImage(){},imageSmoothingEnabled:true};a.drawHeroFrame(spy,hero,pose,frame,0,0,facing);if(actual!==1)throw Error('Authored direction must never be reflected at runtime');transforms++;
  }
  return{preview:preview.toDataURL(),board:board.toDataURL(),transforms};},hero);
  mkdirSync(`docs/arte/${hero}`,{recursive:true});for(const[key,file]of [['preview','previa'],['board','orientacao']])writeFileSync(`docs/arte/${hero}/${file}.png`,Buffer.from(data[key].split(',')[1],'base64'));console.log(JSON.stringify({hero,runtimeDirectionChecks:data.transforms}));

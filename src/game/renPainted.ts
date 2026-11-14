@@ -1,8 +1,10 @@
-import { createPaintedAtlasLoader } from './paintedAtlasLoader';
+import {leftAtlasMetadata} from './heroDirections';
+import { createDirectionalPaintedAtlasLoader } from './paintedAtlasLoader';
 import { heroAtlasMetadata, type HeroPose } from './heroAnimation';
 /** Extra transparent padding contains painted scarf/weapons; physical reference stays 32 × 56. */
 export const REN_FRAME={w:320,h:320,scale:.25,pivot:{x:160,y:288},hurtbox:{x:96,y:64,w:128,h:224},columns:8};
 export const REN_ATLAS=heroAtlasMetadata(REN_FRAME,3);
+export const REN_LEFT_ATLAS=leftAtlasMetadata('ren',REN_FRAME);
 export const REN_SOURCE_POSES={
  idle:{sheet:0,cell:0},runA:{sheet:0,cell:1},runB:{sheet:0,cell:2},runC:{sheet:0,cell:3},jump:{sheet:0,cell:4},fall:{sheet:0,cell:5},
  attack1:{sheet:1,cell:0},attack2:{sheet:1,cell:1},attack3:{sheet:1,cell:2},dash:{sheet:1,cell:3},slide:{sheet:1,cell:4},hurt:{sheet:1,cell:5},
@@ -28,7 +30,7 @@ export function renPlacement(name:RenSourcePose){
  const anchors:Partial<Record<RenSourcePose,number>>={runA:286,runB:282,runC:284,jump:296,fall:300,attack2:280,attack3:300,dash:286,hurt:285,wall:270,climb:290,hang:280,vault:280};
  return{scale:name==='attack3'?.51:.47,anchorX:anchors[name]??256,baseline:496,sourceFacing:renSourceFacing(name)};
 }
-const loader=createPaintedAtlasLoader(REN_ATLAS,new URL('../assets/ren/ren-painted.webp',import.meta.url).href);
+const loader=createDirectionalPaintedAtlasLoader(REN_ATLAS,new URL('../assets/ren/ren-painted.webp',import.meta.url).href,new URL('../assets/ren/ren-painted-left.webp',import.meta.url).href,REN_LEFT_ATLAS);
 export const getRenPaintedAtlas=loader.getAtlas;
 export const renArtworkStatus=loader.status;
 export const loadRenArtwork=()=>loader.load();

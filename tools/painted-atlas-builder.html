@@ -1,17 +1,43 @@
-<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Montagem de atlas pintado</title><style>body{background:#182238;color:#e2e8f0;font:16px system-ui}canvas{max-width:100%;height:auto}</style><h1>Atlas pintado</h1><p>Recortes, alinhamento e orientação canônica para a direita.</p><canvas></canvas>
+<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Montagem de atlas pintado</title><style>body{background:#182238;color:#e2e8f0;font:16px system-ui}canvas{max-width:100%;height:auto}</style><h1>Atlas pintado</h1><p>Recortes e alinhamento de vistas independentes para direita e esquerda.</p><canvas></canvas>
 <script type="module">
-import { REN_ATLAS,REN_SOURCE_POSES,renSourcePose,renSourceRect,renPlacement } from '/src/game/renPainted.ts';
-import { MAYA_ATLAS,MAYA_SOURCE_POSES,mayaSourcePose,mayaSourceRect,mayaPlacement } from '/src/game/mayaPainted.ts';
+import { REN_ATLAS,REN_LEFT_ATLAS,REN_SOURCE_POSES,renSourcePose,renSourceRect,renPlacement } from '/src/game/renPainted.ts';
+import { MAYA_ATLAS,MAYA_LEFT_ATLAS,MAYA_SOURCE_POSES,mayaSourcePose,mayaSourceRect,mayaPlacement } from '/src/game/mayaPainted.ts';
+import {leftSourceKey,leftSourceCell,leftSourceSheets,leftSourceCrop} from '/src/game/heroDirections.ts';
+const direction=new URLSearchParams(location.search).get('direction')??'right';
 const hero=new URLSearchParams(location.search).get('hero')??'ren';if(!['ren','maya'].includes(hero))throw Error('Unknown painted hero');
-const maya=hero==='maya',atlas=maya?MAYA_ATLAS:REN_ATLAS,sources=maya?MAYA_SOURCE_POSES:REN_SOURCE_POSES,sourcePose=maya?mayaSourcePose:renSourcePose,sourceRect=maya?mayaSourceRect:renSourceRect,placement=maya?mayaPlacement:renPlacement;
-const files=['01-locomocao','02-combate','03-acrobacia',...(maya?['04-corrida-e-poderes']:[])];
+const maya=hero==='maya',rightAtlas=maya?MAYA_ATLAS:REN_ATLAS,atlas=direction==='left'?(maya?MAYA_LEFT_ATLAS:REN_LEFT_ATLAS):rightAtlas,sources=maya?MAYA_SOURCE_POSES:REN_SOURCE_POSES,sourcePose=maya?mayaSourcePose:renSourcePose,sourceRect=maya?mayaSourceRect:renSourceRect,placement=maya?mayaPlacement:renPlacement;
+const files=direction==='left'?leftSourceSheets(hero).map(s=>s.file):['01-locomocao','02-combate','03-acrobacia',...(maya?['04-corrida-e-poderes']:[])];
 const images=await Promise.all(files.map(file=>new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=`/docs/arte/${hero}/fontes/${file}.png`;})));
 const canvas=document.querySelector('canvas');canvas.width=atlas.width;canvas.height=atlas.height;const ctx=canvas.getContext('2d');
+if(direction==='right'){
 for(const[pose,clip]of Object.entries(atlas.clips))for(const[frame,f]of clip.frames.entries()){
  const name=sourcePose(pose,frame),source=sources[name],crop=sourceRect(name),p=placement(name),cellX=source.cell%3*512,cellY=Math.floor(source.cell/3)*512;
  const x=(crop.x-cellX-p.anchorX)*p.scale,y=atlas.pivot.y+(crop.y-cellY-p.baseline)*p.scale;
  ctx.save();ctx.beginPath();ctx.rect(f.x,f.y,f.w,f.h);ctx.clip();ctx.translate(f.x+atlas.pivot.x,f.y);ctx.scale(p.sourceFacing,1);ctx.drawImage(images[source.sheet],crop.x,crop.y,crop.w,crop.h,x,y,crop.w*p.scale,crop.h*p.scale);ctx.restore();
 }
-window.paintedBuilder={canvas,metadata:{...atlas,hero,canonicalFacing:'right',sourcePoses:sources,placements:Object.fromEntries(Object.keys(sources).map(name=>[name,{source:sourceRect(name),...placement(name)}])),provenance:'OpenAI image generation from MindBreak concept; aligned, orientation-normalized raster crops; no generated combat events.'}};
+}
+const leftPlacements={};
+if(direction==='left'){
+ const rendered=new Set();
+ const reference=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=`/src/assets/${hero}/${hero}-painted.webp`;});
+ const rc=document.createElement('canvas');rc.width=rightAtlas.width;rc.height=rightAtlas.height;const rx=rc.getContext('2d');rx.drawImage(reference,0,0);
+ function bounds(image,x,y,w,h){
+  const c=document.createElement('canvas');c.width=w;c.height=h;const a=c.getContext('2d');a.drawImage(image,x,y,w,h,0,0,w,h);const d=a.getImageData(0,0,w,h).data;let l=w,t=h,r=-1,b=-1;
+  for(let j=0;j<h;j++)for(let i=0;i<w;i++)if(d[(j*w+i)*4+3]>32){l=Math.min(l,i);t=Math.min(t,j);r=Math.max(r,i);b=Math.max(b,j);}
+  if(r<l)throw Error('Empty directional source');
+  let total=0,weighted=0;for(let j=Math.floor(t+(b-t)*.78);j<=b;j++)for(let i=l;i<=r;i++){const alpha=d[(j*w+i)*4+3];if(alpha>32){total+=alpha;weighted+=i*alpha;}}
+  return{x:x+l,y:y+t,w:r-l+1,h:b-t+1,anchor:total?weighted/total:(l+r)/2};
+ }
+ for(const[pose,clip]of Object.entries(atlas.clips))for(const[frame,f]of clip.frames.entries()){
+  const key=leftSourceKey(hero,pose,frame),cell=leftSourceCell(hero,key),image=images[cell.sheet],cw=Math.floor(image.naturalWidth/cell.columns),ch=Math.floor(image.naturalHeight/cell.rows);
+  const region=leftSourceCrop(hero,key,image.naturalWidth,image.naturalHeight),crop=bounds(image,region.x,region.y,region.w,region.h),rf=rightAtlas.clips[pose].frames[frame],ref=bounds(rc,rf.x,rf.y,rf.w,rf.h),scale=Math.min(ref.h/crop.h,(f.w-16)/crop.w);
+  // Feet/stance anchor, not scarf bounding-box midpoint. Preserve existing pose height/baseline.
+  const anchor=crop.anchor-(crop.x-cell.column*cw),dx=atlas.pivot.x-anchor*scale,dy=ref.y-rf.y+ref.h-crop.h*scale;
+  const safeX=Math.max(8,Math.min(dx,f.w-8-crop.w*scale));
+  if(!rendered.has(key)){ctx.drawImage(image,crop.x,crop.y,crop.w,crop.h,f.x+safeX,f.y+dy,crop.w*scale,crop.h*scale);rendered.add(key);}
+  leftPlacements[`${pose}:${frame}`]={key,cell,crop,scale,x:safeX,y:dy};
+ }
+}
+window.paintedBuilder={canvas,metadata:{...atlas,hero,canonicalFacing:direction,mirrored:false,...(direction==='left'?{sourceSheets:leftSourceSheets(hero),directionalPlacements:leftPlacements}:{}),sourcePoses:direction==='left'?undefined:sources,placements:direction==='left'?undefined:Object.fromEntries(Object.keys(sources).map(name=>[name,{source:sourceRect(name),...placement(name)}])),provenance:'OpenAI image generation from MindBreak concept; aligned, orientation-normalized raster crops; no generated combat events.'}};
 window.renBuilder=window.paintedBuilder;
 </script></html>

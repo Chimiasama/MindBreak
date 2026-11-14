@@ -1,5 +1,5 @@
-import { loadMayaArtwork, getMayaPaintedAtlas, mayaArtworkStatus, MAYA_ATLAS } from './mayaPainted';
-import { loadRenArtwork, getRenPaintedAtlas, renArtworkStatus, REN_ATLAS } from './renPainted';
+import { loadMayaArtwork, getMayaPaintedAtlas, mayaArtworkStatus, MAYA_ATLAS, MAYA_LEFT_ATLAS } from './mayaPainted';
+import { loadRenArtwork, getRenPaintedAtlas, renArtworkStatus, REN_ATLAS, REN_LEFT_ATLAS } from './renPainted';
 import type { CharacterId } from './types';
 import { HERO_FRAME, HERO_CLIPS, type HeroPose, HERO_ATLAS } from './heroAnimation';
 import { figureRig, paintFigure, type FigureStyle } from './illustratedFigure';
@@ -17,16 +17,16 @@ export function heroRig(hero:CharacterId,pose:HeroPose,frame:number){
 }
 const atlases=new Map<CharacterId,HTMLCanvasElement>();
 const painted={
- ren:{load:loadRenArtwork,getAtlas:getRenPaintedAtlas,status:renArtworkStatus,metadata:REN_ATLAS},
- maya:{load:loadMayaArtwork,getAtlas:getMayaPaintedAtlas,status:mayaArtworkStatus,metadata:MAYA_ATLAS},
+ ren:{load:loadRenArtwork,getAtlas:getRenPaintedAtlas,status:renArtworkStatus,metadata:REN_ATLAS,leftMetadata:REN_LEFT_ATLAS},
+ maya:{load:loadMayaArtwork,getAtlas:getMayaPaintedAtlas,status:mayaArtworkStatus,metadata:MAYA_ATLAS,leftMetadata:MAYA_LEFT_ATLAS},
 };
 function paintedEntry(hero:CharacterId){return hero==='leon'?undefined:painted[hero];}
 export function isHeroPainted(hero:CharacterId){return Boolean(paintedEntry(hero)?.getAtlas());}
 export function prepareHeroArtwork(hero:CharacterId){return paintedEntry(hero)?.load()??Promise.resolve(true);}
 export function getHeroArtworkStatus(hero:CharacterId){return paintedEntry(hero)?.status()??'procedural-v2';}
-export function getHeroMetadata(hero:CharacterId){const entry=paintedEntry(hero);return entry?.getAtlas()?entry.metadata:HERO_ATLAS;}
-export function getHeroAtlas(hero:CharacterId){
- const entry=paintedEntry(hero);if(entry){void entry.load();const canvas=entry.getAtlas();if(canvas){atlases.delete(hero);return canvas;}}
+export function getHeroMetadata(hero:CharacterId,facing=1){const entry=paintedEntry(hero);return entry?.getAtlas()?(facing<0?entry.leftMetadata:entry.metadata):HERO_ATLAS;}
+export function getHeroAtlas(hero:CharacterId,facing=1){
+ const entry=paintedEntry(hero);if(entry){void entry.load();const canvas=entry.getAtlas(facing);if(canvas){atlases.delete(hero);return canvas;}}
  const cached=atlases.get(hero);if(cached)return cached;
  const meta=HERO_ATLAS,canvas=document.createElement('canvas');canvas.width=meta.width;canvas.height=meta.height;
  const ctx=canvas.getContext('2d');if(!ctx)throw Error('Hero atlas canvas unavailable');
@@ -40,6 +40,6 @@ export function getHeroAtlas(hero:CharacterId){
  atlases.set(hero,canvas);return canvas;
 }
 export function drawHeroFrame(ctx:CanvasRenderingContext2D,hero:CharacterId,pose:HeroPose,frame:number,centerX:number,feetY:number,facing:number){
- const atlas=getHeroAtlas(hero),meta=getHeroMetadata(hero),f=meta.clips[pose].frames[frame];ctx.save();ctx.translate(Math.round(centerX),Math.round(feetY));ctx.scale(facing,1);ctx.imageSmoothingEnabled=true;
+ const atlas=getHeroAtlas(hero,facing),meta=getHeroMetadata(hero,facing),f=meta.clips[pose].frames[frame];ctx.save();ctx.translate(Math.round(centerX),Math.round(feetY));ctx.scale(isHeroPainted(hero)?1:facing,1);ctx.imageSmoothingEnabled=true;
  ctx.drawImage(atlas,f.x,f.y,f.w,f.h,-meta.pivot.x*meta.scale,-meta.pivot.y*meta.scale,meta.w*meta.scale,meta.h*meta.scale);ctx.restore();
 }

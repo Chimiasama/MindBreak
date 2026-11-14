@@ -1,0 +1,59 @@
+{
+  "browser": "Chromium",
+  "viewport": [
+    915,
+    412
+  ],
+  "touch": true,
+  "errors": [],
+  "results": [
+    {
+      "hero": "ren",
+      "frames": 110,
+      "differences": {
+        "idle": 18460,
+        "run": 15336,
+        "jump": 12444,
+        "fall": 19490,
+        "wall": 20213,
+        "dash": 28545,
+        "attack1": 23650,
+        "flight": 19472
+      },
+      "movement": [
+        {
+          "key": "right",
+          "delta": 65.20000000000005
+        },
+        {
+          "key": "left",
+          "delta": -55.20000000000006
+        }
+      ]
+    },
+    {
+      "hero": "maya",
+      "frames": 110,
+      "differences": {
+        "idle": 16097,
+        "run": 15238,
+        "jump": 18388,
+        "fall": 21795,
+        "wall": 20642,
+        "dash": 22903,
+        "attack1": 27847,
+        "flight": 22598
+      },
+      "movement": [
+        {
+          "key": "right",
+          "delta": 56.99999999999994
+        },
+        {
+          "key": "left",
+          "delta": -47.39999999999998
+        }
+      ]
+    }
+  ]
+}

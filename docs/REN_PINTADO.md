@@ -1,5 +1,7 @@
 # Ren pintado — incremento 24
 
+> **Incremento 27 — contrato atual de direção:** Ren e Maya agora usam vistas autorais independentes para esquerda/direita, sem reflexão de runtime. A regra anterior de espelhamento fica como histórico. Fontes, prévias e orçamento atualizados em [VISTAS_DIRECIONAIS.md](VISTAS_DIRECIONAIS.md).
+
 > **Incremento 25:** corrigida a orientação do repouso/recuperação do Ren no bake; Maya também recebeu pinturas. [Correção, Maya e valores atuais](MAYA_PINTADA_E_ORIENTACAO.md). As seções abaixo registram o fechamento do incremento 24.
 
 ## 1. Objetivo e entrega

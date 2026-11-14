@@ -1,5 +1,7 @@
 # Direção visual V2 — anatomia, ilustração e identidade
 
+> **Incremento 27 — contrato atual de direção:** Ren e Maya agora usam vistas autorais independentes para esquerda/direita, sem reflexão de runtime. A regra anterior de espelhamento fica como histórico. Fontes, prévias e orçamento atualizados em [VISTAS_DIRECIONAIS.md](VISTAS_DIRECIONAIS.md).
+
 > **Incrementos 24–25:** Ren e Maya usam pinturas derivadas da prancha, com atlas e orçamento próprios. Contratos/prévias em [REN_PINTADO.md](REN_PINTADO.md) e [MAYA_PINTADA_E_ORIENTACAO.md](MAYA_PINTADA_E_ORIENTACAO.md). Leon e demais personagens mantêm a V2 descrita abaixo; a visão geral foi atualizada.
 
 ## 1. Revisão solicitada

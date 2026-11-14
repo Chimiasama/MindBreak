@@ -1,7 +1,9 @@
+import {leftAtlasMetadata} from './heroDirections';
 import {heroAtlasMetadata,type HeroPose} from './heroAnimation';
-import {createPaintedAtlasLoader} from './paintedAtlasLoader';
+import {createDirectionalPaintedAtlasLoader} from './paintedAtlasLoader';
 export const MAYA_FRAME={w:320,h:320,scale:.25,pivot:{x:160,y:288},hurtbox:{x:96,y:64,w:128,h:224},columns:8};
 export const MAYA_ATLAS=heroAtlasMetadata(MAYA_FRAME,3);
+export const MAYA_LEFT_ATLAS=leftAtlasMetadata('maya',MAYA_FRAME);
 export const MAYA_SOURCE_POSES={
  idle:{sheet:0,cell:0},runA:{sheet:0,cell:1},runB:{sheet:0,cell:2},runC:{sheet:0,cell:3},jump:{sheet:0,cell:4},fall:{sheet:0,cell:5},
  attack1:{sheet:1,cell:0},attack2:{sheet:1,cell:1},attack3:{sheet:1,cell:2},dash:{sheet:1,cell:3},slide:{sheet:1,cell:4},hurt:{sheet:1,cell:5},
@@ -25,7 +27,7 @@ export function mayaPlacement(name:MayaSourcePose){
  const anchors:Partial<Record<MayaSourcePose,number>>={idle:266,runA:296,runB:286,runC:300,runD:272,runE:298,runF:300,jump:296,fall:300,attack2:248,attack3:280,dash:286,hurt:285,wall:270,climb:290,hang:280,vault:280};
  return{scale:.45,anchorX:anchors[name]??266,baseline:name==='death'?325:500,sourceFacing:1 as const};
 }
-const loader=createPaintedAtlasLoader(MAYA_ATLAS,new URL('../assets/maya/maya-painted.webp',import.meta.url).href);
+const loader=createDirectionalPaintedAtlasLoader(MAYA_ATLAS,new URL('../assets/maya/maya-painted.webp',import.meta.url).href,new URL('../assets/maya/maya-painted-left.webp',import.meta.url).href,MAYA_LEFT_ATLAS);
 export const getMayaPaintedAtlas=loader.getAtlas;
 export const mayaArtworkStatus=loader.status;
 export const loadMayaArtwork=()=>loader.load();
