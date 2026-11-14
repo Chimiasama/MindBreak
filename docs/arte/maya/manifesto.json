@@ -1,0 +1,1006 @@
+{
+  "version": 3,
+  "w": 320,
+  "h": 320,
+  "scale": 0.25,
+  "pivot": {
+    "x": 160,
+    "y": 288
+  },
+  "hurtbox": {
+    "x": 96,
+    "y": 64,
+    "w": 128,
+    "h": 224
+  },
+  "columns": 8,
+  "width": 2560,
+  "height": 2240,
+  "frameCount": 55,
+  "clips": {
+    "idle": {
+      "durations": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        },
+        {
+          "x": 320,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        },
+        {
+          "x": 640,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        },
+        {
+          "x": 960,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        }
+      ]
+    },
+    "run": {
+      "durations": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 1280,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1600,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1920,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 2240,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 320,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "jump": {
+      "durations": [
+        6,
+        8
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 640,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 6
+        },
+        {
+          "x": 960,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        }
+      ]
+    },
+    "fall": {
+      "durations": [
+        8,
+        8
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 1280,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        },
+        {
+          "x": 1600,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        }
+      ]
+    },
+    "wall": {
+      "durations": [
+        10,
+        10
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 1920,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 10
+        },
+        {
+          "x": 2240,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 10
+        }
+      ]
+    },
+    "climb": {
+      "durations": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 320,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 640,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 960,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "hang": {
+      "durations": [
+        12,
+        12
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 1280,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        },
+        {
+          "x": 1600,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        }
+      ]
+    },
+    "vault": {
+      "durations": [
+        3,
+        3,
+        4
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 1920,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 3
+        },
+        {
+          "x": 2240,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 3
+        },
+        {
+          "x": 0,
+          "y": 960,
+          "w": 320,
+          "h": 320,
+          "duration": 4
+        }
+      ]
+    },
+    "dash": {
+      "durations": [
+        3,
+        3,
+        4
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 320,
+          "y": 960,
+          "w": 320,
+          "h": 320,
+          "duration": 3
+        },
+        {
+          "x": 640,
+          "y": 960,
+          "w": 320,
+          "h": 320,
+          "duration": 3
+        },
+        {
+          "x": 960,
+          "y": 960,
+          "w": 320,
+          "h": 320,
+          "duration": 4
+        }
+      ]
+    },
+    "slide": {
+      "durations": [
+        6,
+        6
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 1280,
+          "y": 960,
+          "w": 320,
+          "h": 320,
+          "duration": 6
+        },
+        {
+          "x": 1600,
+          "y": 960,
+          "w": 320,
+          "h": 320,
+          "duration": 6
+        }
+      ]
+    },
+    "attack1": {
+      "durations": [
+        1,
+        5,
+        5
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 1920,
+          "y": 960,
+          "w": 320,
+          "h": 320,
+          "duration": 1,
+          "event": "impact"
+        },
+        {
+          "x": 2240,
+          "y": 960,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 0,
+          "y": 1280,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "attack2": {
+      "durations": [
+        1,
+        5,
+        5
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 320,
+          "y": 1280,
+          "w": 320,
+          "h": 320,
+          "duration": 1,
+          "event": "impact"
+        },
+        {
+          "x": 640,
+          "y": 1280,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 960,
+          "y": 1280,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "attack3": {
+      "durations": [
+        1,
+        7,
+        8
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 1280,
+          "y": 1280,
+          "w": 320,
+          "h": 320,
+          "duration": 1,
+          "event": "impact"
+        },
+        {
+          "x": 1600,
+          "y": 1280,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 1920,
+          "y": 1280,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        }
+      ]
+    },
+    "hurt": {
+      "durations": [
+        5,
+        7
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 2240,
+          "y": 1280,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 0,
+          "y": 1600,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        }
+      ]
+    },
+    "stun": {
+      "durations": [
+        7,
+        7
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 320,
+          "y": 1600,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 640,
+          "y": 1600,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        }
+      ]
+    },
+    "special": {
+      "durations": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 960,
+          "y": 1600,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1280,
+          "y": 1600,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1600,
+          "y": 1600,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1920,
+          "y": 1600,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "flight": {
+      "durations": [
+        7,
+        7,
+        7,
+        7
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 2240,
+          "y": 1600,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 0,
+          "y": 1920,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 320,
+          "y": 1920,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 640,
+          "y": 1920,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        }
+      ]
+    },
+    "death": {
+      "durations": [
+        5,
+        5,
+        6,
+        8
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 960,
+          "y": 1920,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1280,
+          "y": 1920,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1600,
+          "y": 1920,
+          "w": 320,
+          "h": 320,
+          "duration": 6
+        },
+        {
+          "x": 1920,
+          "y": 1920,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        }
+      ]
+    }
+  },
+  "hero": "maya",
+  "canonicalFacing": "right",
+  "sourcePoses": {
+    "idle": {
+      "sheet": 0,
+      "cell": 0
+    },
+    "runA": {
+      "sheet": 0,
+      "cell": 1
+    },
+    "runB": {
+      "sheet": 0,
+      "cell": 2
+    },
+    "runC": {
+      "sheet": 0,
+      "cell": 3
+    },
+    "jump": {
+      "sheet": 0,
+      "cell": 4
+    },
+    "fall": {
+      "sheet": 0,
+      "cell": 5
+    },
+    "attack1": {
+      "sheet": 1,
+      "cell": 0
+    },
+    "attack2": {
+      "sheet": 1,
+      "cell": 1
+    },
+    "attack3": {
+      "sheet": 1,
+      "cell": 2
+    },
+    "dash": {
+      "sheet": 1,
+      "cell": 3
+    },
+    "slide": {
+      "sheet": 1,
+      "cell": 4
+    },
+    "hurt": {
+      "sheet": 1,
+      "cell": 5
+    },
+    "wall": {
+      "sheet": 2,
+      "cell": 0
+    },
+    "climb": {
+      "sheet": 2,
+      "cell": 1
+    },
+    "hang": {
+      "sheet": 2,
+      "cell": 2
+    },
+    "vault": {
+      "sheet": 2,
+      "cell": 3
+    },
+    "flightA": {
+      "sheet": 2,
+      "cell": 4
+    },
+    "death": {
+      "sheet": 2,
+      "cell": 5
+    },
+    "runD": {
+      "sheet": 3,
+      "cell": 0
+    },
+    "runE": {
+      "sheet": 3,
+      "cell": 1
+    },
+    "runF": {
+      "sheet": 3,
+      "cell": 2
+    },
+    "special": {
+      "sheet": 3,
+      "cell": 3
+    },
+    "flightB": {
+      "sheet": 3,
+      "cell": 4
+    },
+    "stun": {
+      "sheet": 3,
+      "cell": 5
+    }
+  },
+  "placements": {
+    "idle": {
+      "source": {
+        "x": 6,
+        "y": 6,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 266,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "runA": {
+      "source": {
+        "x": 518,
+        "y": 6,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 296,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "runB": {
+      "source": {
+        "x": 1030,
+        "y": 6,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 286,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "runC": {
+      "source": {
+        "x": 6,
+        "y": 518,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 300,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "jump": {
+      "source": {
+        "x": 518,
+        "y": 518,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 296,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "fall": {
+      "source": {
+        "x": 1030,
+        "y": 518,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 300,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "attack1": {
+      "source": {
+        "x": 6,
+        "y": 6,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 266,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "attack2": {
+      "source": {
+        "x": 518,
+        "y": 6,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 248,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "attack3": {
+      "source": {
+        "x": 1030,
+        "y": 6,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 280,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "dash": {
+      "source": {
+        "x": 6,
+        "y": 518,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 286,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "slide": {
+      "source": {
+        "x": 512,
+        "y": 518,
+        "w": 512,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 266,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "hurt": {
+      "source": {
+        "x": 1030,
+        "y": 518,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 285,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "wall": {
+      "source": {
+        "x": 6,
+        "y": 6,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 270,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "climb": {
+      "source": {
+        "x": 518,
+        "y": 6,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 290,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "hang": {
+      "source": {
+        "x": 1030,
+        "y": 6,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 280,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "vault": {
+      "source": {
+        "x": 6,
+        "y": 518,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 280,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "flightA": {
+      "source": {
+        "x": 518,
+        "y": 518,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 266,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "death": {
+      "source": {
+        "x": 1030,
+        "y": 662,
+        "w": 500,
+        "h": 200
+      },
+      "scale": 0.45,
+      "anchorX": 266,
+      "baseline": 325,
+      "sourceFacing": 1
+    },
+    "runD": {
+      "source": {
+        "x": 6,
+        "y": 6,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 272,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "runE": {
+      "source": {
+        "x": 518,
+        "y": 6,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 298,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "runF": {
+      "source": {
+        "x": 1030,
+        "y": 6,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 300,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "special": {
+      "source": {
+        "x": 6,
+        "y": 518,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 266,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "flightB": {
+      "source": {
+        "x": 518,
+        "y": 518,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 266,
+      "baseline": 500,
+      "sourceFacing": 1
+    },
+    "stun": {
+      "source": {
+        "x": 1030,
+        "y": 518,
+        "w": 500,
+        "h": 500
+      },
+      "scale": 0.45,
+      "anchorX": 266,
+      "baseline": 500,
+      "sourceFacing": 1
+    }
+  },
+  "provenance": "OpenAI image generation from MindBreak concept; aligned, orientation-normalized raster crops; no generated combat events.",
+  "asset": {
+    "file": "src/assets/maya/maya-painted.webp",
+    "bytes": 1183792,
+    "quality": 0.97,
+    "sha256": "3504e83c94f225b454c7afbaea82f44ad45b2e35d709da9263fcb456aebfae97"
+  },
+  "sourceFiles": [
+    {
+      "file": "docs/arte/maya/fontes/01-locomocao.png",
+      "sha256": "f261f6b510334ae7b528c97ab42fe76dac681657f99cbd27ca2540f476ad52eb"
+    },
+    {
+      "file": "docs/arte/maya/fontes/02-combate.png",
+      "sha256": "c4c9b84640e4901921269b04914d5e9ca4bfcf21d40d44cabcd75036f19268b3"
+    },
+    {
+      "file": "docs/arte/maya/fontes/03-acrobacia.png",
+      "sha256": "9991c6fda625d77deb776f3dace194b3a873f3b3d81fbfb776779636288d039f"
+    },
+    {
+      "file": "docs/arte/maya/fontes/04-corrida-e-poderes.png",
+      "sha256": "6acd7287316ebd18d156fceac148528a81f3c7e7b086a77fc747f9bc038422b8"
+    }
+  ]
+}

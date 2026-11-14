@@ -13,7 +13,7 @@
 import { HERO_ATLAS, HERO_CLIPS, clipFrame } from '/src/game/heroAnimation.ts';
 import { BOSS_ART, BOSS_FRAME, getBossSprite } from '/src/game/bossArtwork.ts';
 import { ENEMY_ART, ENEMY_FRAME, getEnemyPixelSprite, enemySourceRect } from '/src/game/enemyArtwork.ts';
-import { getHeroAtlas, getHeroMetadata, prepareHeroArtwork, getHeroArtworkStatus } from '/src/game/heroArtwork.ts';
+import { getHeroAtlas, getHeroMetadata, prepareHeroArtwork, getHeroArtworkStatus, drawHeroFrame } from '/src/game/heroArtwork.ts';
 const hero=document.querySelector('#hero'),pose=document.querySelector('#pose'),frame=document.querySelector('#frame'),play=document.querySelector('#play');
 for(const name of Object.keys(HERO_CLIPS)){const o=document.createElement('option');o.value=o.textContent=name;pose.append(o);}
 let epoch=performance.now();
@@ -28,5 +28,5 @@ document.querySelector('#png').onclick=()=>getHeroAtlas(hero.value).toBlob(b=>do
 document.querySelector('#json').onclick=()=>download(new Blob([JSON.stringify({hero:hero.value,...getHeroMetadata(hero.value)},null,2)],{type:'application/json'}),`${hero.value}-atlas.json`);
 function enemySheet(){const c=document.querySelector('#enemies');c.width=1200;c.height=Object.keys(ENEMY_ART).length*150;const x=c.getContext('2d');x.imageSmoothingEnabled=true;x.fillStyle='#263449';x.fillRect(0,0,c.width,c.height);x.font='14px monospace';Object.entries(ENEMY_ART).forEach(([type,art],row)=>{x.fillStyle='#f1f5f9';x.fillText(type,8,row*150+25);x.fillText(art.label,8,row*150+47);for(let i=0;i<4;i++){x.drawImage(getEnemyPixelSprite(type,i),320+i*200,row*150+4,96,128);x.fillText(['repouso','apoio A','apoio B','ação'][i],320+i*200,row*150+145);}});}enemySheet();
 function bossSheet(){const c=document.querySelector('#bosses');c.width=960;c.height=18*150;const x=c.getContext('2d');x.imageSmoothingEnabled=true;x.fillStyle='#263449';x.fillRect(0,0,c.width,c.height);x.font='14px monospace';let row=0;for(const kind of Object.keys(BOSS_ART))for(const phase of [1,2]){for(const twin of kind==='twins'?[false,true]:[false]){x.fillStyle='#f1f5f9';x.fillText(`${kind}${twin?' (Pólux)':''} · fase ${phase}`,8,row*150+25);for(let frame=0;frame<4;frame++){x.drawImage(getBossSprite(kind,phase,frame,twin),270+frame*170,row*150+4,96,128);x.fillText(BOSS_FRAME.states[frame],270+frame*170,row*150+146);}row++;}}}bossSheet();
-window.artStudio={ENEMY_FRAME,BOSS_ART,BOSS_FRAME,getBossSprite,bossSheet,ENEMY_ART,getEnemyPixelSprite,enemySourceRect,enemySheet,getHeroAtlas,getHeroMetadata,prepareHero,get metadata(){return getHeroMetadata(hero.value);},sheet};
+window.artStudio={ENEMY_FRAME,BOSS_ART,BOSS_FRAME,getBossSprite,bossSheet,ENEMY_ART,getEnemyPixelSprite,enemySourceRect,enemySheet,drawHeroFrame,getHeroAtlas,getHeroMetadata,prepareHero,get metadata(){return getHeroMetadata(hero.value);},sheet};
 </script></html>

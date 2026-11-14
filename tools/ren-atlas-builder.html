@@ -1,13 +1,1 @@
-<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Ren — montagem do atlas pintado</title><style>body{background:#182238;color:#e2e8f0;font:16px system-ui}canvas{max-width:100%;height:auto}</style><h1>Atlas pintado do Ren</h1><p>Montagem de recortes e alinhamento. A pintura permanece nos arquivos fonte.</p><canvas></canvas>
-<script type="module">
-import { REN_ATLAS,REN_SOURCE_POSES,renSourcePose,renSourceRect,renPlacement } from '/src/game/renPainted.ts';
-const files=['01-locomocao','02-combate','03-acrobacia'];
-const images=await Promise.all(files.map(file=>new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=`/docs/arte/ren/fontes/${file}.png`;})));
-const canvas=document.querySelector('canvas');canvas.width=REN_ATLAS.width;canvas.height=REN_ATLAS.height;const ctx=canvas.getContext('2d');
-for(const[pose,clip]of Object.entries(REN_ATLAS.clips))for(const[frame,f]of clip.frames.entries()){
- const name=renSourcePose(pose,frame),source=REN_SOURCE_POSES[name],crop=renSourceRect(name),p=renPlacement(name),cellX=source.cell%3*512,cellY=Math.floor(source.cell/3)*512;
- const x=REN_ATLAS.pivot.x+(crop.x-cellX-p.anchorX)*p.scale,y=REN_ATLAS.pivot.y+(crop.y-cellY-p.baseline)*p.scale;
- ctx.save();ctx.beginPath();ctx.rect(f.x,f.y,f.w,f.h);ctx.clip();ctx.drawImage(images[source.sheet],crop.x,crop.y,crop.w,crop.h,f.x+x,f.y+y,crop.w*p.scale,crop.h*p.scale);ctx.restore();
-}
-window.renBuilder={canvas,metadata:{...REN_ATLAS,hero:'ren',sourcePoses:REN_SOURCE_POSES,placements:Object.fromEntries(Object.keys(REN_SOURCE_POSES).map(name=>[name,{source:renSourceRect(name),...renPlacement(name)}])),provenance:'OpenAI image generation from MindBreak concept; aligned raster crops, no generated combat events.'}};
-</script></html>
+<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Ren — montagem do atlas</title><script>location.replace('/tools/painted-atlas-builder.html?hero=ren');</script><a href="/tools/painted-atlas-builder.html?hero=ren">Abrir montador do Ren</a></html>

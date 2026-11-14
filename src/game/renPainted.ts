@@ -1,3 +1,4 @@
+import { createPaintedAtlasLoader } from './paintedAtlasLoader';
 import { heroAtlasMetadata, type HeroPose } from './heroAnimation';
 /** Extra transparent padding contains painted scarf/weapons; physical reference stays 32 × 56. */
 export const REN_FRAME={w:320,h:320,scale:.25,pivot:{x:160,y:288},hurtbox:{x:96,y:64,w:128,h:224},columns:8};
@@ -20,25 +21,14 @@ export function renSourcePose(pose:HeroPose,frame:number):RenSourcePose{
 export function renSourceRect(name:RenSourcePose){
  const s=REN_SOURCE_POSES[name];return{x:s.cell%3*512+6,y:Math.floor(s.cell/3)*512+6,w:500,h:500};
 }
+/** The idle painting faces left; normalize it before the runtime facing transform. */
+export function renSourceFacing(name:RenSourcePose):1|-1{return name==='idle'?-1:1;}
 export function renPlacement(name:RenSourcePose){
  // Shared scale across keys preserves character size; uppercut gets a small anatomy correction.
  const anchors:Partial<Record<RenSourcePose,number>>={runA:286,runB:282,runC:284,jump:296,fall:300,attack2:280,attack3:300,dash:286,hurt:285,wall:270,climb:290,hang:280,vault:280};
- return{scale:name==='attack3'?.51:.47,anchorX:anchors[name]??256,baseline:496};
+ return{scale:name==='attack3'?.51:.47,anchorX:anchors[name]??256,baseline:496,sourceFacing:renSourceFacing(name)};
 }
-let atlas:HTMLCanvasElement|null=null,state:'idle'|'loading'|'ready'|'error'='idle';
-let pending:Promise<boolean>|undefined;
-export function getRenPaintedAtlas(){return atlas;}
-export function renArtworkStatus(){return state;}
-export function loadRenArtwork():Promise<boolean>{
- if(pending)return pending;if(typeof Image==='undefined')return Promise.resolve(false);
- state='loading';pending=new Promise(resolve=>{
-  const image=new Image();image.decoding='async';
-  image.onload=()=>{try{
-   if(image.naturalWidth!==REN_ATLAS.width||image.naturalHeight!==REN_ATLAS.height)throw Error('Ren atlas dimensions do not match manifest');
-   const canvas=document.createElement('canvas');canvas.width=REN_ATLAS.width;canvas.height=REN_ATLAS.height;
-   const ctx=canvas.getContext('2d');if(!ctx)throw Error('Ren atlas canvas unavailable');ctx.drawImage(image,0,0);atlas=canvas;state='ready';image.src='';resolve(true);
-  }catch{state='error';image.src='';resolve(false);}};
-  image.onerror=()=>{state='error';resolve(false);};
-  image.src=new URL('../assets/ren/ren-painted.webp',import.meta.url).href;
- });return pending;
-}
+const loader=createPaintedAtlasLoader(REN_ATLAS,new URL('../assets/ren/ren-painted.webp',import.meta.url).href);
+export const getRenPaintedAtlas=loader.getAtlas;
+export const renArtworkStatus=loader.status;
+export const loadRenArtwork=()=>loader.load();

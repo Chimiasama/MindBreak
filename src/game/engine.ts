@@ -2703,7 +2703,7 @@ export class GameEngine {
     // Psychic Slash Arc
     if (p.slashing) {
       ctx.save();
-      ctx.strokeStyle = p.atkTimer > 0 ? '#ef4444' : this.characterId === 'ren' && isHeroPainted(this.characterId) ? '#6be7ef' : char.accentColor;
+      ctx.strokeStyle = p.atkTimer > 0 ? '#ef4444' : isHeroPainted(this.characterId) ? '#6be7ef' : char.accentColor;
       const swing = SWINGS[p.comboStep];
       const progress = (swing.totalTicks - p.slashTimer) / swing.activeTicks;
       ctx.globalAlpha = 1 - progress * 0.65;

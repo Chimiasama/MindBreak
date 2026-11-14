@@ -1,5 +1,3 @@
-// Manual authoring only: requires Vite, Playwright and Chromium. Never dispatches Actions/APK.
-import{mkdirSync,writeFileSync,readFileSync}from'node:fs';
-import{createHash}from'node:crypto';
-const{chromium}=await import(process.env.PLAYWRIGHT_MODULE??'playwright');const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
-try{const page=await browser.newPage();await page.goto(new URL('/tools/ren-atlas-builder.html',process.env.PREVIEW_URL??'http://localhost:3000').href);await page.waitForFunction(()=>window.renBuilder);const result=await page.evaluate(()=>({webp:window.renBuilder.canvas.toDataURL('image/webp',.97),metadata:window.renBuilder.metadata}));mkdirSync('src/assets/ren',{recursive:true});mkdirSync('docs/arte/ren',{recursive:true});const bytes=Buffer.from(result.webp.split(',')[1],'base64');writeFileSync('src/assets/ren/ren-painted.webp',bytes);result.metadata.asset={file:'src/assets/ren/ren-painted.webp',bytes:bytes.length,quality:.97,sha256:createHash('sha256').update(bytes).digest('hex')};result.metadata.sourceFiles=['01-locomocao','02-combate','03-acrobacia'].map(name=>({file:`docs/arte/ren/fontes/${name}.png`,sha256:createHash('sha256').update(readFileSync(`docs/arte/ren/fontes/${name}.png`)).digest('hex')}));writeFileSync('docs/arte/ren/manifesto.json',JSON.stringify(result.metadata,null,2)+'\n');console.log(JSON.stringify({bytes:bytes.length,width:result.metadata.width,height:result.metadata.height}));}finally{await browser.close();}
+// Backward-compatible manual authoring entry point.
+import {buildPaintedArtwork} from './build-painted-artwork.mjs';
+await buildPaintedArtwork('ren');

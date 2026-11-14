@@ -7,9 +7,9 @@
       "id": "ren",
       "pose": "idle",
       "frame": 0,
-      "opaque": 21722,
-      "colors": 10838,
-      "hash": 135220664
+      "opaque": 21724,
+      "colors": 10832,
+      "hash": 2480025770
     },
     {
       "type": "hero",
@@ -17,17 +17,17 @@
       "pose": "idle",
       "frame": 1,
       "opaque": 21724,
-      "colors": 10856,
-      "hash": 908205029
+      "colors": 10809,
+      "hash": 3533363532
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "idle",
       "frame": 2,
-      "opaque": 21722,
-      "colors": 10833,
-      "hash": 2613191796
+      "opaque": 21724,
+      "colors": 10847,
+      "hash": 4011363061
     },
     {
       "type": "hero",
@@ -35,8 +35,8 @@
       "pose": "idle",
       "frame": 3,
       "opaque": 21722,
-      "colors": 10849,
-      "hash": 3721238473
+      "colors": 10879,
+      "hash": 2236672634
     },
     {
       "type": "hero",
@@ -44,8 +44,8 @@
       "pose": "run",
       "frame": 0,
       "opaque": 18267,
-      "colors": 8936,
-      "hash": 2534745586
+      "colors": 8957,
+      "hash": 3572594288
     },
     {
       "type": "hero",
@@ -53,8 +53,8 @@
       "pose": "run",
       "frame": 1,
       "opaque": 15981,
-      "colors": 8396,
-      "hash": 131368387
+      "colors": 8404,
+      "hash": 4035468711
     },
     {
       "type": "hero",
@@ -62,8 +62,8 @@
       "pose": "run",
       "frame": 2,
       "opaque": 19093,
-      "colors": 9349,
-      "hash": 364952966
+      "colors": 9359,
+      "hash": 3711846524
     },
     {
       "type": "hero",
@@ -71,8 +71,8 @@
       "pose": "run",
       "frame": 3,
       "opaque": 18267,
-      "colors": 8932,
-      "hash": 2687742182
+      "colors": 8931,
+      "hash": 3631504043
     },
     {
       "type": "hero",
@@ -80,8 +80,8 @@
       "pose": "run",
       "frame": 4,
       "opaque": 15981,
-      "colors": 8407,
-      "hash": 898699711
+      "colors": 8414,
+      "hash": 474239369
     },
     {
       "type": "hero",
@@ -89,8 +89,8 @@
       "pose": "run",
       "frame": 5,
       "opaque": 19093,
-      "colors": 9388,
-      "hash": 3351143521
+      "colors": 9313,
+      "hash": 1541824684
     },
     {
       "type": "hero",
@@ -98,8 +98,8 @@
       "pose": "jump",
       "frame": 0,
       "opaque": 16405,
-      "colors": 8713,
-      "hash": 2499586167
+      "colors": 8739,
+      "hash": 543332711
     },
     {
       "type": "hero",
@@ -107,8 +107,8 @@
       "pose": "jump",
       "frame": 1,
       "opaque": 16405,
-      "colors": 8713,
-      "hash": 2499586167
+      "colors": 8739,
+      "hash": 543332711
     },
     {
       "type": "hero",
@@ -116,8 +116,8 @@
       "pose": "fall",
       "frame": 0,
       "opaque": 18137,
-      "colors": 9137,
-      "hash": 2891762752
+      "colors": 9129,
+      "hash": 1268485878
     },
     {
       "type": "hero",
@@ -125,8 +125,8 @@
       "pose": "fall",
       "frame": 1,
       "opaque": 18137,
-      "colors": 9137,
-      "hash": 2891762752
+      "colors": 9129,
+      "hash": 1268485878
     },
     {
       "type": "hero",
@@ -134,8 +134,8 @@
       "pose": "wall",
       "frame": 0,
       "opaque": 28007,
-      "colors": 9281,
-      "hash": 2529801488
+      "colors": 9341,
+      "hash": 4173029600
     },
     {
       "type": "hero",
@@ -143,8 +143,8 @@
       "pose": "wall",
       "frame": 1,
       "opaque": 28007,
-      "colors": 9322,
-      "hash": 1254459659
+      "colors": 9341,
+      "hash": 4173029600
     },
     {
       "type": "hero",
@@ -152,8 +152,8 @@
       "pose": "climb",
       "frame": 0,
       "opaque": 28007,
-      "colors": 9315,
-      "hash": 2806475049
+      "colors": 9327,
+      "hash": 3222125172
     },
     {
       "type": "hero",
@@ -161,8 +161,8 @@
       "pose": "climb",
       "frame": 1,
       "opaque": 31867,
-      "colors": 8748,
-      "hash": 813981240
+      "colors": 8730,
+      "hash": 3428649053
     },
     {
       "type": "hero",
@@ -170,8 +170,8 @@
       "pose": "climb",
       "frame": 2,
       "opaque": 28007,
-      "colors": 9324,
-      "hash": 2925102806
+      "colors": 9333,
+      "hash": 1429454711
     },
     {
       "type": "hero",
@@ -179,8 +179,8 @@
       "pose": "climb",
       "frame": 3,
       "opaque": 31867,
-      "colors": 8761,
-      "hash": 2386474081
+      "colors": 8730,
+      "hash": 3428649053
     },
     {
       "type": "hero",
@@ -188,8 +188,8 @@
       "pose": "hang",
       "frame": 0,
       "opaque": 23063,
-      "colors": 8512,
-      "hash": 1947134838
+      "colors": 8537,
+      "hash": 3612092741
     },
     {
       "type": "hero",
@@ -197,8 +197,8 @@
       "pose": "hang",
       "frame": 1,
       "opaque": 23063,
-      "colors": 8512,
-      "hash": 1947134838
+      "colors": 8537,
+      "hash": 3612092741
     },
     {
       "type": "hero",
@@ -206,8 +206,8 @@
       "pose": "vault",
       "frame": 0,
       "opaque": 28786,
-      "colors": 10546,
-      "hash": 4207950645
+      "colors": 10501,
+      "hash": 1523847636
     },
     {
       "type": "hero",
@@ -215,8 +215,8 @@
       "pose": "vault",
       "frame": 1,
       "opaque": 28786,
-      "colors": 10546,
-      "hash": 4207950645
+      "colors": 10501,
+      "hash": 1523847636
     },
     {
       "type": "hero",
@@ -224,8 +224,8 @@
       "pose": "vault",
       "frame": 2,
       "opaque": 28786,
-      "colors": 10449,
-      "hash": 2054705172
+      "colors": 10491,
+      "hash": 3059776623
     },
     {
       "type": "hero",
@@ -233,8 +233,8 @@
       "pose": "dash",
       "frame": 0,
       "opaque": 23833,
-      "colors": 10459,
-      "hash": 3211113805
+      "colors": 10443,
+      "hash": 370475680
     },
     {
       "type": "hero",
@@ -242,8 +242,8 @@
       "pose": "dash",
       "frame": 1,
       "opaque": 23833,
-      "colors": 10515,
-      "hash": 3566127951
+      "colors": 10443,
+      "hash": 370475680
     },
     {
       "type": "hero",
@@ -251,8 +251,8 @@
       "pose": "dash",
       "frame": 2,
       "opaque": 23833,
-      "colors": 10444,
-      "hash": 3503325719
+      "colors": 10464,
+      "hash": 3646509742
     },
     {
       "type": "hero",
@@ -260,8 +260,8 @@
       "pose": "slide",
       "frame": 0,
       "opaque": 17002,
-      "colors": 8399,
-      "hash": 2716528399
+      "colors": 8396,
+      "hash": 278773598
     },
     {
       "type": "hero",
@@ -269,8 +269,8 @@
       "pose": "slide",
       "frame": 1,
       "opaque": 17002,
-      "colors": 8399,
-      "hash": 2716528399
+      "colors": 8396,
+      "hash": 278773598
     },
     {
       "type": "hero",
@@ -278,8 +278,8 @@
       "pose": "attack1",
       "frame": 0,
       "opaque": 29934,
-      "colors": 14214,
-      "hash": 3236556032
+      "colors": 14248,
+      "hash": 1627991113
     },
     {
       "type": "hero",
@@ -287,17 +287,17 @@
       "pose": "attack1",
       "frame": 1,
       "opaque": 29934,
-      "colors": 14214,
-      "hash": 3236556032
+      "colors": 14248,
+      "hash": 1627991113
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "attack1",
       "frame": 2,
-      "opaque": 21722,
-      "colors": 10831,
-      "hash": 4224398435
+      "opaque": 21724,
+      "colors": 10830,
+      "hash": 3267649567
     },
     {
       "type": "hero",
@@ -305,8 +305,8 @@
       "pose": "attack2",
       "frame": 0,
       "opaque": 27768,
-      "colors": 13664,
-      "hash": 3484490358
+      "colors": 13682,
+      "hash": 3244373022
     },
     {
       "type": "hero",
@@ -314,8 +314,8 @@
       "pose": "attack2",
       "frame": 1,
       "opaque": 27768,
-      "colors": 13664,
-      "hash": 3484490358
+      "colors": 13663,
+      "hash": 1223112279
     },
     {
       "type": "hero",
@@ -323,8 +323,8 @@
       "pose": "attack2",
       "frame": 2,
       "opaque": 21722,
-      "colors": 10838,
-      "hash": 4219763814
+      "colors": 10837,
+      "hash": 130769142
     },
     {
       "type": "hero",
@@ -332,8 +332,8 @@
       "pose": "attack3",
       "frame": 0,
       "opaque": 43484,
-      "colors": 16058,
-      "hash": 668149686
+      "colors": 16041,
+      "hash": 3450642816
     },
     {
       "type": "hero",
@@ -341,8 +341,8 @@
       "pose": "attack3",
       "frame": 1,
       "opaque": 43484,
-      "colors": 16050,
-      "hash": 3491464559
+      "colors": 16052,
+      "hash": 3447380581
     },
     {
       "type": "hero",
@@ -350,8 +350,8 @@
       "pose": "attack3",
       "frame": 2,
       "opaque": 21722,
-      "colors": 10839,
-      "hash": 4211636344
+      "colors": 10837,
+      "hash": 130769142
     },
     {
       "type": "hero",
@@ -359,17 +359,17 @@
       "pose": "hurt",
       "frame": 0,
       "opaque": 24113,
-      "colors": 11563,
-      "hash": 2823560342
+      "colors": 11543,
+      "hash": 217275482
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "hurt",
       "frame": 1,
-      "opaque": 24113,
-      "colors": 11579,
-      "hash": 2490991457
+      "opaque": 24125,
+      "colors": 11562,
+      "hash": 3197375179
     },
     {
       "type": "hero",
@@ -377,8 +377,8 @@
       "pose": "stun",
       "frame": 0,
       "opaque": 24125,
-      "colors": 11577,
-      "hash": 2163462454
+      "colors": 11572,
+      "hash": 3994764090
     },
     {
       "type": "hero",
@@ -386,8 +386,8 @@
       "pose": "stun",
       "frame": 1,
       "opaque": 24113,
-      "colors": 11575,
-      "hash": 234566885
+      "colors": 11529,
+      "hash": 2280002612
     },
     {
       "type": "hero",
@@ -395,8 +395,8 @@
       "pose": "special",
       "frame": 0,
       "opaque": 44631,
-      "colors": 14571,
-      "hash": 2669210310
+      "colors": 14537,
+      "hash": 3929881831
     },
     {
       "type": "hero",
@@ -404,8 +404,8 @@
       "pose": "special",
       "frame": 1,
       "opaque": 44631,
-      "colors": 14571,
-      "hash": 2669210310
+      "colors": 14537,
+      "hash": 3929881831
     },
     {
       "type": "hero",
@@ -413,8 +413,8 @@
       "pose": "special",
       "frame": 2,
       "opaque": 44631,
-      "colors": 14571,
-      "hash": 2669210310
+      "colors": 14537,
+      "hash": 3929881831
     },
     {
       "type": "hero",
@@ -422,8 +422,8 @@
       "pose": "special",
       "frame": 3,
       "opaque": 44631,
-      "colors": 14571,
-      "hash": 2669210310
+      "colors": 14537,
+      "hash": 3929881831
     },
     {
       "type": "hero",
@@ -431,8 +431,8 @@
       "pose": "flight",
       "frame": 0,
       "opaque": 18137,
-      "colors": 9175,
-      "hash": 2630130872
+      "colors": 9127,
+      "hash": 3497215503
     },
     {
       "type": "hero",
@@ -440,8 +440,8 @@
       "pose": "flight",
       "frame": 1,
       "opaque": 18137,
-      "colors": 9148,
-      "hash": 4054796345
+      "colors": 9211,
+      "hash": 2684380425
     },
     {
       "type": "hero",
@@ -449,8 +449,8 @@
       "pose": "flight",
       "frame": 2,
       "opaque": 18137,
-      "colors": 9178,
-      "hash": 2789258071
+      "colors": 9192,
+      "hash": 3850433692
     },
     {
       "type": "hero",
@@ -458,8 +458,8 @@
       "pose": "flight",
       "frame": 3,
       "opaque": 18137,
-      "colors": 9178,
-      "hash": 2789258071
+      "colors": 9192,
+      "hash": 3850433692
     },
     {
       "type": "hero",
@@ -467,8 +467,8 @@
       "pose": "death",
       "frame": 0,
       "opaque": 15375,
-      "colors": 6702,
-      "hash": 1353306808
+      "colors": 6675,
+      "hash": 2856742819
     },
     {
       "type": "hero",
@@ -476,8 +476,8 @@
       "pose": "death",
       "frame": 1,
       "opaque": 15375,
-      "colors": 6702,
-      "hash": 1353306808
+      "colors": 6675,
+      "hash": 2856742819
     },
     {
       "type": "hero",
@@ -485,8 +485,8 @@
       "pose": "death",
       "frame": 2,
       "opaque": 15375,
-      "colors": 6702,
-      "hash": 1353306808
+      "colors": 6675,
+      "hash": 2856742819
     },
     {
       "type": "hero",
@@ -494,503 +494,503 @@
       "pose": "death",
       "frame": 3,
       "opaque": 15375,
-      "colors": 6702,
-      "hash": 1353306808
+      "colors": 6675,
+      "hash": 2856742819
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "idle",
       "frame": 0,
-      "opaque": 3186,
-      "colors": 1357,
-      "hash": 943738177
+      "opaque": 20304,
+      "colors": 12488,
+      "hash": 1838088574
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "idle",
       "frame": 1,
-      "opaque": 3221,
-      "colors": 1371,
-      "hash": 1911363383
+      "opaque": 20304,
+      "colors": 12510,
+      "hash": 2547882902
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "idle",
       "frame": 2,
-      "opaque": 3186,
-      "colors": 1357,
-      "hash": 943738177
+      "opaque": 20304,
+      "colors": 12524,
+      "hash": 1310421028
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "idle",
       "frame": 3,
-      "opaque": 3186,
-      "colors": 1356,
-      "hash": 4063853368
+      "opaque": 20304,
+      "colors": 12535,
+      "hash": 2982161078
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "run",
       "frame": 0,
-      "opaque": 2958,
-      "colors": 1277,
-      "hash": 2115925304
+      "opaque": 19324,
+      "colors": 11112,
+      "hash": 2198042631
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "run",
       "frame": 1,
-      "opaque": 3049,
-      "colors": 1350,
-      "hash": 1669469186
+      "opaque": 17217,
+      "colors": 9991,
+      "hash": 1170251876
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "run",
       "frame": 2,
-      "opaque": 2862,
-      "colors": 1324,
-      "hash": 2877124374
+      "opaque": 20543,
+      "colors": 11596,
+      "hash": 1630048078
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "run",
       "frame": 3,
-      "opaque": 2958,
-      "colors": 1276,
-      "hash": 3907993394
+      "opaque": 19099,
+      "colors": 11418,
+      "hash": 2160899444
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "run",
       "frame": 4,
-      "opaque": 3191,
-      "colors": 1376,
-      "hash": 4267869320
+      "opaque": 18037,
+      "colors": 10824,
+      "hash": 1711098024
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "run",
       "frame": 5,
-      "opaque": 2986,
-      "colors": 1348,
-      "hash": 193422808
+      "opaque": 18946,
+      "colors": 11364,
+      "hash": 1739491667
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "jump",
       "frame": 0,
-      "opaque": 2943,
-      "colors": 1295,
-      "hash": 68544830
+      "opaque": 16319,
+      "colors": 10109,
+      "hash": 2897376459
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "jump",
       "frame": 1,
-      "opaque": 2963,
-      "colors": 1293,
-      "hash": 2288945202
+      "opaque": 16319,
+      "colors": 10109,
+      "hash": 2897376459
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "fall",
       "frame": 0,
-      "opaque": 3182,
-      "colors": 1380,
-      "hash": 3027524085
+      "opaque": 19745,
+      "colors": 11712,
+      "hash": 2970405822
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "fall",
       "frame": 1,
-      "opaque": 3161,
-      "colors": 1388,
-      "hash": 3407597207
+      "opaque": 19745,
+      "colors": 11712,
+      "hash": 2970405822
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "wall",
       "frame": 0,
-      "opaque": 3118,
-      "colors": 1325,
-      "hash": 3342520518
+      "opaque": 18803,
+      "colors": 12746,
+      "hash": 2249741416
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "wall",
       "frame": 1,
-      "opaque": 3118,
-      "colors": 1325,
-      "hash": 3342520518
+      "opaque": 18802,
+      "colors": 12673,
+      "hash": 3881672760
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "climb",
       "frame": 0,
-      "opaque": 3118,
-      "colors": 1327,
-      "hash": 2208556629
+      "opaque": 18803,
+      "colors": 12687,
+      "hash": 124280029
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "climb",
       "frame": 1,
-      "opaque": 3010,
-      "colors": 1307,
-      "hash": 3700502127
+      "opaque": 18604,
+      "colors": 12599,
+      "hash": 2449482214
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "climb",
       "frame": 2,
-      "opaque": 3118,
-      "colors": 1325,
-      "hash": 3537471907
+      "opaque": 18802,
+      "colors": 12687,
+      "hash": 2414526701
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "climb",
       "frame": 3,
-      "opaque": 3010,
-      "colors": 1307,
-      "hash": 3700502127
+      "opaque": 18604,
+      "colors": 12607,
+      "hash": 458354440
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "hang",
       "frame": 0,
-      "opaque": 3395,
-      "colors": 1373,
-      "hash": 1394044053
+      "opaque": 16994,
+      "colors": 11997,
+      "hash": 3442905314
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "hang",
       "frame": 1,
-      "opaque": 3377,
-      "colors": 1367,
-      "hash": 3059564983
+      "opaque": 16994,
+      "colors": 11997,
+      "hash": 3442905314
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "vault",
       "frame": 0,
-      "opaque": 2962,
-      "colors": 1320,
-      "hash": 1050567555
+      "opaque": 17690,
+      "colors": 12613,
+      "hash": 4233571040
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "vault",
       "frame": 1,
-      "opaque": 2944,
-      "colors": 1313,
-      "hash": 738141131
+      "opaque": 17690,
+      "colors": 12613,
+      "hash": 4233571040
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "vault",
       "frame": 2,
-      "opaque": 2926,
-      "colors": 1308,
-      "hash": 3094784901
+      "opaque": 17690,
+      "colors": 12670,
+      "hash": 1412147987
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "dash",
       "frame": 0,
-      "opaque": 3007,
-      "colors": 1325,
-      "hash": 3445796323
+      "opaque": 23840,
+      "colors": 12517,
+      "hash": 2822800692
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "dash",
       "frame": 1,
-      "opaque": 3007,
-      "colors": 1325,
-      "hash": 3445796323
+      "opaque": 23839,
+      "colors": 12555,
+      "hash": 1598175219
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "dash",
       "frame": 2,
-      "opaque": 3007,
-      "colors": 1325,
-      "hash": 3520799670
+      "opaque": 23839,
+      "colors": 12555,
+      "hash": 1598175219
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "slide",
       "frame": 0,
-      "opaque": 2462,
-      "colors": 1230,
-      "hash": 1776587684
+      "opaque": 20325,
+      "colors": 11042,
+      "hash": 3148474205
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "slide",
       "frame": 1,
-      "opaque": 2462,
-      "colors": 1229,
-      "hash": 2962304197
+      "opaque": 20325,
+      "colors": 11057,
+      "hash": 1545226075
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "attack1",
       "frame": 0,
-      "opaque": 3112,
-      "colors": 1325,
-      "hash": 3530992709
+      "opaque": 30185,
+      "colors": 14867,
+      "hash": 1002699171
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "attack1",
       "frame": 1,
-      "opaque": 3098,
-      "colors": 1322,
-      "hash": 3776841434
+      "opaque": 30186,
+      "colors": 14824,
+      "hash": 297609197
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "attack1",
       "frame": 2,
-      "opaque": 3270,
-      "colors": 1369,
-      "hash": 2982330674
+      "opaque": 20305,
+      "colors": 12459,
+      "hash": 3511211018
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "attack2",
       "frame": 0,
-      "opaque": 3221,
-      "colors": 1371,
-      "hash": 586451509
+      "opaque": 28079,
+      "colors": 15317,
+      "hash": 314741208
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "attack2",
       "frame": 1,
-      "opaque": 3170,
-      "colors": 1363,
-      "hash": 963584488
+      "opaque": 28078,
+      "colors": 15330,
+      "hash": 3996773636
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "attack2",
       "frame": 2,
-      "opaque": 3270,
-      "colors": 1369,
-      "hash": 2982330674
+      "opaque": 20305,
+      "colors": 12527,
+      "hash": 501888687
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "attack3",
       "frame": 0,
-      "opaque": 3212,
-      "colors": 1356,
-      "hash": 3197857505
+      "opaque": 31494,
+      "colors": 15373,
+      "hash": 4117210548
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "attack3",
       "frame": 1,
-      "opaque": 3161,
-      "colors": 1346,
-      "hash": 1554557883
+      "opaque": 31494,
+      "colors": 15373,
+      "hash": 4117210548
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "attack3",
       "frame": 2,
-      "opaque": 3270,
-      "colors": 1369,
-      "hash": 2832361180
+      "opaque": 20305,
+      "colors": 12549,
+      "hash": 3679421754
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "hurt",
       "frame": 0,
-      "opaque": 3058,
-      "colors": 1322,
-      "hash": 3359787160
+      "opaque": 25691,
+      "colors": 12879,
+      "hash": 1076571575
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "hurt",
       "frame": 1,
-      "opaque": 3029,
-      "colors": 1310,
-      "hash": 1820024044
+      "opaque": 25691,
+      "colors": 12894,
+      "hash": 1428499446
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "stun",
       "frame": 0,
-      "opaque": 3152,
-      "colors": 1303,
-      "hash": 39694261
+      "opaque": 19214,
+      "colors": 12107,
+      "hash": 3221917374
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "stun",
       "frame": 1,
-      "opaque": 3125,
-      "colors": 1299,
-      "hash": 3070642260
+      "opaque": 19212,
+      "colors": 12041,
+      "hash": 3985406994
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "special",
       "frame": 0,
-      "opaque": 3377,
-      "colors": 1447,
-      "hash": 4044005521
+      "opaque": 24753,
+      "colors": 14182,
+      "hash": 3941087252
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "special",
       "frame": 1,
-      "opaque": 3405,
-      "colors": 1446,
-      "hash": 3370271987
+      "opaque": 24755,
+      "colors": 14187,
+      "hash": 1831960911
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "special",
       "frame": 2,
-      "opaque": 3377,
-      "colors": 1446,
-      "hash": 748493993
+      "opaque": 24755,
+      "colors": 14187,
+      "hash": 1831960911
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "special",
       "frame": 3,
-      "opaque": 3405,
-      "colors": 1445,
-      "hash": 642541755
+      "opaque": 24755,
+      "colors": 14187,
+      "hash": 1831960911
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "flight",
       "frame": 0,
-      "opaque": 3271,
-      "colors": 1478,
-      "hash": 3658515511
+      "opaque": 23500,
+      "colors": 15404,
+      "hash": 1215471101
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "flight",
       "frame": 1,
-      "opaque": 3319,
-      "colors": 1483,
-      "hash": 1428224163
+      "opaque": 22624,
+      "colors": 12523,
+      "hash": 2587317961
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "flight",
       "frame": 2,
-      "opaque": 3271,
-      "colors": 1480,
-      "hash": 2289779776
+      "opaque": 23500,
+      "colors": 15435,
+      "hash": 3492029675
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "flight",
       "frame": 3,
-      "opaque": 3319,
-      "colors": 1482,
-      "hash": 1478266734
+      "opaque": 22621,
+      "colors": 12589,
+      "hash": 3815348178
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "death",
       "frame": 0,
-      "opaque": 2492,
-      "colors": 1193,
-      "hash": 2470374197
+      "opaque": 7616,
+      "colors": 5943,
+      "hash": 1508815676
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "death",
       "frame": 1,
-      "opaque": 2495,
-      "colors": 1222,
-      "hash": 1204614727
+      "opaque": 7616,
+      "colors": 5940,
+      "hash": 3341561945
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "death",
       "frame": 2,
-      "opaque": 2498,
-      "colors": 1203,
-      "hash": 1104278449
+      "opaque": 7616,
+      "colors": 5940,
+      "hash": 3341561945
     },
     {
       "type": "hero",
       "id": "maya",
       "pose": "death",
       "frame": 3,
-      "opaque": 2504,
-      "colors": 1205,
-      "hash": 71866853
+      "opaque": 7616,
+      "colors": 5940,
+      "hash": 3341561945
     },
     {
       "type": "hero",

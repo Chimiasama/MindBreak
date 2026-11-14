@@ -589,6 +589,7 @@
     }
   },
   "hero": "ren",
+  "canonicalFacing": "right",
   "sourcePoses": {
     "idle": {
       "sheet": 0,
@@ -673,7 +674,8 @@
       },
       "scale": 0.47,
       "anchorX": 256,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": -1
     },
     "runA": {
       "source": {
@@ -684,7 +686,8 @@
       },
       "scale": 0.47,
       "anchorX": 286,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "runB": {
       "source": {
@@ -695,7 +698,8 @@
       },
       "scale": 0.47,
       "anchorX": 282,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "runC": {
       "source": {
@@ -706,7 +710,8 @@
       },
       "scale": 0.47,
       "anchorX": 284,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "jump": {
       "source": {
@@ -717,7 +722,8 @@
       },
       "scale": 0.47,
       "anchorX": 296,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "fall": {
       "source": {
@@ -728,7 +734,8 @@
       },
       "scale": 0.47,
       "anchorX": 300,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "attack1": {
       "source": {
@@ -739,7 +746,8 @@
       },
       "scale": 0.47,
       "anchorX": 256,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "attack2": {
       "source": {
@@ -750,7 +758,8 @@
       },
       "scale": 0.47,
       "anchorX": 280,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "attack3": {
       "source": {
@@ -761,7 +770,8 @@
       },
       "scale": 0.51,
       "anchorX": 300,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "dash": {
       "source": {
@@ -772,7 +782,8 @@
       },
       "scale": 0.47,
       "anchorX": 286,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "slide": {
       "source": {
@@ -783,7 +794,8 @@
       },
       "scale": 0.47,
       "anchorX": 256,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "hurt": {
       "source": {
@@ -794,7 +806,8 @@
       },
       "scale": 0.47,
       "anchorX": 285,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "wall": {
       "source": {
@@ -805,7 +818,8 @@
       },
       "scale": 0.47,
       "anchorX": 270,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "climb": {
       "source": {
@@ -816,7 +830,8 @@
       },
       "scale": 0.47,
       "anchorX": 290,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "hang": {
       "source": {
@@ -827,7 +842,8 @@
       },
       "scale": 0.47,
       "anchorX": 280,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "vault": {
       "source": {
@@ -838,7 +854,8 @@
       },
       "scale": 0.47,
       "anchorX": 280,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "special": {
       "source": {
@@ -849,7 +866,8 @@
       },
       "scale": 0.47,
       "anchorX": 256,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     },
     "death": {
       "source": {
@@ -860,15 +878,16 @@
       },
       "scale": 0.47,
       "anchorX": 256,
-      "baseline": 496
+      "baseline": 496,
+      "sourceFacing": 1
     }
   },
-  "provenance": "OpenAI image generation from MindBreak concept; aligned raster crops, no generated combat events.",
+  "provenance": "OpenAI image generation from MindBreak concept; aligned, orientation-normalized raster crops; no generated combat events.",
   "asset": {
     "file": "src/assets/ren/ren-painted.webp",
-    "bytes": 1169560,
+    "bytes": 1168748,
     "quality": 0.97,
-    "sha256": "07772cd5eb2db7c94f9589fdb0cb8706ce742cf5ce1b6d9343efb5b512d49737"
+    "sha256": "1b9d1519f4a6d584707a5aca8960d353992d576e724be7436c4eb91e24090953"
   },
   "sourceFiles": [
     {

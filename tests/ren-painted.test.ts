@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {REN_FRAME,REN_ATLAS,REN_SOURCE_POSES,renSourcePose,renSourceRect,renPlacement,loadRenArtwork,renArtworkStatus} from '../src/game/renPainted';
+import {REN_FRAME,REN_ATLAS,REN_SOURCE_POSES,renSourcePose,renSourceRect,renPlacement,loadRenArtwork,renArtworkStatus,renSourceFacing} from '../src/game/renPainted';
 import {HERO_CLIPS,type HeroPose} from '../src/game/heroAnimation';
 test('painted Ren keeps the physical box and pivot while expanding visual padding',()=>{
  assert.equal(REN_FRAME.hurtbox.w*REN_FRAME.scale,32);assert.equal(REN_FRAME.hurtbox.h*REN_FRAME.scale,56);
@@ -31,5 +31,11 @@ test('packaged artwork is an alpha WebP with manifest dimensions and fits the de
 });
 test('loading is safe in non-DOM simulation tests',async()=>{assert.equal(await loadRenArtwork(),false);assert.equal(renArtworkStatus(),'idle');});
 test('hero metadata and readiness share one source before a browser image is loaded',async()=>{
- const api=await import('../src/game/heroArtwork');assert.equal(api.isHeroPainted('ren'),false);assert.equal(api.getHeroMetadata('ren').version,2);assert.equal(api.getHeroMetadata('maya').w,96);assert.equal(await api.prepareHeroArtwork('maya'),true);assert.equal(api.getHeroArtworkStatus('ren'),'idle');
+ const api=await import('../src/game/heroArtwork');assert.equal(api.isHeroPainted('ren'),false);assert.equal(api.getHeroMetadata('ren').version,2);assert.equal(api.getHeroMetadata('maya').w,96);assert.equal(await api.prepareHeroArtwork('leon'),true);assert.equal(api.getHeroArtworkStatus('ren'),'idle');
+});
+
+test('Ren idle is normalized without reversing attacks or locomotion',()=>{
+ assert.equal(renSourceFacing('idle'),-1);
+ for(const pose of ['attack1','attack2','attack3','runA','runB','runC','wall','climb'] as const)assert.equal(renSourceFacing(pose),1);
+ assert.equal(renSourceFacing(renSourcePose('attack1',2)),-1);assert.equal(renPlacement('idle').sourceFacing,-1);
 });

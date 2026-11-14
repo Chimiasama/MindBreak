@@ -257,9 +257,9 @@ Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; A
 
 Contrato, paletas, prévias reproduzíveis, orçamento e limites do fluxo de morte em [ARTE_E_ANIMACAO.md](ARTE_E_ANIMACAO.md).
 
-### 7.2 Personagens, inimigos e chefes — PARCIAL (Ren pintado 24; demais V2 23)
+### 7.2 Personagens, inimigos e chefes — PARCIAL (Ren/Maya pintados 24–25; Leon V2)
 
-- **7.2.0.1 — Ren com pinturas integradas no incremento 24; Maya/Leon V2, intermediários e aprovação em aparelho pendentes:** produzir heróis com idle, corrida, salto, queda, parede, escalada, hang, vault, dash, slide, combo, dano, stun, especial e morte; Maya inclui voo. Integrar um herói antes de produzir todas as variantes.
+- **7.2.0.1 — Ren/Maya com pinturas integradas e orientação corrigida; Leon V2, intermediários e aprovação em aparelho pendentes:** produzir heróis com idle, corrida, salto, queda, parede, escalada, hang, vault, dash, slide, combo, dano, stun, especial e morte; Maya inclui voo. Integrar um herói antes de produzir todas as variantes.
 - **7.2.0.2 — Primeira passagem dos 12 inimigos e oito chefes/duas fases integrada; revisão no aparelho pendente:** diferenciar doze arquétipos inimigos por silhueta/arma/postura, sem depender só de cor; depois desenhar os oito chefes e transformações.
 - **7.2.0.3:** criar cut-ins e retratos com coerência visual; sincronizar efeitos de impacto com hitstop, som e janela de dano.
 
@@ -326,6 +326,6 @@ Chefes, transformações, contrato de estado e prévias em [ARTE_DOS_CHEFES.md](
 
 1. Ler este documento e o registro de execução.
 2. Verificar `git status`, preservar mudanças existentes e rodar a suíte da base.
-3. Manter 26 mapas, exploração do incremento 18 e catálogo sonoro do 19. O incremento 20 entrega pipeline e primeira passagem dos três heróis (7.1/7.2.0.1). O incremento 21 integra silhuetas dos 12 inimigos; o incremento 22 integra os oito chefes e duas fases. O incremento 24 concentra produção pintada no Ren a partir da prancha; consultar `REN_PINTADO.md` e `DIRECAO_VISUAL_V2.md`. Priorizar intermediários/consistência/playtest do Ren, depois produzir os demais heróis nesse padrão, cut-ins/retratos (7.2.0.3) e ambientes (7.3); depois fase 8. Consultar `ARTE_E_ANIMACAO.md`, `ARTE_DOS_INIMIGOS.md`, `ARTE_DOS_CHEFES.md` e `EXECUCAO.md`. Permanecem aceites físicos de combate, rotas, som, dificuldade e leitura Android; catálogo ou suíte verde não equivalem à aprovação final.
+3. Manter 26 mapas, exploração do incremento 18 e catálogo sonoro do 19. O incremento 20 entrega pipeline e primeira passagem dos três heróis (7.1/7.2.0.1). O incremento 21 integra silhuetas dos 12 inimigos; o incremento 22 integra os oito chefes e duas fases. O incremento 24 concentra produção pintada no Ren a partir da prancha; consultar `REN_PINTADO.md` e `DIRECAO_VISUAL_V2.md`. O incremento 25 corrige repouso/recuperação do Ren e integra Maya com 24 pinturas; consultar `MAYA_PINTADA_E_ORIENTACAO.md`. Seguir revisão/intermediários/playtest dos dois, produção individual do Leon, cut-ins/retratos (7.2.0.3) e ambientes (7.3); depois fase 8. Consultar `ARTE_E_ANIMACAO.md`, `ARTE_DOS_INIMIGOS.md`, `ARTE_DOS_CHEFES.md` e `EXECUCAO.md`. Permanecem aceites físicos de combate, rotas, som, dificuldade e leitura Android; catálogo ou suíte verde não equivalem à aprovação final.
 4. Atualizar status somente com evidência. Antes de avançar para cada lote de subfases, validar o lote anterior.
 5. Não confundir a publicação do ambiente de desenvolvimento com a publicação do jogo, commits remotos, GitHub Actions ou APK.

@@ -1,0 +1,17 @@
+<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Montagem de atlas pintado</title><style>body{background:#182238;color:#e2e8f0;font:16px system-ui}canvas{max-width:100%;height:auto}</style><h1>Atlas pintado</h1><p>Recortes, alinhamento e orientação canônica para a direita.</p><canvas></canvas>
+<script type="module">
+import { REN_ATLAS,REN_SOURCE_POSES,renSourcePose,renSourceRect,renPlacement } from '/src/game/renPainted.ts';
+import { MAYA_ATLAS,MAYA_SOURCE_POSES,mayaSourcePose,mayaSourceRect,mayaPlacement } from '/src/game/mayaPainted.ts';
+const hero=new URLSearchParams(location.search).get('hero')??'ren';if(!['ren','maya'].includes(hero))throw Error('Unknown painted hero');
+const maya=hero==='maya',atlas=maya?MAYA_ATLAS:REN_ATLAS,sources=maya?MAYA_SOURCE_POSES:REN_SOURCE_POSES,sourcePose=maya?mayaSourcePose:renSourcePose,sourceRect=maya?mayaSourceRect:renSourceRect,placement=maya?mayaPlacement:renPlacement;
+const files=['01-locomocao','02-combate','03-acrobacia',...(maya?['04-corrida-e-poderes']:[])];
+const images=await Promise.all(files.map(file=>new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=`/docs/arte/${hero}/fontes/${file}.png`;})));
+const canvas=document.querySelector('canvas');canvas.width=atlas.width;canvas.height=atlas.height;const ctx=canvas.getContext('2d');
+for(const[pose,clip]of Object.entries(atlas.clips))for(const[frame,f]of clip.frames.entries()){
+ const name=sourcePose(pose,frame),source=sources[name],crop=sourceRect(name),p=placement(name),cellX=source.cell%3*512,cellY=Math.floor(source.cell/3)*512;
+ const x=(crop.x-cellX-p.anchorX)*p.scale,y=atlas.pivot.y+(crop.y-cellY-p.baseline)*p.scale;
+ ctx.save();ctx.beginPath();ctx.rect(f.x,f.y,f.w,f.h);ctx.clip();ctx.translate(f.x+atlas.pivot.x,f.y);ctx.scale(p.sourceFacing,1);ctx.drawImage(images[source.sheet],crop.x,crop.y,crop.w,crop.h,x,y,crop.w*p.scale,crop.h*p.scale);ctx.restore();
+}
+window.paintedBuilder={canvas,metadata:{...atlas,hero,canonicalFacing:'right',sourcePoses:sources,placements:Object.fromEntries(Object.keys(sources).map(name=>[name,{source:sourceRect(name),...placement(name)}])),provenance:'OpenAI image generation from MindBreak concept; aligned, orientation-normalized raster crops; no generated combat events.'}};
+window.renBuilder=window.paintedBuilder;
+</script></html>

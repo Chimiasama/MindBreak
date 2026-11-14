@@ -1,5 +1,7 @@
 # Ren pintado — incremento 24
 
+> **Incremento 25:** corrigida a orientação do repouso/recuperação do Ren no bake; Maya também recebeu pinturas. [Correção, Maya e valores atuais](MAYA_PINTADA_E_ORIENTACAO.md). As seções abaixo registram o fechamento do incremento 24.
+
 ## 1. Objetivo e entrega
 
 O usuário pediu aproximar a imagem jogável da prancha detalhada, trabalhando em um personagem por vez. Este lote concentra a produção no **Ren**: o renderer passa a usar pinturas baseadas diretamente na identidade da prancha, com rosto, cabelo, viseira estreita, anatomia humana, jaqueta/harness/fivelas, tecido, botas e cachecol detalhados. Maya, Leon, inimigos e chefes continuam na V2.

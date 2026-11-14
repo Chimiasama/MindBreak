@@ -1,3 +1,4 @@
+import { loadMayaArtwork, getMayaPaintedAtlas, mayaArtworkStatus, MAYA_ATLAS } from './mayaPainted';
 import { loadRenArtwork, getRenPaintedAtlas, renArtworkStatus, REN_ATLAS } from './renPainted';
 import type { CharacterId } from './types';
 import { HERO_FRAME, HERO_CLIPS, type HeroPose, HERO_ATLAS } from './heroAnimation';
@@ -15,12 +16,17 @@ export function heroRig(hero:CharacterId,pose:HeroPose,frame:number){
  return rig;
 }
 const atlases=new Map<CharacterId,HTMLCanvasElement>();
-export function isHeroPainted(hero:CharacterId){return hero==='ren'&&getRenPaintedAtlas()!==null;}
-export function prepareHeroArtwork(hero:CharacterId){return hero==='ren'?loadRenArtwork():Promise.resolve(true);}
-export function getHeroArtworkStatus(hero:CharacterId){return hero==='ren'?renArtworkStatus():'procedural-v2';}
-export function getHeroMetadata(hero:CharacterId){return hero==='ren'&&getRenPaintedAtlas()?REN_ATLAS:HERO_ATLAS;}
+const painted={
+ ren:{load:loadRenArtwork,getAtlas:getRenPaintedAtlas,status:renArtworkStatus,metadata:REN_ATLAS},
+ maya:{load:loadMayaArtwork,getAtlas:getMayaPaintedAtlas,status:mayaArtworkStatus,metadata:MAYA_ATLAS},
+};
+function paintedEntry(hero:CharacterId){return hero==='leon'?undefined:painted[hero];}
+export function isHeroPainted(hero:CharacterId){return Boolean(paintedEntry(hero)?.getAtlas());}
+export function prepareHeroArtwork(hero:CharacterId){return paintedEntry(hero)?.load()??Promise.resolve(true);}
+export function getHeroArtworkStatus(hero:CharacterId){return paintedEntry(hero)?.status()??'procedural-v2';}
+export function getHeroMetadata(hero:CharacterId){const entry=paintedEntry(hero);return entry?.getAtlas()?entry.metadata:HERO_ATLAS;}
 export function getHeroAtlas(hero:CharacterId){
- if(hero==='ren'){void loadRenArtwork();const painted=getRenPaintedAtlas();if(painted){atlases.delete('ren');return painted;}}
+ const entry=paintedEntry(hero);if(entry){void entry.load();const canvas=entry.getAtlas();if(canvas){atlases.delete(hero);return canvas;}}
  const cached=atlases.get(hero);if(cached)return cached;
  const meta=HERO_ATLAS,canvas=document.createElement('canvas');canvas.width=meta.width;canvas.height=meta.height;
  const ctx=canvas.getContext('2d');if(!ctx)throw Error('Hero atlas canvas unavailable');

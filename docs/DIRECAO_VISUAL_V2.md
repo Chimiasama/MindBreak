@@ -1,6 +1,6 @@
 # Direção visual V2 — anatomia, ilustração e identidade
 
-> **Incremento 24:** o Ren agora usa pinturas derivadas da prancha, com atlas e orçamento próprios. Contrato/previews em [REN_PINTADO.md](REN_PINTADO.md). Maya/Leon e demais personagens mantêm a V2 descrita abaixo; a visão geral vinculada foi atualizada.
+> **Incrementos 24–25:** Ren e Maya usam pinturas derivadas da prancha, com atlas e orçamento próprios. Contratos/prévias em [REN_PINTADO.md](REN_PINTADO.md) e [MAYA_PINTADA_E_ORIENTACAO.md](MAYA_PINTADA_E_ORIENTACAO.md). Leon e demais personagens mantêm a V2 descrita abaixo; a visão geral foi atualizada.
 
 ## 1. Revisão solicitada
 
