@@ -136,6 +136,7 @@ export class GameEngine {
   private platformDeltas = new Map<Platform, { x: number; y: number }>();
   private input = new GameInput();
   private jumpBuffer = 0;
+  private flightRequested = false;
   private coyoteTicks = 0;
   private slideHitIds = new Set<number>();
   private spawns = new SpawnManager(STAGES[0]);
@@ -239,6 +240,8 @@ export class GameEngine {
   }
 
   clearInput() {
+    this.flightRequested = false;
+    this.player.isFlying = false;
     this.attackBuffered = false;
     this.input.clear();
     this.jumpBuffer = 0;
@@ -736,6 +739,7 @@ export class GameEngine {
     this.player.maxHp = profile.maxHp;
     this.player.hp = Math.max(1, Math.floor(profile.maxHp * oldRatio));
     this.player.isFlying = false;
+    this.flightRequested = false;
     this.heroVisualTimers = { hurt:0, vault:0, special:0 };
     this.heroAnimator.reset(this.visualTick);
     this.addParticle(this.player.x + 16, this.player.y + 28, profile.accentColor, 14, 6);
@@ -807,6 +811,10 @@ export class GameEngine {
   setKey(key: InputKey, pressed: boolean, source: InputSource = 'keyboard') {
     if (pressed && !this.canAct()) return;
     this.input.set(source, key, pressed);
+    if (key === 'jumpHeld' && !this.keys.jumpHeld) {
+      this.flightRequested = false;
+      this.player.isFlying = false;
+    }
   }
 
   queueAction(action: GameAction, source: InputSource = 'keyboard') {
@@ -880,8 +888,17 @@ export class GameEngine {
   triggerJump(source: InputSource = 'keyboard') {
     if (!this.canAct()) return;
     this.input.set(source, 'jumpHeld', true);
+    this.requestJump();
+    if (this.tryJump() || this.flightRequested) this.jumpBuffer = 0;
+  }
+
+  /** A new aerial press can request flight; holding the takeoff press cannot. */
+  private requestJump() {
+    const p = this.player;
+    if (CHARACTERS[this.characterId].canFlight && this.keys.jumpHeld && !p.grounded &&
+      this.coyoteTicks <= 0 && p.onWall === 0 && !p.hangingCeiling &&
+      p.stunTimer <= 0 && p.psyEnergy > 0.6) this.flightRequested = true;
     this.jumpBuffer = MOVEMENT.jumpBufferTicks;
-    if (this.tryJump()) this.jumpBuffer = 0;
   }
 
   private tryJump(): boolean {
@@ -1430,6 +1447,9 @@ export class GameEngine {
     if (p.gstTimer > 0 && !ignoreInvuln) return false; // GST optical camouflage invulnerability
     if (!ignoreInvuln && (p.invulnTimer > 0 || p.isDashing)) return false;
 
+    this.flightRequested = false;
+    p.isFlying = false;
+
     // Leon Super Armor: absorbs knockback/flinch from weak bullets!
     if (char.superArmor && isWeakBullet) {
       p.hp = Math.max(0, p.hp - Math.round(dmg * 0.7));
@@ -1546,14 +1566,14 @@ export class GameEngine {
     let interactRequested = false;
     for (const { action } of this.input.drain()) {
       if (action === 'interact') interactRequested = true;
-      if (action === 'jump') this.jumpBuffer = MOVEMENT.jumpBufferTicks;
+      if (action === 'jump') this.requestJump();
       if (action === 'attack') this.triggerAttack();
       if (action === 'dash') this.triggerDashOrSlide();
       if (action === 'psy') this.triggerPsy();
       if (action === 'assist') this.triggerAssist();
     }
     if (this.jumpBuffer > 0) {
-      if (this.tryJump()) this.jumpBuffer = 0;
+      if (this.tryJump() || this.flightRequested) this.jumpBuffer = 0;
       else this.jumpBuffer--;
     }
 
@@ -1694,12 +1714,14 @@ export class GameEngine {
     // Maya 8-Directional Free Flight check
     p.isFlying =
       char.canFlight &&
+      this.flightRequested &&
       this.keys.jumpHeld &&
       !p.grounded &&
       p.onWall === 0 &&
       !p.hangingCeiling &&
       p.psyEnergy > 0.6 &&
       p.stunTimer <= 0;
+    if (!p.isFlying) this.flightRequested = false;
 
     // Briefly preserve the outward wall-kick impulse instead of overriding it with held input.
     if (this.wallKickLock > 0) this.wallKickLock--;
@@ -1844,6 +1866,10 @@ export class GameEngine {
       }
     });
 
+    if (p.grounded || p.onWall !== 0 || p.hangingCeiling) {
+      this.flightRequested = false;
+      p.isFlying = false;
+    }
     if (!wasGrounded && p.grounded && verticalSpeed > 4.5) sound.playCue('land');
     if (p.grounded && (this.keys.left || this.keys.right) && !p.isDashing && !p.isSliding) {
       this.footstepDistance += Math.abs(p.x - footstepStartX);

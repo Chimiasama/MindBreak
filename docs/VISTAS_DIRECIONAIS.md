@@ -1,76 +1,67 @@
-# Vistas direcionais — incremento 27
+# Vistas direcionais — incrementos 27–28
 
-## 1. Regra de identidade
+## 1. Regra atual
 
-Ren e Maya agora têm imagens próprias para olhar/mover-se à esquerda e à direita. A direção escolhe **outro atlas e outros recortes**, sem `scale(-1,1)` no desenho pintado. Virar não deve duplicar ombreiras, emblemas, bolsos, coldres ou equipamentos no lado oposto do corpo.
+**Ren, Maya e Leon têm pinturas independentes para esquerda/direita.** O renderer seleciona o atlas/recorte da direção, sem refletir a pintura com `scale(-1,1)`.
 
-Direita/esquerda de um acessório significa o lado **anatômico do personagem**, não o lado da tela. Nas novas vistas à esquerda, vemos principalmente o flanco direito: Ren mostra manga escura simples em vez da ombreira segmentada próxima da câmera; Maya mostra a manga verde simples em vez do painel dourado da outra vista. Tiras, sobreposição da roupa e equipamento da perna têm desenho próprio. Cachecol, cabelo e abas podem mudar com o movimento; a posição anatômica de seus pontos de fixação deve permanecer coerente.
+O usuário reforçou que isso não basta: objetos conservam lado anatômico, volume e fixações, incluindo o verso. Bolsas de Ren/Maya pertencem à coxa direita; tiras continuam ao redor da mesma perna. Leon conserva duas joelheiras e suas fixações. Faixas do Ren mantêm as pontas expostas quando vistas pelo lado oposto. A corrida 4/6 dele foi redesenhada com dois braços.
 
-**Regra para a continuidade da produção:** Leon, inimigos e chefes deverão receber pares autorais na sua revisão visual. Eles ainda usam o renderer anterior com espelhamento; esta entrega migra Ren e Maya. O fallback procedural também permanece espelhado se uma imagem não carregar, para evitar personagens invisíveis. Isso não é o acabamento aprovado para novos recursos.
+A diretriz obrigatória de [continuidade visual e anatomia](CONTINUIDADE_VISUAL.md) tem prioridade sobre as simplificações de autoria anteriores. Está também em [AGENTS.md](../AGENTS.md). Não interpretar direita/esquerda como lado da tela nem apagar um acessório simplesmente por estar do outro lado. Oclusão deve ser fisicamente plausível. Corpos humanos não admitem membros extras/deformidades acidentais; exceções exigem design explícito, como uma criatura ou zumbi.
 
-## 2. Arte integrada e prévias
+NPCs e chefes ainda usam a arte anterior. Seus próximos lotes devem adotar as mesmas regras, incluindo vistas próprias. O fallback procedural permanece disponível para evitar personagens invisíveis se uma imagem falhar; ele não é a referência de acabamento para novos sprites.
 
-| Recurso | Ren | Maya |
-|---|---|---|
-| Pinturas novas à esquerda | 21 | 24 |
-| Corrida à esquerda | 6 chaves | 6 chaves |
-| Demais ações | repouso, salto/queda, parede/escalada, hang/vault, dash/slide, três golpes, dano, especial e morte | mesmas ações, stun próprio e duas chaves de voo |
-| Clipes / posições lógicas por direção | 18 / 55 | 18 / 55 |
-| Atlas à esquerda | 2560 × 960, WebP alpha | 2560 × 960, WebP alpha |
-| Arquivo adicional | 466.326 bytes | 600.566 bytes |
+## 2. Cobertura e prévias
 
-Os atlas existentes à direita foram conservados. Ren mantém três pinturas de corrida reutilizadas nos seis tempos à direita; a nova corrida à esquerda tem seis pinturas. Holds, recuperações e escalada reutilizam fontes explicitamente. Não são 55 desenhos exclusivos por direção.
+| Recurso | Ren | Maya | Leon |
+|---|---|---|---|
+| Fontes à direita / esquerda | 18 / 21 | 24 / 24 | 21 / 21 |
+| Corrida direita / esquerda | 3 pinturas em 6 tempos / 6 pinturas | 6 / 6 | 6 / 6 |
+| Clipes / posições lógicas por lado | 18 / 55 | 18 / 55 | 18 / 55 |
+| Atlas à direita | 2560 × 2240 | 2560 × 2240 | 2560 × 960 |
+| Atlas à esquerda | 2560 × 960 | 2560 × 960 | 2560 × 960 |
 
-- [Ren — comparação dos seis tempos de corrida, repouso, salto e queda](arte/ren/direcoes.png).
-- [Maya — comparação dos seis tempos de corrida, repouso, salto e queda](arte/maya/direcoes.png).
-- [Ren — repouso, corrida, golpe e recuperação](arte/ren/orientacao.png).
-- [Maya — repouso, corrida, golpe e recuperação](arte/maya/orientacao.png).
-- [Ren — manifesto à esquerda](arte/ren/manifesto-esquerda.json).
-- [Maya — manifesto à esquerda](arte/maya/manifesto-esquerda.json).
+São 129 pinturas/vistas únicas em 15 folhas de fontes, com holds e recuperações reutilizados explicitamente. Não são 330 desenhos exclusivos. Leon não ganhou voo: seu clipe compartilhado correspondente reutiliza queda.
 
-As fontes novas foram produzidas por geração de imagens com as pinturas anteriores como referência e revisadas para retirar detalhes indevidamente repetidos no lado próximo. São as folhas `05-esquerda-locomocao.png` e `06-esquerda-acoes.png` em `docs/arte/<heroi>/fontes`. Os originais de autoria ficam fora do aplicativo; os WebP em `src/assets` entram nos builds web e Android.
+- [Galeria de revisão com zoom e todos os estados](REVISAO_VISUAL.html).
+- [Ren — movimento](arte/ren/direcoes.png) e [continuidade completa](arte/ren/continuidade.png).
+- [Maya — movimento](arte/maya/direcoes.png) e [continuidade completa](arte/maya/continuidade.png).
+- [Leon — movimento](arte/leon/direcoes.png) e [continuidade completa](arte/leon/continuidade.png).
+- [Entrega 28: Leon pintado e comando de voo](LEON_PINTADO_E_VOO_DA_MAYA.md).
+
+As fontes foram editadas por geração de imagem, usando as pinturas existentes e o inventário de continuidade. Os seis atlas foram reconstruídos. Fontes e pranchas ficam em `docs/arte`; só os WebP em `src/assets` entram no jogo. Os manifestos de cada herói registram hashes, recortes e referências efetivas.
 
 ## 3. Contrato técnico
 
 ### 3.1 Seleção e carregamento
 
-1. `heroDirections.ts` define a origem de cada pose à esquerda, os seis tempos da corrida e os recortes das fontes. Dois recortes do Ren excluem uma extremidade vizinha que invadia a margem vazia da célula.
-2. `leftAtlasMetadata()` mantém durações, loop, eventos documentais e 55 posições lógicas. Poses iguais compartilham uma célula, resultando em 21/24 células reais.
-3. `createDirectionalPaintedAtlasLoader()` carrega e valida dimensões dos dois arquivos. Só disponibiliza o par quando ambos estiverem prontos; falha em um lado usa o fallback do herói inteiro. As promessas ficam em cache, sem novos carregamentos por frame.
-4. Ao liberar a imagem temporária depois de copiá-la ao canvas, seus handlers são removidos antes de limpar `src`. Isso evita um evento de erro tardio transformar uma carga bem-sucedida em falha.
-5. `getHeroAtlas(hero, facing)` e `getHeroMetadata(hero, facing)` selecionam pixels e retângulos correspondentes. `drawHeroFrame()` desenha pinturas com escala horizontal positiva nos dois sentidos. Parede/escalada continuam usando o lado da parede indicado pelo motor.
+`heroDirections.ts` define chaves à esquerda, as duas fontes compactas de Leon e reutilizações. `leftAtlasMetadata()` mantém tempos, loops, eventos documentais e 55 posições lógicas, compartilhando células repetidas. Leon usa esse layout compacto nos dois lados.
 
-### 3.2 Alinhamento e gameplay
+`createDirectionalPaintedAtlasLoader()` valida dimensões e disponibiliza o par apenas quando ambos os lados estiverem prontos. Em falha, o herói inteiro usa fallback. Promessas e canvases ficam em cache; não há novo carregamento por quadro. Handlers da imagem temporária são removidos antes de limpar `src`, evitando erro tardio depois de uma carga bem-sucedida.
 
-Quadro de 320 × 320, escala de mundo 0,25, pivot `(160,288)` e referência física 32 × 56 preservados. O montador mede a silhueta alpha da fonte e a ajusta à altura/baseline da pose anterior, usando a região dos pés para ancoragem horizontal e margem para não cortar a figura. Mudanças na extensão do cachecol/casaco não reposicionam a colisão.
+`getHeroAtlas(hero,facing)` e `getHeroMetadata(hero,facing)` escolhem os recursos correspondentes. `drawHeroFrame()` aplica escala horizontal positiva às pinturas. Parede/escalada continuam olhando para a parede indicada pelo motor.
 
-Sem mudança em aceleração, salto, voo, alcance/dano, janelas de combo, exploração, itens ou áudio. As imagens não disparam eventos de combate. A morte continua sujeita à pausa do fluxo de continue já documentada.
+### 3.2 Extração e alinhamento
+
+Quadro 320 × 320, escala 0,25, pivot `(160,288)` e referência física 32 × 56 preservados. Timings, colisões e alcance/dano não são derivados das novas imagens.
+
+O montador mede a figura na célula e usa o layout **fixo** `tools/painted-layout.json` para conservar altura/baseline. Não usa seu próprio arquivo de saída como referência para o próximo bake. A região dos pés orienta a ancoragem horizontal.
+
+A extração identifica o retângulo do componente principal conectado, excluindo do recorte pequenos fragmentos de células vizinhas. Não altera pixels nem remove membros presos ao corpo; o braço extra do Ren foi corrigido na fonte, não por esse mecanismo. Fontes e recortes exigem inspeção visual para não confundir detalhe legítimo com resíduo.
 
 ### 3.3 Memória
 
-Cada canvas adicional de 2560 × 960 ocupa aproximadamente **9,375 MiB RGBA**, antes de overhead/GPU. Sem compactar as poses repetidas seriam 21,875 MiB. Cada par direita/esquerda ocupa cerca de 31,25 MiB; os dois heróis carregados totalizam 62,5 MiB nesses canvases, sem contar Leon, inimigos, chefes ou outras superfícies. Carregamento por herói sob demanda e ausência de alocação de canvas por quadro foram mantidos. Profiling no Android físico continua necessário.
+Um canvas 2560 × 960 ocupa aproximadamente 9,375 MiB RGBA; 2560 × 2240, 21,875 MiB. Cada par de Ren/Maya totaliza 31,25 MiB e o de Leon, 18,75 MiB. Os três pares carregados somam cerca de **81,25 MiB**, antes de overhead/GPU e sem contar NPCs, chefes ou outras superfícies. Continua necessário medir no aparelho; tamanho comprimido dos WebP não equivale à memória decodificada.
 
-Os dois arquivos novos somam aproximadamente 1,02 MiB comprimidos. Não confundir tamanho WebP com memória decodificada.
+## 4. Inspeção e reprodução
 
-## 4. Inspeção e exportação manual
+O estúdio `/tools/art-studio.html` oferece herói, direção, pose e quadro. A galeria documental reúne as pranchas com zoom.
 
-O estúdio `/tools/art-studio.html` tem seleção de direção para inspecionar, animar e exportar o atlas correspondente. A orientação faz parte da escolha do recurso, não muda os estados do jogo.
+Com Vite aberto e Playwright/Chromium configurados, executar `node scripts/build-painted-artwork.mjs <ren|maya|leon> <right|left>`. Depois, `review-directional-artwork.mjs` produz movimento/todos os estados e verifica a seleção real; `review-painted-artwork.mjs` exporta prévias, atlas e quadros. `ART_HERO=leon` pode limitar este último a um personagem.
 
-Com Vite aberto e Playwright/Chromium disponíveis, usar as mesmas variáveis de browser já documentadas para os scripts anteriores:
+Não há execução automática de workflows nem APK nesses comandos.
 
-```bash
-node scripts/build-painted-artwork.mjs ren left
-node scripts/build-painted-artwork.mjs maya left
-node scripts/review-directional-artwork.mjs
-node scripts/review-painted-artwork.mjs
-```
+## 5. Aceite
 
-`right` continua disponível para reproduzir o bake anterior. Os manifestos registram hashes das fontes e do WebP, dimensões e recortes. Nenhum desses comandos cria APK ou executa Actions.
+Verificação no Chromium horizontal 915 × 412: **330 combinações de quadro/direção**, presença de pixels, seleção de atlas e ausência de reflexão. Entradas no motor real movem cada herói para os lados correspondentes. A bateria de testes verifica geometria/timing, fontes/hashes, alpha/dimensões, extração de figura e falha/carga atômica.
 
-## 5. Validação e próximos aceites
-
-**22 testes direcionados aprovados**, cobrindo os dois heróis, animação, horários de impacto, referência física, cobertura de fontes, hashes/alpha/dimensões, compactação e carga atômica/falha/limpeza da imagem. TypeScript e builds web/assets Android com Capacitor sync aprovados.
-
-Chromium horizontal 915 × 412 com suporte a touch verificou **220 combinações de quadro/direção**: pixels presentes, atlas selecionado, ausência de reflexão e bordas dos novos recortes. Comparações de pixels confirmam que as novas poses não são apenas o reflexo das anteriores. O motor real foi atualizado com entradas esquerda/direita pela fonte de toque e selecionou os respectivos atlas durante a movimentação. Não foi um teste manual de campanha nem toque físico no aparelho. Sem erros JavaScript; evidência em [validacao-direcional.json](arte/validacao-direcional.json).
-
-Pranchas de movimento e combate inspecionadas visualmente. Intermediários de animação, uniformidade fina de anatomia/acessórios entre todas as pinturas e leitura/custo em celular continuam sujeitos a refinamento e ao aceite do usuário. Nenhuma Action disparada ou APK gerado.
+Anatomia, continuidade de bolsas/tiras/joelheiras/faixas e ausência de membros extras são revisadas visualmente nas fontes e no renderer; testes de pixels não comprovam esses significados. Pranchas atuais foram inspecionadas, mas o aceite artístico do usuário e o teste físico Android/DualShock 4 continuam pendentes. Evidência técnica em [validacao-direcional.json](arte/validacao-direcional.json).

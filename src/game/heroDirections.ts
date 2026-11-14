@@ -1,6 +1,6 @@
 import {heroAtlasMetadata,type HeroFrameDefinition,type HeroPose} from './heroAnimation';
 
-export type PaintedHero='ren'|'maya';
+export type PaintedHero='ren'|'maya'|'leon';
 export const LEFT_MOVEMENT_KEYS=['idle','runA','runB','runC','runD','runE','runF','jump','fall'] as const;
 const renActions=['wall','climb','hang','vault','dash','slide','attack1','attack2','attack3','hurt','special','death'];
 const mayaActions=['wall','climb','hang','vault','dash','slide','attack1','attack2','attack3','hurt','stun','special','flightA','flightB','death'];
@@ -10,26 +10,26 @@ export function leftSourceKey(hero:PaintedHero,pose:HeroPose,frame:number):strin
  if(pose.startsWith('attack')&&frame===2)return 'idle';
  if(pose==='climb')return frame%2?'climb':'wall';
  if(pose==='flight')return hero==='maya'?(frame%2?'flightB':'flightA'):'fall';
- if(pose==='stun'&&hero==='ren')return'hurt';
+ if(pose==='stun'&&hero!=='maya')return'hurt';
  return pose;
 }
 export function leftSourceSheets(hero:PaintedHero){
  return[
   {file:'05-esquerda-locomocao',columns:3,rows:3,keys:[...LEFT_MOVEMENT_KEYS]},
-  {file:'06-esquerda-acoes',columns:3,rows:hero==='ren'?4:5,keys:hero==='ren'?renActions:mayaActions},
+  {file:'06-esquerda-acoes',columns:3,rows:hero==='maya'?5:4,keys:hero==='maya'?mayaActions:renActions},
  ];
+}
+export function directionalSourceSheets(hero:PaintedHero,direction:'left'|'right'){
+ const sheets=leftSourceSheets(hero);
+ if(direction==='left')return sheets;
+ if(hero!=='leon')throw Error('Ren and Maya retain their legacy right-facing source layout');
+ return sheets.map((sheet,index)=>({...sheet,file:index===0?'01-direita-locomocao':'02-direita-acoes'}));
 }
 export function leftSourceCell(hero:PaintedHero,key:string){
  for(const[sheet,definition]of leftSourceSheets(hero).entries()){
   const index=definition.keys.indexOf(key);if(index>=0)return{sheet,column:index%definition.columns,row:Math.floor(index/definition.columns),columns:definition.columns,rows:definition.rows};
  }
  throw Error(`Missing authored left-facing ${hero} pose: ${key}`);
-}
-
-/** Two generated cells contain a neighbor's extremity in their unused margin. Crop it out. */
-export function leftSourceCrop(hero:PaintedHero,key:string,imageWidth:number,imageHeight:number){
- const cell=leftSourceCell(hero,key),w=Math.floor(imageWidth/cell.columns),h=Math.floor(imageHeight/cell.rows);
- return{x:cell.column*w,y:cell.row*h,w:w-(hero==='ren'&&(key==='runD'||key==='jump')?40:0),h:h-(hero==='ren'&&key==='jump'?110:0)};
 }
 
 /** Reused holds share pixels, keeping the additional directional atlas small on Android. */

@@ -24,7 +24,7 @@ test('Maya flies through the open shaft to the suspended island with a finite en
  const{e,s,f,scale}=fixture('maya');t.after(()=>e.stop());navigate(e,s,{x:1400*scale,y:f-356,w:80,h:56});
  local(e,s,{x:2100*scale+10,y:f-456,w:80,h:56});local(e,s,{x:2380*scale,y:f-556,w:50,h:56});local(e,s,{x:2190*scale,y:f-656,w:80,h:56});
  s.player.psyEnergy=s.player.maxPsy;const energy=s.player.psyEnergy;let failed=false,flight=0;s.damagePlayer=()=>{failed=true;return false;};s.recoverPlayer=()=>{failed=true;};
- const tick=()=>{s.update();if(s.player.isFlying)flight++;};e.queueAction('jump');e.setKey('jumpHeld',true);e.setKey('up',true);
+ const tick=()=>{s.update();if(s.player.isFlying)flight++;};e.clearInput();e.queueAction('jump');tick();e.setKey('jumpHeld',false);for(let i=0;i<6;i++)tick();e.queueAction('jump');e.setKey('up',true);
  for(let i=0;i<200&&s.player.y+s.player.h>f-1340;i++)tick();e.setKey('up',false);e.setKey('right',true);
  const n=s.stage.exploration.nodes.find((n:any)=>n.id==='nucleo-maya');for(let i=0;i<80&&s.player.x<n.x;i++)tick();e.clearInput();for(let i=0;i<100&&!s.player.grounded;i++)tick();
  assert.ok(overlaps(s.player,n),`${s.player.x},${s.player.y}`);assert.ok(flight>100);assert.ok(s.player.psyEnergy>0&&s.player.psyEnergy<energy);e.inspectRouteNode(n.id);assert.equal(s.activated.has(n.id),true);assert.equal(failed,false);assert.equal(s.routeComplete(),false);

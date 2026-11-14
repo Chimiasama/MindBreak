@@ -11,14 +11,14 @@
       "hero": "ren",
       "frames": 110,
       "differences": {
-        "idle": 18460,
-        "run": 15336,
-        "jump": 12444,
-        "fall": 19490,
-        "wall": 20213,
-        "dash": 28545,
-        "attack1": 23650,
-        "flight": 19472
+        "idle": 27247,
+        "run": 32361,
+        "jump": 14510,
+        "fall": 21767,
+        "wall": 16240,
+        "dash": 20358,
+        "attack1": 25825,
+        "flight": 21755
       },
       "movement": [
         {
@@ -35,14 +35,14 @@
       "hero": "maya",
       "frames": 110,
       "differences": {
-        "idle": 16097,
-        "run": 15238,
-        "jump": 18388,
-        "fall": 21795,
-        "wall": 20642,
-        "dash": 22903,
-        "attack1": 27847,
-        "flight": 22598
+        "idle": 17650,
+        "run": 20936,
+        "jump": 11372,
+        "fall": 18229,
+        "wall": 22096,
+        "dash": 21181,
+        "attack1": 25998,
+        "flight": 21028
       },
       "movement": [
         {
@@ -52,6 +52,30 @@
         {
           "key": "left",
           "delta": -47.39999999999998
+        }
+      ]
+    },
+    {
+      "hero": "leon",
+      "frames": 110,
+      "differences": {
+        "idle": 10636,
+        "run": 13827,
+        "jump": 10309,
+        "fall": 14809,
+        "wall": 19857,
+        "dash": 18337,
+        "attack1": 16541,
+        "flight": 14809
+      },
+      "movement": [
+        {
+          "key": "right",
+          "delta": 52.099999999999994
+        },
+        {
+          "key": "left",
+          "delta": -41.75
         }
       ]
     }

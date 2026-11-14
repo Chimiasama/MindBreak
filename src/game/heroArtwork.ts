@@ -1,5 +1,6 @@
 import { loadMayaArtwork, getMayaPaintedAtlas, mayaArtworkStatus, MAYA_ATLAS, MAYA_LEFT_ATLAS } from './mayaPainted';
 import { loadRenArtwork, getRenPaintedAtlas, renArtworkStatus, REN_ATLAS, REN_LEFT_ATLAS } from './renPainted';
+import {loadLeonArtwork,getLeonPaintedAtlas,leonArtworkStatus,LEON_ATLAS,LEON_LEFT_ATLAS} from './leonPainted';
 import type { CharacterId } from './types';
 import { HERO_FRAME, HERO_CLIPS, type HeroPose, HERO_ATLAS } from './heroAnimation';
 import { figureRig, paintFigure, type FigureStyle } from './illustratedFigure';
@@ -19,8 +20,9 @@ const atlases=new Map<CharacterId,HTMLCanvasElement>();
 const painted={
  ren:{load:loadRenArtwork,getAtlas:getRenPaintedAtlas,status:renArtworkStatus,metadata:REN_ATLAS,leftMetadata:REN_LEFT_ATLAS},
  maya:{load:loadMayaArtwork,getAtlas:getMayaPaintedAtlas,status:mayaArtworkStatus,metadata:MAYA_ATLAS,leftMetadata:MAYA_LEFT_ATLAS},
+ leon:{load:loadLeonArtwork,getAtlas:getLeonPaintedAtlas,status:leonArtworkStatus,metadata:LEON_ATLAS,leftMetadata:LEON_LEFT_ATLAS},
 };
-function paintedEntry(hero:CharacterId){return hero==='leon'?undefined:painted[hero];}
+function paintedEntry(hero:CharacterId){return painted[hero];}
 export function isHeroPainted(hero:CharacterId){return Boolean(paintedEntry(hero)?.getAtlas());}
 export function prepareHeroArtwork(hero:CharacterId){return paintedEntry(hero)?.load()??Promise.resolve(true);}
 export function getHeroArtworkStatus(hero:CharacterId){return paintedEntry(hero)?.status()??'procedural-v2';}

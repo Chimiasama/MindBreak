@@ -28,7 +28,7 @@ export const CHARACTERS: Record<CharacterId, CharacterProfile> = {
     age: 16,
     title: 'Mestra da Gravidade',
     powerName: 'Voo Direcional em 8 Direções',
-    summary: 'Prodígio telecinética (85 HP): segure PULO no ar para voar livremente em 8 direções.',
+    summary: 'Prodígio telecinética (85 HP): pule normalmente; solte e aperte PULO de novo no ar, segurando para voar em 8 direções.',
     primaryColor: '#0f766e',
     accentColor: '#facc15',
     trailColor: '#00f0ff',

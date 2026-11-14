@@ -1,5 +1,7 @@
 # Movimento e terreno — incremento 9
 
+> **Revisão 28:** Maya salta normalmente no primeiro toque mantido; voo exige soltar PULO, apertar novamente no ar e manter. Soltura, pouso e interrupções cancelam a intenção. Contrato e ensaios em [LEON_PINTADO_E_VOO_DA_MAYA.md](LEON_PINTADO_E_VOO_DA_MAYA.md).
+
 ## Perfis e unidades
 
 A simulação continua em 60 ticks/s. Distâncias são unidades do mundo; velocidade é unidade/tick, aceleração é unidade/tick². `movement.ts` define perfis versão 1 e `tuning.ts` centraliza gravidade, velocidades especiais, fatores de salto e tempos já existentes. Velocidades máximas, dano, custos e altura lógica da câmera não foram aumentados.

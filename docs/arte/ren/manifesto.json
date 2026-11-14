@@ -590,317 +590,1203 @@
   },
   "hero": "ren",
   "canonicalFacing": "right",
-  "sourcePoses": {
-    "idle": {
-      "sheet": 0,
-      "cell": 0
+  "mirrored": false,
+  "sourceSheets": [
+    {
+      "file": "01-locomocao",
+      "columns": 3,
+      "rows": 2
     },
-    "runA": {
-      "sheet": 0,
-      "cell": 1
+    {
+      "file": "02-combate",
+      "columns": 3,
+      "rows": 2
     },
-    "runB": {
-      "sheet": 0,
-      "cell": 2
+    {
+      "file": "03-acrobacia",
+      "columns": 3,
+      "rows": 2
+    }
+  ],
+  "directionalPlacements": {
+    "idle:0": {
+      "key": "idle",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 71,
+        "y": 12,
+        "w": 337,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 257.1736954935591
+      },
+      "scale": 0.46680497925311204,
+      "x": 73.09319193765396,
+      "y": 60
     },
-    "runC": {
-      "sheet": 0,
-      "cell": 3
+    "idle:1": {
+      "key": "idle",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 71,
+        "y": 12,
+        "w": 337,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 257.1736954935591
+      },
+      "scale": 0.46680497925311204,
+      "x": 73.09319193765396,
+      "y": 60
     },
-    "jump": {
-      "sheet": 0,
-      "cell": 4
+    "idle:2": {
+      "key": "idle",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 71,
+        "y": 12,
+        "w": 337,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 257.1736954935591
+      },
+      "scale": 0.46680497925311204,
+      "x": 73.09319193765396,
+      "y": 60
     },
-    "fall": {
-      "sheet": 0,
-      "cell": 5
+    "idle:3": {
+      "key": "idle",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 71,
+        "y": 12,
+        "w": 337,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 257.1736954935591
+      },
+      "scale": 0.46680497925311204,
+      "x": 73.09319193765396,
+      "y": 60
     },
-    "attack1": {
-      "sheet": 1,
-      "cell": 0
+    "run:0": {
+      "key": "runA",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 512,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 532,
+        "y": 37,
+        "w": 434,
+        "h": 448,
+        "ignoredNeighborFragments": 0,
+        "anchor": 856.8852328614805
+      },
+      "scale": 0.46651785714285715,
+      "x": 8.435237348103954,
+      "y": 72
     },
-    "attack2": {
-      "sheet": 1,
-      "cell": 1
+    "run:1": {
+      "key": "runB",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 1024,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1092,
+        "y": 16,
+        "w": 348,
+        "h": 461,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1147.1778135221377
+      },
+      "scale": 0.4511930585683297,
+      "x": 135.10415355183375,
+      "y": 62
     },
-    "attack3": {
-      "sheet": 1,
-      "cell": 2
+    "run:2": {
+      "key": "runC",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 0,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 49,
+        "y": 546,
+        "w": 449,
+        "h": 454,
+        "ignoredNeighborFragments": 0,
+        "anchor": 340.6603753482439
+      },
+      "scale": 0.4647577092511013,
+      "x": 24.448592073833765,
+      "y": 74
     },
-    "dash": {
-      "sheet": 1,
-      "cell": 3
+    "run:3": {
+      "key": "runA",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 512,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 532,
+        "y": 37,
+        "w": 434,
+        "h": 448,
+        "ignoredNeighborFragments": 0,
+        "anchor": 856.8852328614805
+      },
+      "scale": 0.46651785714285715,
+      "x": 8.435237348103954,
+      "y": 72
     },
-    "slide": {
-      "sheet": 1,
-      "cell": 4
+    "run:4": {
+      "key": "runB",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 1024,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1092,
+        "y": 16,
+        "w": 348,
+        "h": 461,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1147.1778135221377
+      },
+      "scale": 0.4511930585683297,
+      "x": 135.10415355183375,
+      "y": 62
     },
-    "hurt": {
-      "sheet": 1,
-      "cell": 5
+    "run:5": {
+      "key": "runC",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 0,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 49,
+        "y": 546,
+        "w": 449,
+        "h": 454,
+        "ignoredNeighborFragments": 0,
+        "anchor": 340.6603753482439
+      },
+      "scale": 0.4647577092511013,
+      "x": 24.448592073833765,
+      "y": 74
     },
-    "wall": {
-      "sheet": 2,
-      "cell": 0
+    "jump:0": {
+      "key": "jump",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 512,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 545,
+        "y": 513,
+        "w": 360,
+        "h": 408,
+        "ignoredNeighborFragments": 0,
+        "anchor": 758.4973556522236
+      },
+      "scale": 0.43137254901960786,
+      "x": 67.9031014833545,
+      "y": 58
     },
-    "climb": {
-      "sheet": 2,
-      "cell": 1
+    "jump:1": {
+      "key": "jump",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 512,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 545,
+        "y": 513,
+        "w": 360,
+        "h": 408,
+        "ignoredNeighborFragments": 0,
+        "anchor": 758.4973556522236
+      },
+      "scale": 0.43137254901960786,
+      "x": 67.9031014833545,
+      "y": 58
     },
-    "hang": {
-      "sheet": 2,
-      "cell": 2
+    "fall:0": {
+      "key": "fall",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1044,
+        "y": 523,
+        "w": 446,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1386.93267858506
+      },
+      "scale": 0.4605809128630705,
+      "x": 8,
+      "y": 63
     },
-    "vault": {
-      "sheet": 2,
-      "cell": 3
+    "fall:1": {
+      "key": "fall",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1044,
+        "y": 523,
+        "w": 446,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1386.93267858506
+      },
+      "scale": 0.4605809128630705,
+      "x": 8,
+      "y": 63
     },
-    "special": {
-      "sheet": 2,
-      "cell": 4
+    "wall:0": {
+      "key": "wall",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 83,
+        "y": 34,
+        "w": 338,
+        "h": 470,
+        "ignoredNeighborFragments": 0,
+        "anchor": 206.68587947187393
+      },
+      "scale": 0.46595744680851064,
+      "x": 102.36764339502045,
+      "y": 73
     },
-    "death": {
-      "sheet": 2,
-      "cell": 5
+    "wall:1": {
+      "key": "wall",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 83,
+        "y": 34,
+        "w": 338,
+        "h": 470,
+        "ignoredNeighborFragments": 0,
+        "anchor": 206.68587947187393
+      },
+      "scale": 0.46595744680851064,
+      "x": 102.36764339502045,
+      "y": 73
+    },
+    "climb:0": {
+      "key": "wall",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 83,
+        "y": 34,
+        "w": 338,
+        "h": 470,
+        "ignoredNeighborFragments": 0,
+        "anchor": 206.68587947187393
+      },
+      "scale": 0.46595744680851064,
+      "x": 102.36764339502045,
+      "y": 73
+    },
+    "climb:1": {
+      "key": "climb",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 512,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 580,
+        "y": 18,
+        "w": 325,
+        "h": 486,
+        "ignoredNeighborFragments": 0,
+        "anchor": 673.7922325377758
+      },
+      "scale": 0.46502057613168724,
+      "x": 116.3846819886063,
+      "y": 65
+    },
+    "climb:2": {
+      "key": "wall",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 83,
+        "y": 34,
+        "w": 338,
+        "h": 470,
+        "ignoredNeighborFragments": 0,
+        "anchor": 206.68587947187393
+      },
+      "scale": 0.46595744680851064,
+      "x": 102.36764339502045,
+      "y": 73
+    },
+    "climb:3": {
+      "key": "climb",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 512,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 580,
+        "y": 18,
+        "w": 325,
+        "h": 486,
+        "ignoredNeighborFragments": 0,
+        "anchor": 673.7922325377758
+      },
+      "scale": 0.46502057613168724,
+      "x": 116.3846819886063,
+      "y": 65
+    },
+    "hang:0": {
+      "key": "hang",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 1024,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1115,
+        "y": 7,
+        "w": 286,
+        "h": 499,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1279.3603249428247
+      },
+      "scale": 0.46893787575150303,
+      "x": 82.925218363485,
+      "y": 59
+    },
+    "hang:1": {
+      "key": "hang",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 1024,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1115,
+        "y": 7,
+        "w": 286,
+        "h": 499,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1279.3603249428247
+      },
+      "scale": 0.46893787575150303,
+      "x": 82.925218363485,
+      "y": 59
+    },
+    "vault:0": {
+      "key": "vault",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 0,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 56,
+        "y": 550,
+        "w": 404,
+        "h": 386,
+        "ignoredNeighborFragments": 0,
+        "anchor": 243.48815589343855
+      },
+      "scale": 0.4689119170984456,
+      "x": 72.0845693867555,
+      "y": 74
+    },
+    "vault:1": {
+      "key": "vault",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 0,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 56,
+        "y": 550,
+        "w": 404,
+        "h": 386,
+        "ignoredNeighborFragments": 0,
+        "anchor": 243.48815589343855
+      },
+      "scale": 0.4689119170984456,
+      "x": 72.0845693867555,
+      "y": 74
+    },
+    "vault:2": {
+      "key": "vault",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 0,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 56,
+        "y": 550,
+        "w": 404,
+        "h": 386,
+        "ignoredNeighborFragments": 0,
+        "anchor": 243.48815589343855
+      },
+      "scale": 0.4689119170984456,
+      "x": 72.0845693867555,
+      "y": 74
+    },
+    "dash:0": {
+      "key": "dash",
+      "sheet": "02-combate",
+      "region": {
+        "x": 0,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 46,
+        "y": 570,
+        "w": 433,
+        "h": 418,
+        "ignoredNeighborFragments": 0,
+        "anchor": 126.49041672064227
+      },
+      "scale": 0.4665071770334928,
+      "x": 110.00239234449762,
+      "y": 83
+    },
+    "dash:1": {
+      "key": "dash",
+      "sheet": "02-combate",
+      "region": {
+        "x": 0,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 46,
+        "y": 570,
+        "w": 433,
+        "h": 418,
+        "ignoredNeighborFragments": 0,
+        "anchor": 126.49041672064227
+      },
+      "scale": 0.4665071770334928,
+      "x": 110.00239234449762,
+      "y": 83
+    },
+    "dash:2": {
+      "key": "dash",
+      "sheet": "02-combate",
+      "region": {
+        "x": 0,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 46,
+        "y": 570,
+        "w": 433,
+        "h": 418,
+        "ignoredNeighborFragments": 0,
+        "anchor": 126.49041672064227
+      },
+      "scale": 0.4665071770334928,
+      "x": 110.00239234449762,
+      "y": 83
+    },
+    "slide:0": {
+      "key": "slide",
+      "sheet": "02-combate",
+      "region": {
+        "x": 512,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 527,
+        "y": 677,
+        "w": 472,
+        "h": 279,
+        "ignoredNeighborFragments": 0,
+        "anchor": 775.2568280597848
+      },
+      "scale": 0.46236559139784944,
+      "x": 45.2145848755834,
+      "y": 134
+    },
+    "slide:1": {
+      "key": "slide",
+      "sheet": "02-combate",
+      "region": {
+        "x": 512,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 527,
+        "y": 677,
+        "w": 472,
+        "h": 279,
+        "ignoredNeighborFragments": 0,
+        "anchor": 775.2568280597848
+      },
+      "scale": 0.46236559139784944,
+      "x": 45.2145848755834,
+      "y": 134
+    },
+    "attack1:0": {
+      "key": "attack1",
+      "sheet": "02-combate",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 39,
+        "y": 40,
+        "w": 471,
+        "h": 465,
+        "ignoredNeighborFragments": 0,
+        "anchor": 235.69433333753113
+      },
+      "scale": 0.46236559139784944,
+      "x": 69.05530824178669,
+      "y": 77
+    },
+    "attack1:1": {
+      "key": "attack1",
+      "sheet": "02-combate",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 39,
+        "y": 40,
+        "w": 471,
+        "h": 465,
+        "ignoredNeighborFragments": 0,
+        "anchor": 235.69433333753113
+      },
+      "scale": 0.46236559139784944,
+      "x": 69.05530824178669,
+      "y": 77
+    },
+    "attack1:2": {
+      "key": "idle",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 71,
+        "y": 12,
+        "w": 337,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 257.1736954935591
+      },
+      "scale": 0.46680497925311204,
+      "x": 73.09319193765396,
+      "y": 60
+    },
+    "attack2:0": {
+      "key": "attack2",
+      "sheet": "02-combate",
+      "region": {
+        "x": 512,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 529,
+        "y": 90,
+        "w": 480,
+        "h": 414,
+        "ignoredNeighborFragments": 0,
+        "anchor": 770.3227365486456
+      },
+      "scale": 0.4613526570048309,
+      "x": 48.66511429760554,
+      "y": 100
+    },
+    "attack2:1": {
+      "key": "attack2",
+      "sheet": "02-combate",
+      "region": {
+        "x": 512,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 529,
+        "y": 90,
+        "w": 480,
+        "h": 414,
+        "ignoredNeighborFragments": 0,
+        "anchor": 770.3227365486456
+      },
+      "scale": 0.4613526570048309,
+      "x": 48.66511429760554,
+      "y": 100
+    },
+    "attack2:2": {
+      "key": "idle",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 71,
+        "y": 12,
+        "w": 337,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 257.1736954935591
+      },
+      "scale": 0.46680497925311204,
+      "x": 73.09319193765396,
+      "y": 60
+    },
+    "attack3:0": {
+      "key": "attack3",
+      "sheet": "02-combate",
+      "region": {
+        "x": 1024,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1073,
+        "y": 11,
+        "w": 415,
+        "h": 498,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1288.5523269130051
+      },
+      "scale": 0.5120481927710844,
+      "x": 49.626820556593756,
+      "y": 37.99999999999997
+    },
+    "attack3:1": {
+      "key": "attack3",
+      "sheet": "02-combate",
+      "region": {
+        "x": 1024,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1073,
+        "y": 11,
+        "w": 415,
+        "h": 498,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1288.5523269130051
+      },
+      "scale": 0.5120481927710844,
+      "x": 49.626820556593756,
+      "y": 37.99999999999997
+    },
+    "attack3:2": {
+      "key": "idle",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 71,
+        "y": 12,
+        "w": 337,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 257.1736954935591
+      },
+      "scale": 0.46680497925311204,
+      "x": 73.09319193765396,
+      "y": 60
+    },
+    "hurt:0": {
+      "key": "hurt",
+      "sheet": "02-combate",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1053,
+        "y": 541,
+        "w": 465,
+        "h": 453,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1347.5044860210799
+      },
+      "scale": 0.46578366445916114,
+      "x": 22.824621301439635,
+      "y": 70
+    },
+    "hurt:1": {
+      "key": "hurt",
+      "sheet": "02-combate",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1053,
+        "y": 541,
+        "w": 465,
+        "h": 453,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1347.5044860210799
+      },
+      "scale": 0.46578366445916114,
+      "x": 22.824621301439635,
+      "y": 70
+    },
+    "stun:0": {
+      "key": "hurt",
+      "sheet": "02-combate",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1053,
+        "y": 541,
+        "w": 465,
+        "h": 453,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1347.5044860210799
+      },
+      "scale": 0.46578366445916114,
+      "x": 22.824621301439635,
+      "y": 70
+    },
+    "stun:1": {
+      "key": "hurt",
+      "sheet": "02-combate",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1053,
+        "y": 541,
+        "w": 465,
+        "h": 453,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1347.5044860210799
+      },
+      "scale": 0.46578366445916114,
+      "x": 22.824621301439635,
+      "y": 70
+    },
+    "special:0": {
+      "key": "special",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 512,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 543,
+        "y": 520,
+        "w": 408,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 779.9939779916693
+      },
+      "scale": 0.46265560165975106,
+      "x": 50.35340852252642,
+      "y": 62
+    },
+    "special:1": {
+      "key": "special",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 512,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 543,
+        "y": 520,
+        "w": 408,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 779.9939779916693
+      },
+      "scale": 0.46265560165975106,
+      "x": 50.35340852252642,
+      "y": 62
+    },
+    "special:2": {
+      "key": "special",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 512,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 543,
+        "y": 520,
+        "w": 408,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 779.9939779916693
+      },
+      "scale": 0.46265560165975106,
+      "x": 50.35340852252642,
+      "y": 62
+    },
+    "special:3": {
+      "key": "special",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 512,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 543,
+        "y": 520,
+        "w": 408,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 779.9939779916693
+      },
+      "scale": 0.46265560165975106,
+      "x": 50.35340852252642,
+      "y": 62
+    },
+    "flight:0": {
+      "key": "fall",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1044,
+        "y": 523,
+        "w": 446,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1386.93267858506
+      },
+      "scale": 0.4605809128630705,
+      "x": 8,
+      "y": 63
+    },
+    "flight:1": {
+      "key": "fall",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1044,
+        "y": 523,
+        "w": 446,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1386.93267858506
+      },
+      "scale": 0.4605809128630705,
+      "x": 8,
+      "y": 63
+    },
+    "flight:2": {
+      "key": "fall",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1044,
+        "y": 523,
+        "w": 446,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1386.93267858506
+      },
+      "scale": 0.4605809128630705,
+      "x": 8,
+      "y": 63
+    },
+    "flight:3": {
+      "key": "fall",
+      "sheet": "01-locomocao",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1044,
+        "y": 523,
+        "w": 446,
+        "h": 482,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1386.93267858506
+      },
+      "scale": 0.4605809128630705,
+      "x": 8,
+      "y": 63
+    },
+    "death:0": {
+      "key": "death",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1030,
+        "y": 851,
+        "w": 494,
+        "h": 140,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1291.872296738209
+      },
+      "scale": 0.45714285714285713,
+      "x": 40.28695006253308,
+      "y": 214
+    },
+    "death:1": {
+      "key": "death",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1030,
+        "y": 851,
+        "w": 494,
+        "h": 140,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1291.872296738209
+      },
+      "scale": 0.45714285714285713,
+      "x": 40.28695006253308,
+      "y": 214
+    },
+    "death:2": {
+      "key": "death",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1030,
+        "y": 851,
+        "w": 494,
+        "h": 140,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1291.872296738209
+      },
+      "scale": 0.45714285714285713,
+      "x": 40.28695006253308,
+      "y": 214
+    },
+    "death:3": {
+      "key": "death",
+      "sheet": "03-acrobacia",
+      "region": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "crop": {
+        "x": 1030,
+        "y": 851,
+        "w": 494,
+        "h": 140,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1291.872296738209
+      },
+      "scale": 0.45714285714285713,
+      "x": 40.28695006253308,
+      "y": 214
     }
   },
-  "placements": {
-    "idle": {
-      "source": {
-        "x": 6,
-        "y": 6,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 256,
-      "baseline": 496,
-      "sourceFacing": -1
-    },
-    "runA": {
-      "source": {
-        "x": 518,
-        "y": 6,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 286,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "runB": {
-      "source": {
-        "x": 1030,
-        "y": 6,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 282,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "runC": {
-      "source": {
-        "x": 6,
-        "y": 518,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 284,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "jump": {
-      "source": {
-        "x": 518,
-        "y": 518,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 296,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "fall": {
-      "source": {
-        "x": 1030,
-        "y": 518,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 300,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "attack1": {
-      "source": {
-        "x": 6,
-        "y": 6,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 256,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "attack2": {
-      "source": {
-        "x": 518,
-        "y": 6,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 280,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "attack3": {
-      "source": {
-        "x": 1030,
-        "y": 6,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.51,
-      "anchorX": 300,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "dash": {
-      "source": {
-        "x": 6,
-        "y": 518,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 286,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "slide": {
-      "source": {
-        "x": 518,
-        "y": 518,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 256,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "hurt": {
-      "source": {
-        "x": 1030,
-        "y": 518,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 285,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "wall": {
-      "source": {
-        "x": 6,
-        "y": 6,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 270,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "climb": {
-      "source": {
-        "x": 518,
-        "y": 6,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 290,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "hang": {
-      "source": {
-        "x": 1030,
-        "y": 6,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 280,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "vault": {
-      "source": {
-        "x": 6,
-        "y": 518,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 280,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "special": {
-      "source": {
-        "x": 518,
-        "y": 518,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 256,
-      "baseline": 496,
-      "sourceFacing": 1
-    },
-    "death": {
-      "source": {
-        "x": 1030,
-        "y": 518,
-        "w": 500,
-        "h": 500
-      },
-      "scale": 0.47,
-      "anchorX": 256,
-      "baseline": 496,
-      "sourceFacing": 1
-    }
-  },
-  "provenance": "OpenAI image generation from MindBreak concept; aligned, orientation-normalized raster crops; no generated combat events.",
+  "layoutReference": "tools/painted-layout.json",
+  "continuityReference": "docs/CONTINUIDADE_VISUAL.md",
+  "provenance": "Independently authored OpenAI raster paintings, revised for anatomical continuity; alpha crops aligned to frozen pose references. No runtime reflection or image-driven combat events.",
   "asset": {
     "file": "src/assets/ren/ren-painted.webp",
-    "bytes": 1168748,
+    "bytes": 1197476,
     "quality": 0.97,
-    "sha256": "1b9d1519f4a6d584707a5aca8960d353992d576e724be7436c4eb91e24090953"
+    "sha256": "ce25e354e5556f39e57c22dec65c82b877cd21776f3f2828080692b3a2c229fd"
   },
+  "layoutReferenceHash": "1f3fee5a632f79314c5973eeb573f494e4acfe3c4d0f7bf18bb675c986ded568",
   "sourceFiles": [
     {
       "file": "docs/arte/ren/fontes/01-locomocao.png",
-      "sha256": "ddad4c9ab5c5f751f99e2320fa35c25bfe94aeda7ae201d0e4d3aff4bb5fa754"
+      "sha256": "83b4ea2eebc49ef81b395d5d4fb717a949d62cded4e09b06be3fc65ee83b97a6"
     },
     {
       "file": "docs/arte/ren/fontes/02-combate.png",
-      "sha256": "0c8e6f9af18bed2e56431474168caa9f0e16ec8fd304f1ebe2ba867b3b9429d4"
+      "sha256": "fa3c5252e05e63198dd470571990cad1bf1dfc3ddf9763fda58cbc3e2b5032e5"
     },
     {
       "file": "docs/arte/ren/fontes/03-acrobacia.png",
-      "sha256": "3db0043ea59b0144e7bd0f7d2cb20b4bdeff27cf5b401fe43d752b579c4927a5"
+      "sha256": "67d30c9c07ecc09fe64f48ca20fc81b1014930ddd4ada8cecb8a778a9ea188fd"
     }
   ]
 }

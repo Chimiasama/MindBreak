@@ -23,8 +23,8 @@ export function renSourcePose(pose:HeroPose,frame:number):RenSourcePose{
 export function renSourceRect(name:RenSourcePose){
  const s=REN_SOURCE_POSES[name];return{x:s.cell%3*512+6,y:Math.floor(s.cell/3)*512+6,w:500,h:500};
 }
-/** The idle painting faces left; normalize it before the runtime facing transform. */
-export function renSourceFacing(name:RenSourcePose):1|-1{return name==='idle'?-1:1;}
+/** Continuity revision: every right-side painting, including idle, is authored facing right. */
+export function renSourceFacing(name:RenSourcePose):1|-1{return 1;}
 export function renPlacement(name:RenSourcePose){
  // Shared scale across keys preserves character size; uppercut gets a small anatomy correction.
  const anchors:Partial<Record<RenSourcePose,number>>={runA:286,runB:282,runC:284,jump:296,fall:300,attack2:280,attack3:300,dash:286,hurt:285,wall:270,climb:290,hang:280,vault:280};

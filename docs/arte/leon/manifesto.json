@@ -1,0 +1,1809 @@
+{
+  "version": 4,
+  "w": 320,
+  "h": 320,
+  "scale": 0.25,
+  "pivot": {
+    "x": 160,
+    "y": 288
+  },
+  "hurtbox": {
+    "x": 96,
+    "y": 64,
+    "w": 128,
+    "h": 224
+  },
+  "columns": 8,
+  "width": 2560,
+  "height": 960,
+  "frameCount": 55,
+  "clips": {
+    "idle": {
+      "durations": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        }
+      ]
+    },
+    "run": {
+      "durations": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 320,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 640,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 960,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1280,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1600,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1920,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "jump": {
+      "durations": [
+        6,
+        8
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 2240,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 6
+        },
+        {
+          "x": 2240,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        }
+      ]
+    },
+    "fall": {
+      "durations": [
+        8,
+        8
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        },
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        }
+      ]
+    },
+    "wall": {
+      "durations": [
+        10,
+        10
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 320,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 10
+        },
+        {
+          "x": 320,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 10
+        }
+      ]
+    },
+    "climb": {
+      "durations": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 320,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 640,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 320,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 640,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "hang": {
+      "durations": [
+        12,
+        12
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 960,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        },
+        {
+          "x": 960,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        }
+      ]
+    },
+    "vault": {
+      "durations": [
+        3,
+        3,
+        4
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 1280,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 3
+        },
+        {
+          "x": 1280,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 3
+        },
+        {
+          "x": 1280,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 4
+        }
+      ]
+    },
+    "dash": {
+      "durations": [
+        3,
+        3,
+        4
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 1600,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 3
+        },
+        {
+          "x": 1600,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 3
+        },
+        {
+          "x": 1600,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 4
+        }
+      ]
+    },
+    "slide": {
+      "durations": [
+        6,
+        6
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 1920,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 6
+        },
+        {
+          "x": 1920,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 6
+        }
+      ]
+    },
+    "attack1": {
+      "durations": [
+        1,
+        5,
+        5
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 2240,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 1,
+          "event": "impact"
+        },
+        {
+          "x": 2240,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "attack2": {
+      "durations": [
+        1,
+        5,
+        5
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 0,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 1,
+          "event": "impact"
+        },
+        {
+          "x": 0,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "attack3": {
+      "durations": [
+        1,
+        7,
+        8
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 320,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 1,
+          "event": "impact"
+        },
+        {
+          "x": 320,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        }
+      ]
+    },
+    "hurt": {
+      "durations": [
+        5,
+        7
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 640,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 640,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        }
+      ]
+    },
+    "stun": {
+      "durations": [
+        7,
+        7
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 640,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 640,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        }
+      ]
+    },
+    "special": {
+      "durations": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 960,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 960,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 960,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 960,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "flight": {
+      "durations": [
+        7,
+        7,
+        7,
+        7
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        }
+      ]
+    },
+    "death": {
+      "durations": [
+        5,
+        5,
+        6,
+        8
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 1280,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1280,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1280,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 6
+        },
+        {
+          "x": 1280,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        }
+      ]
+    }
+  },
+  "uniqueFrameCount": 21,
+  "hero": "leon",
+  "canonicalFacing": "right",
+  "mirrored": false,
+  "sourceSheets": [
+    {
+      "file": "01-direita-locomocao",
+      "columns": 3,
+      "rows": 3,
+      "keys": [
+        "idle",
+        "runA",
+        "runB",
+        "runC",
+        "runD",
+        "runE",
+        "runF",
+        "jump",
+        "fall"
+      ]
+    },
+    {
+      "file": "02-direita-acoes",
+      "columns": 3,
+      "rows": 4,
+      "keys": [
+        "wall",
+        "climb",
+        "hang",
+        "vault",
+        "dash",
+        "slide",
+        "attack1",
+        "attack2",
+        "attack3",
+        "hurt",
+        "special",
+        "death"
+      ]
+    }
+  ],
+  "directionalPlacements": {
+    "idle:0": {
+      "key": "idle",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 125,
+        "y": 64,
+        "w": 185,
+        "h": 319,
+        "ignoredNeighborFragments": 0,
+        "anchor": 214.96479080573695
+      },
+      "scale": 0.7053291536050157,
+      "x": 96.54521024673726,
+      "y": 60
+    },
+    "idle:1": {
+      "key": "idle",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 125,
+        "y": 64,
+        "w": 185,
+        "h": 319,
+        "ignoredNeighborFragments": 0,
+        "anchor": 214.96479080573695
+      },
+      "scale": 0.7053291536050157,
+      "x": 96.54521024673726,
+      "y": 60
+    },
+    "idle:2": {
+      "key": "idle",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 125,
+        "y": 64,
+        "w": 185,
+        "h": 319,
+        "ignoredNeighborFragments": 0,
+        "anchor": 214.96479080573695
+      },
+      "scale": 0.7053291536050157,
+      "x": 96.54521024673726,
+      "y": 60
+    },
+    "idle:3": {
+      "key": "idle",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 125,
+        "y": 64,
+        "w": 185,
+        "h": 319,
+        "ignoredNeighborFragments": 0,
+        "anchor": 214.96479080573695
+      },
+      "scale": 0.7053291536050157,
+      "x": 96.54521024673726,
+      "y": 60
+    },
+    "run:0": {
+      "key": "runA",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 420,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 476,
+        "y": 82,
+        "w": 259,
+        "h": 298,
+        "ignoredNeighborFragments": 0,
+        "anchor": 612.9678271336907
+      },
+      "scale": 0.7013422818791947,
+      "x": 63.93867157402231,
+      "y": 72
+    },
+    "run:1": {
+      "key": "runB",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 840,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 911,
+        "y": 66,
+        "w": 221,
+        "h": 317,
+        "ignoredNeighborFragments": 0,
+        "anchor": 970.15429866555
+      },
+      "scale": 0.6561514195583596,
+      "x": 121.18582295762022,
+      "y": 62
+    },
+    "run:2": {
+      "key": "runC",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 0,
+        "y": 415,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 64,
+        "y": 474,
+        "w": 297,
+        "h": 296,
+        "ignoredNeighborFragments": 0,
+        "anchor": 217.45736692808276
+      },
+      "scale": 0.7128378378378378,
+      "x": 50.60978235869776,
+      "y": 74
+    },
+    "run:3": {
+      "key": "runD",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 420,
+        "y": 415,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 516,
+        "y": 473,
+        "w": 204,
+        "h": 294,
+        "ignoredNeighborFragments": 0,
+        "anchor": 583.1473793520745
+      },
+      "scale": 0.7108843537414966,
+      "x": 112.26597862386541,
+      "y": 72
+    },
+    "run:4": {
+      "key": "runE",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 840,
+        "y": 415,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 855,
+        "y": 468,
+        "w": 333,
+        "h": 270,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1016.2906217021721
+      },
+      "scale": 0.7703703703703704,
+      "x": 35.7464840220304,
+      "y": 62
+    },
+    "run:5": {
+      "key": "runF",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 0,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 92,
+        "y": 854,
+        "w": 229,
+        "h": 332,
+        "ignoredNeighborFragments": 0,
+        "anchor": 138.949662791907
+      },
+      "scale": 0.6355421686746988,
+      "x": 130.1615094906856,
+      "y": 74
+    },
+    "jump:0": {
+      "key": "jump",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 420,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 512,
+        "y": 855,
+        "w": 198,
+        "h": 267,
+        "ignoredNeighborFragments": 0,
+        "anchor": 610.2775435041225
+      },
+      "scale": 0.6591760299625468,
+      "x": 95.21779903848106,
+      "y": 58.00000000000003
+    },
+    "jump:1": {
+      "key": "jump",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 420,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 512,
+        "y": 855,
+        "w": 198,
+        "h": 267,
+        "ignoredNeighborFragments": 0,
+        "anchor": 610.2775435041225
+      },
+      "scale": 0.6591760299625468,
+      "x": 95.21779903848106,
+      "y": 58.00000000000003
+    },
+    "fall:0": {
+      "key": "fall",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 840,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 875,
+        "y": 852,
+        "w": 297,
+        "h": 335,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1011.7836568364761
+      },
+      "scale": 0.6626865671641791,
+      "x": 69.35530800687256,
+      "y": 63
+    },
+    "fall:1": {
+      "key": "fall",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 840,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 875,
+        "y": 852,
+        "w": 297,
+        "h": 335,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1011.7836568364761
+      },
+      "scale": 0.6626865671641791,
+      "x": 69.35530800687256,
+      "y": 63
+    },
+    "wall:0": {
+      "key": "wall",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 92,
+        "y": 115,
+        "w": 207,
+        "h": 225,
+        "ignoredNeighborFragments": 0,
+        "anchor": 180.0842439407998
+      },
+      "scale": 0.9733333333333334,
+      "x": 74.26466923095485,
+      "y": 73
+    },
+    "wall:1": {
+      "key": "wall",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 92,
+        "y": 115,
+        "w": 207,
+        "h": 225,
+        "ignoredNeighborFragments": 0,
+        "anchor": 180.0842439407998
+      },
+      "scale": 0.9733333333333334,
+      "x": 74.26466923095485,
+      "y": 73
+    },
+    "climb:0": {
+      "key": "wall",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 92,
+        "y": 115,
+        "w": 207,
+        "h": 225,
+        "ignoredNeighborFragments": 0,
+        "anchor": 180.0842439407998
+      },
+      "scale": 0.9733333333333334,
+      "x": 74.26466923095485,
+      "y": 73
+    },
+    "climb:1": {
+      "key": "climb",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 362,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 454,
+        "y": 42,
+        "w": 180,
+        "h": 312,
+        "ignoredNeighborFragments": 0,
+        "anchor": 485.1643045779735
+      },
+      "scale": 0.7243589743589743,
+      "x": 137.42585629928843,
+      "y": 65
+    },
+    "climb:2": {
+      "key": "wall",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 92,
+        "y": 115,
+        "w": 207,
+        "h": 225,
+        "ignoredNeighborFragments": 0,
+        "anchor": 180.0842439407998
+      },
+      "scale": 0.9733333333333334,
+      "x": 74.26466923095485,
+      "y": 73
+    },
+    "climb:3": {
+      "key": "climb",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 362,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 454,
+        "y": 42,
+        "w": 180,
+        "h": 312,
+        "ignoredNeighborFragments": 0,
+        "anchor": 485.1643045779735
+      },
+      "scale": 0.7243589743589743,
+      "x": 137.42585629928843,
+      "y": 65
+    },
+    "hang:0": {
+      "key": "hang",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 724,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 831,
+        "y": 41,
+        "w": 151,
+        "h": 314,
+        "ignoredNeighborFragments": 0,
+        "anchor": 904.5410071879695
+      },
+      "scale": 0.7452229299363057,
+      "x": 105.19555515291444,
+      "y": 59.00000000000003
+    },
+    "hang:1": {
+      "key": "hang",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 724,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 831,
+        "y": 41,
+        "w": 151,
+        "h": 314,
+        "ignoredNeighborFragments": 0,
+        "anchor": 904.5410071879695
+      },
+      "scale": 0.7452229299363057,
+      "x": 105.19555515291444,
+      "y": 59.00000000000003
+    },
+    "vault:0": {
+      "key": "vault",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 56,
+        "y": 460,
+        "w": 261,
+        "h": 190,
+        "ignoredNeighborFragments": 0,
+        "anchor": 155.70616057796735
+      },
+      "scale": 0.9526315789473684,
+      "x": 63.363157894736844,
+      "y": 74
+    },
+    "vault:1": {
+      "key": "vault",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 56,
+        "y": 460,
+        "w": 261,
+        "h": 190,
+        "ignoredNeighborFragments": 0,
+        "anchor": 155.70616057796735
+      },
+      "scale": 0.9526315789473684,
+      "x": 63.363157894736844,
+      "y": 74
+    },
+    "vault:2": {
+      "key": "vault",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 56,
+        "y": 460,
+        "w": 261,
+        "h": 190,
+        "ignoredNeighborFragments": 0,
+        "anchor": 155.70616057796735
+      },
+      "scale": 0.9526315789473684,
+      "x": 63.363157894736844,
+      "y": 74
+    },
+    "dash:0": {
+      "key": "dash",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 362,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 407,
+        "y": 451,
+        "w": 254,
+        "h": 210,
+        "ignoredNeighborFragments": 0,
+        "anchor": 514.1530654717099
+      },
+      "scale": 0.9285714285714286,
+      "x": 60.50072491912657,
+      "y": 83
+    },
+    "dash:1": {
+      "key": "dash",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 362,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 407,
+        "y": 451,
+        "w": 254,
+        "h": 210,
+        "ignoredNeighborFragments": 0,
+        "anchor": 514.1530654717099
+      },
+      "scale": 0.9285714285714286,
+      "x": 60.50072491912657,
+      "y": 83
+    },
+    "dash:2": {
+      "key": "dash",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 362,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 407,
+        "y": 451,
+        "w": 254,
+        "h": 210,
+        "ignoredNeighborFragments": 0,
+        "anchor": 514.1530654717099
+      },
+      "scale": 0.9285714285714286,
+      "x": 60.50072491912657,
+      "y": 83
+    },
+    "slide:0": {
+      "key": "slide",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 724,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 766,
+        "y": 471,
+        "w": 283,
+        "h": 175,
+        "ignoredNeighborFragments": 0,
+        "anchor": 921.9494192891543
+      },
+      "scale": 0.7371428571428571,
+      "x": 45.04299949542339,
+      "y": 134
+    },
+    "slide:1": {
+      "key": "slide",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 724,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 766,
+        "y": 471,
+        "w": 283,
+        "h": 175,
+        "ignoredNeighborFragments": 0,
+        "anchor": 921.9494192891543
+      },
+      "scale": 0.7371428571428571,
+      "x": 45.04299949542339,
+      "y": 134
+    },
+    "attack1:0": {
+      "key": "attack1",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 724,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 71,
+        "y": 754,
+        "w": 227,
+        "h": 269,
+        "ignoredNeighborFragments": 0,
+        "anchor": 167.79010124606737
+      },
+      "scale": 0.7992565055762082,
+      "x": 82.6398819037008,
+      "y": 77
+    },
+    "attack1:1": {
+      "key": "attack1",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 724,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 71,
+        "y": 754,
+        "w": 227,
+        "h": 269,
+        "ignoredNeighborFragments": 0,
+        "anchor": 167.79010124606737
+      },
+      "scale": 0.7992565055762082,
+      "x": 82.6398819037008,
+      "y": 77
+    },
+    "attack1:2": {
+      "key": "idle",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 125,
+        "y": 64,
+        "w": 185,
+        "h": 319,
+        "ignoredNeighborFragments": 0,
+        "anchor": 214.96479080573695
+      },
+      "scale": 0.7053291536050157,
+      "x": 96.54521024673726,
+      "y": 60
+    },
+    "attack2:0": {
+      "key": "attack2",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 362,
+        "y": 724,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 445,
+        "y": 749,
+        "w": 192,
+        "h": 275,
+        "ignoredNeighborFragments": 0,
+        "anchor": 537.1653965114665
+      },
+      "scale": 0.6945454545454546,
+      "x": 95.98694278658145,
+      "y": 100
+    },
+    "attack2:1": {
+      "key": "attack2",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 362,
+        "y": 724,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 445,
+        "y": 749,
+        "w": 192,
+        "h": 275,
+        "ignoredNeighborFragments": 0,
+        "anchor": 537.1653965114665
+      },
+      "scale": 0.6945454545454546,
+      "x": 95.98694278658145,
+      "y": 100
+    },
+    "attack2:2": {
+      "key": "idle",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 125,
+        "y": 64,
+        "w": 185,
+        "h": 319,
+        "ignoredNeighborFragments": 0,
+        "anchor": 214.96479080573695
+      },
+      "scale": 0.7053291536050157,
+      "x": 96.54521024673726,
+      "y": 60
+    },
+    "attack3:0": {
+      "key": "attack3",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 724,
+        "y": 724,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 778,
+        "y": 747,
+        "w": 232,
+        "h": 272,
+        "ignoredNeighborFragments": 0,
+        "anchor": 881.8318341105829
+      },
+      "scale": 0.9338235294117647,
+      "x": 63.039390205558604,
+      "y": 39
+    },
+    "attack3:1": {
+      "key": "attack3",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 724,
+        "y": 724,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 778,
+        "y": 747,
+        "w": 232,
+        "h": 272,
+        "ignoredNeighborFragments": 0,
+        "anchor": 881.8318341105829
+      },
+      "scale": 0.9338235294117647,
+      "x": 63.039390205558604,
+      "y": 39
+    },
+    "attack3:2": {
+      "key": "idle",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 125,
+        "y": 64,
+        "w": 185,
+        "h": 319,
+        "ignoredNeighborFragments": 0,
+        "anchor": 214.96479080573695
+      },
+      "scale": 0.7053291536050157,
+      "x": 96.54521024673726,
+      "y": 60
+    },
+    "hurt:0": {
+      "key": "hurt",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 97,
+        "y": 1109,
+        "w": 180,
+        "h": 274,
+        "ignoredNeighborFragments": 0,
+        "anchor": 181.3202687978161
+      },
+      "scale": 0.7700729927007299,
+      "x": 95.06723826153576,
+      "y": 70
+    },
+    "hurt:1": {
+      "key": "hurt",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 97,
+        "y": 1109,
+        "w": 180,
+        "h": 274,
+        "ignoredNeighborFragments": 0,
+        "anchor": 181.3202687978161
+      },
+      "scale": 0.7700729927007299,
+      "x": 95.06723826153576,
+      "y": 70
+    },
+    "stun:0": {
+      "key": "hurt",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 97,
+        "y": 1109,
+        "w": 180,
+        "h": 274,
+        "ignoredNeighborFragments": 0,
+        "anchor": 181.3202687978161
+      },
+      "scale": 0.7700729927007299,
+      "x": 95.06723826153576,
+      "y": 70
+    },
+    "stun:1": {
+      "key": "hurt",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 0,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 97,
+        "y": 1109,
+        "w": 180,
+        "h": 274,
+        "ignoredNeighborFragments": 0,
+        "anchor": 181.3202687978161
+      },
+      "scale": 0.7700729927007299,
+      "x": 95.06723826153576,
+      "y": 70
+    },
+    "special:0": {
+      "key": "special",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 362,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 409,
+        "y": 1165,
+        "w": 212,
+        "h": 189,
+        "ignoredNeighborFragments": 0,
+        "anchor": 516.0917281933001
+      },
+      "scale": 1.17989417989418,
+      "x": 33.64309318991572,
+      "y": 61.99999999999997
+    },
+    "special:1": {
+      "key": "special",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 362,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 409,
+        "y": 1165,
+        "w": 212,
+        "h": 189,
+        "ignoredNeighborFragments": 0,
+        "anchor": 516.0917281933001
+      },
+      "scale": 1.17989417989418,
+      "x": 33.64309318991572,
+      "y": 61.99999999999997
+    },
+    "special:2": {
+      "key": "special",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 362,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 409,
+        "y": 1165,
+        "w": 212,
+        "h": 189,
+        "ignoredNeighborFragments": 0,
+        "anchor": 516.0917281933001
+      },
+      "scale": 1.17989417989418,
+      "x": 33.64309318991572,
+      "y": 61.99999999999997
+    },
+    "special:3": {
+      "key": "special",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 362,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 409,
+        "y": 1165,
+        "w": 212,
+        "h": 189,
+        "ignoredNeighborFragments": 0,
+        "anchor": 516.0917281933001
+      },
+      "scale": 1.17989417989418,
+      "x": 33.64309318991572,
+      "y": 61.99999999999997
+    },
+    "flight:0": {
+      "key": "fall",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 840,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 875,
+        "y": 852,
+        "w": 297,
+        "h": 335,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1011.7836568364761
+      },
+      "scale": 0.6626865671641791,
+      "x": 69.35530800687256,
+      "y": 63
+    },
+    "flight:1": {
+      "key": "fall",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 840,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 875,
+        "y": 852,
+        "w": 297,
+        "h": 335,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1011.7836568364761
+      },
+      "scale": 0.6626865671641791,
+      "x": 69.35530800687256,
+      "y": 63
+    },
+    "flight:2": {
+      "key": "fall",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 840,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 875,
+        "y": 852,
+        "w": 297,
+        "h": 335,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1011.7836568364761
+      },
+      "scale": 0.6626865671641791,
+      "x": 69.35530800687256,
+      "y": 63
+    },
+    "flight:3": {
+      "key": "fall",
+      "sheet": "01-direita-locomocao",
+      "region": {
+        "x": 840,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 875,
+        "y": 852,
+        "w": 297,
+        "h": 335,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1011.7836568364761
+      },
+      "scale": 0.6626865671641791,
+      "x": 69.35530800687256,
+      "y": 63
+    },
+    "death:0": {
+      "key": "death",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 724,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 724,
+        "y": 1247,
+        "w": 313,
+        "h": 100,
+        "ignoredNeighborFragments": 0,
+        "anchor": 886.6225840561331
+      },
+      "scale": 0.64,
+      "x": 55.92154620407484,
+      "y": 214
+    },
+    "death:1": {
+      "key": "death",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 724,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 724,
+        "y": 1247,
+        "w": 313,
+        "h": 100,
+        "ignoredNeighborFragments": 0,
+        "anchor": 886.6225840561331
+      },
+      "scale": 0.64,
+      "x": 55.92154620407484,
+      "y": 214
+    },
+    "death:2": {
+      "key": "death",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 724,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 724,
+        "y": 1247,
+        "w": 313,
+        "h": 100,
+        "ignoredNeighborFragments": 0,
+        "anchor": 886.6225840561331
+      },
+      "scale": 0.64,
+      "x": 55.92154620407484,
+      "y": 214
+    },
+    "death:3": {
+      "key": "death",
+      "sheet": "02-direita-acoes",
+      "region": {
+        "x": 724,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 724,
+        "y": 1247,
+        "w": 313,
+        "h": 100,
+        "ignoredNeighborFragments": 0,
+        "anchor": 886.6225840561331
+      },
+      "scale": 0.64,
+      "x": 55.92154620407484,
+      "y": 214
+    }
+  },
+  "layoutReference": "tools/painted-layout.json",
+  "continuityReference": "docs/CONTINUIDADE_VISUAL.md",
+  "provenance": "Independently authored OpenAI raster paintings, revised for anatomical continuity; alpha crops aligned to frozen pose references. No runtime reflection or image-driven combat events.",
+  "asset": {
+    "file": "src/assets/leon/leon-painted.webp",
+    "bytes": 504622,
+    "quality": 0.97,
+    "sha256": "d2f77c47e320cea2ded91ae3a9f65ab25ec6ccc1cba241ac98de7ea5149e1a8c"
+  },
+  "layoutReferenceHash": "1f3fee5a632f79314c5973eeb573f494e4acfe3c4d0f7bf18bb675c986ded568",
+  "sourceFiles": [
+    {
+      "file": "docs/arte/leon/fontes/01-direita-locomocao.png",
+      "sha256": "f0be7de731633545b2d36e9bea997928ab6bf0397601389defae1e8f57d7d9f3"
+    },
+    {
+      "file": "docs/arte/leon/fontes/02-direita-acoes.png",
+      "sha256": "ae36aa6811805dafccd30f90c586461127a54a316e60ca7487d5fa24a7efa93c"
+    }
+  ]
+}

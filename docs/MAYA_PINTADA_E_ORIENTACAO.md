@@ -1,5 +1,7 @@
 # Maya pintada e orientação do Ren — incremento 25
 
+> **Incremento 28 — prioridade de continuidade e anatomia:** os três protagonistas usam pinturas nos dois sentidos; 15 folhas revisadas, bolsas/tiras à direita anatômica de Ren/Maya, duas joelheiras do Leon e correção do braço extra na corrida 4/6 do Ren. Contrato obrigatório em [CONTINUIDADE_VISUAL.md](CONTINUIDADE_VISUAL.md); entrega atual em [LEON_PINTADO_E_VOO_DA_MAYA.md](LEON_PINTADO_E_VOO_DA_MAYA.md). Descrições de normalização/espelhamento abaixo são histórico.
+
 > **Incremento 27 — contrato atual de direção:** Ren e Maya agora usam vistas autorais independentes para esquerda/direita, sem reflexão de runtime. A regra anterior de espelhamento fica como histórico. Fontes, prévias e orçamento atualizados em [VISTAS_DIRECIONAIS.md](VISTAS_DIRECIONAIS.md).
 
 ## 1. Correção da orientação

@@ -1,0 +1,57 @@
+{
+  "viewport": [
+    915,
+    412
+  ],
+  "realTouchEvents": true,
+  "first": {
+    "flight": 0,
+    "energy": 100,
+    "grounded": true,
+    "vy": 0,
+    "held": true
+  },
+  "launch": {
+    "flight": 0,
+    "energy": 100,
+    "grounded": false,
+    "vy": -7.1999999999999975,
+    "held": true
+  },
+  "second": {
+    "flight": 12,
+    "energy": 95.80000000000007,
+    "grounded": false,
+    "vy": -0.3456523532867432,
+    "held": true
+  },
+  "released": {
+    "flight": 0,
+    "energy": 95.87000000000006,
+    "grounded": false,
+    "vy": 0.3043476467132568,
+    "held": false
+  },
+  "keyboardFirst": {
+    "flight": 0,
+    "energy": 100,
+    "grounded": false,
+    "vy": -7.1999999999999975,
+    "held": true
+  },
+  "keyboardSecond": {
+    "flight": 8,
+    "energy": 97.20000000000005,
+    "grounded": false,
+    "vy": -1.0924321289062502,
+    "held": true
+  },
+  "keyboardReleased": {
+    "flight": 0,
+    "energy": 97.27000000000004,
+    "grounded": false,
+    "vy": -0.44243212890625017,
+    "held": false
+  },
+  "errors": []
+}

@@ -1,0 +1,1809 @@
+{
+  "version": 4,
+  "w": 320,
+  "h": 320,
+  "scale": 0.25,
+  "pivot": {
+    "x": 160,
+    "y": 288
+  },
+  "hurtbox": {
+    "x": 96,
+    "y": 64,
+    "w": 128,
+    "h": 224
+  },
+  "columns": 8,
+  "width": 2560,
+  "height": 960,
+  "frameCount": 55,
+  "clips": {
+    "idle": {
+      "durations": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        }
+      ]
+    },
+    "run": {
+      "durations": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 320,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 640,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 960,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1280,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1600,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1920,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "jump": {
+      "durations": [
+        6,
+        8
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 2240,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 6
+        },
+        {
+          "x": 2240,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        }
+      ]
+    },
+    "fall": {
+      "durations": [
+        8,
+        8
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        },
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        }
+      ]
+    },
+    "wall": {
+      "durations": [
+        10,
+        10
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 320,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 10
+        },
+        {
+          "x": 320,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 10
+        }
+      ]
+    },
+    "climb": {
+      "durations": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 320,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 640,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 320,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 640,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "hang": {
+      "durations": [
+        12,
+        12
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 960,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        },
+        {
+          "x": 960,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 12
+        }
+      ]
+    },
+    "vault": {
+      "durations": [
+        3,
+        3,
+        4
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 1280,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 3
+        },
+        {
+          "x": 1280,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 3
+        },
+        {
+          "x": 1280,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 4
+        }
+      ]
+    },
+    "dash": {
+      "durations": [
+        3,
+        3,
+        4
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 1600,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 3
+        },
+        {
+          "x": 1600,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 3
+        },
+        {
+          "x": 1600,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 4
+        }
+      ]
+    },
+    "slide": {
+      "durations": [
+        6,
+        6
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 1920,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 6
+        },
+        {
+          "x": 1920,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 6
+        }
+      ]
+    },
+    "attack1": {
+      "durations": [
+        1,
+        5,
+        5
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 2240,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 1,
+          "event": "impact"
+        },
+        {
+          "x": 2240,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "attack2": {
+      "durations": [
+        1,
+        5,
+        5
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 0,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 1,
+          "event": "impact"
+        },
+        {
+          "x": 0,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "attack3": {
+      "durations": [
+        1,
+        7,
+        8
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 320,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 1,
+          "event": "impact"
+        },
+        {
+          "x": 320,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        }
+      ]
+    },
+    "hurt": {
+      "durations": [
+        5,
+        7
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 640,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 640,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        }
+      ]
+    },
+    "stun": {
+      "durations": [
+        7,
+        7
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 640,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 640,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        }
+      ]
+    },
+    "special": {
+      "durations": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 960,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 960,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 960,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 960,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        }
+      ]
+    },
+    "flight": {
+      "durations": [
+        7,
+        7,
+        7,
+        7
+      ],
+      "loop": true,
+      "frames": [
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        },
+        {
+          "x": 0,
+          "y": 320,
+          "w": 320,
+          "h": 320,
+          "duration": 7
+        }
+      ]
+    },
+    "death": {
+      "durations": [
+        5,
+        5,
+        6,
+        8
+      ],
+      "loop": false,
+      "frames": [
+        {
+          "x": 1280,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1280,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 5
+        },
+        {
+          "x": 1280,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 6
+        },
+        {
+          "x": 1280,
+          "y": 640,
+          "w": 320,
+          "h": 320,
+          "duration": 8
+        }
+      ]
+    }
+  },
+  "uniqueFrameCount": 21,
+  "hero": "leon",
+  "canonicalFacing": "left",
+  "mirrored": false,
+  "sourceSheets": [
+    {
+      "file": "05-esquerda-locomocao",
+      "columns": 3,
+      "rows": 3,
+      "keys": [
+        "idle",
+        "runA",
+        "runB",
+        "runC",
+        "runD",
+        "runE",
+        "runF",
+        "jump",
+        "fall"
+      ]
+    },
+    {
+      "file": "06-esquerda-acoes",
+      "columns": 3,
+      "rows": 4,
+      "keys": [
+        "wall",
+        "climb",
+        "hang",
+        "vault",
+        "dash",
+        "slide",
+        "attack1",
+        "attack2",
+        "attack3",
+        "hurt",
+        "special",
+        "death"
+      ]
+    }
+  ],
+  "directionalPlacements": {
+    "idle:0": {
+      "key": "idle",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 77,
+        "y": 11,
+        "w": 226,
+        "h": 386,
+        "ignoredNeighborFragments": 0,
+        "anchor": 193.22870338091175
+      },
+      "scale": 0.582901554404145,
+      "x": 92.25010813288823,
+      "y": 60.00000000000003
+    },
+    "idle:1": {
+      "key": "idle",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 77,
+        "y": 11,
+        "w": 226,
+        "h": 386,
+        "ignoredNeighborFragments": 0,
+        "anchor": 193.22870338091175
+      },
+      "scale": 0.582901554404145,
+      "x": 92.25010813288823,
+      "y": 60.00000000000003
+    },
+    "idle:2": {
+      "key": "idle",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 77,
+        "y": 11,
+        "w": 226,
+        "h": 386,
+        "ignoredNeighborFragments": 0,
+        "anchor": 193.22870338091175
+      },
+      "scale": 0.582901554404145,
+      "x": 92.25010813288823,
+      "y": 60.00000000000003
+    },
+    "idle:3": {
+      "key": "idle",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 77,
+        "y": 11,
+        "w": 226,
+        "h": 386,
+        "ignoredNeighborFragments": 0,
+        "anchor": 193.22870338091175
+      },
+      "scale": 0.582901554404145,
+      "x": 92.25010813288823,
+      "y": 60.00000000000003
+    },
+    "run:0": {
+      "key": "runA",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 420,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 446,
+        "y": 34,
+        "w": 327,
+        "h": 361,
+        "ignoredNeighborFragments": 0,
+        "anchor": 595.5379126276574
+      },
+      "scale": 0.5789473684210527,
+      "x": 73.42541900504044,
+      "y": 72
+    },
+    "run:1": {
+      "key": "runB",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 840,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 911,
+        "y": 10,
+        "w": 278,
+        "h": 386,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1124.5837150809941
+      },
+      "scale": 0.538860103626943,
+      "x": 44.90825715842803,
+      "y": 62
+    },
+    "run:2": {
+      "key": "runC",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 0,
+        "y": 415,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 24,
+        "y": 441,
+        "w": 385,
+        "h": 349,
+        "ignoredNeighborFragments": 0,
+        "anchor": 211.20796929351084
+      },
+      "scale": 0.6045845272206304,
+      "x": 46.81695839274846,
+      "y": 74
+    },
+    "run:3": {
+      "key": "runD",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 420,
+        "y": 415,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 472,
+        "y": 437,
+        "w": 227,
+        "h": 355,
+        "ignoredNeighborFragments": 2,
+        "anchor": 620.7864853390888
+      },
+      "scale": 0.5887323943661972,
+      "x": 72.40457623698715,
+      "y": 72
+    },
+    "run:4": {
+      "key": "runE",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 840,
+        "y": 415,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 840,
+        "y": 421,
+        "w": 390,
+        "h": 328,
+        "ignoredNeighborFragments": 1,
+        "anchor": 1087.487611972373
+      },
+      "scale": 0.6341463414634146,
+      "x": 8,
+      "y": 62
+    },
+    "run:5": {
+      "key": "runF",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 0,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 85,
+        "y": 834,
+        "w": 314,
+        "h": 394,
+        "ignoredNeighborFragments": 0,
+        "anchor": 345.66781791689004
+      },
+      "scale": 0.5355329949238579,
+      "x": 20.40378279070103,
+      "y": 74
+    },
+    "jump:0": {
+      "key": "jump",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 420,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 481,
+        "y": 830,
+        "w": 216,
+        "h": 295,
+        "ignoredNeighborFragments": 1,
+        "anchor": 599.3105905961319
+      },
+      "scale": 0.5966101694915255,
+      "x": 89.41469849179929,
+      "y": 58
+    },
+    "jump:1": {
+      "key": "jump",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 420,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 481,
+        "y": 830,
+        "w": 216,
+        "h": 295,
+        "ignoredNeighborFragments": 1,
+        "anchor": 599.3105905961319
+      },
+      "scale": 0.5966101694915255,
+      "x": 89.41469849179929,
+      "y": 58
+    },
+    "fall:0": {
+      "key": "fall",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 840,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 840,
+        "y": 830,
+        "w": 334,
+        "h": 394,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1006.7230082332203
+      },
+      "scale": 0.5634517766497462,
+      "x": 66.05962480260176,
+      "y": 63
+    },
+    "fall:1": {
+      "key": "fall",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 840,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 840,
+        "y": 830,
+        "w": 334,
+        "h": 394,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1006.7230082332203
+      },
+      "scale": 0.5634517766497462,
+      "x": 66.05962480260176,
+      "y": 63
+    },
+    "wall:0": {
+      "key": "wall",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 96,
+        "y": 108,
+        "w": 203,
+        "h": 221,
+        "ignoredNeighborFragments": 0,
+        "anchor": 215.26739214856835
+      },
+      "scale": 0.9909502262443439,
+      "x": 41.81195076680331,
+      "y": 73
+    },
+    "wall:1": {
+      "key": "wall",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 96,
+        "y": 108,
+        "w": 203,
+        "h": 221,
+        "ignoredNeighborFragments": 0,
+        "anchor": 215.26739214856835
+      },
+      "scale": 0.9909502262443439,
+      "x": 41.81195076680331,
+      "y": 73
+    },
+    "climb:0": {
+      "key": "wall",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 96,
+        "y": 108,
+        "w": 203,
+        "h": 221,
+        "ignoredNeighborFragments": 0,
+        "anchor": 215.26739214856835
+      },
+      "scale": 0.9909502262443439,
+      "x": 41.81195076680331,
+      "y": 73
+    },
+    "climb:1": {
+      "key": "climb",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 362,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 435,
+        "y": 46,
+        "w": 180,
+        "h": 309,
+        "ignoredNeighborFragments": 0,
+        "anchor": 579.955531081708
+      },
+      "scale": 0.7313915857605178,
+      "x": 53.980744257391535,
+      "y": 65
+    },
+    "climb:2": {
+      "key": "wall",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 96,
+        "y": 108,
+        "w": 203,
+        "h": 221,
+        "ignoredNeighborFragments": 0,
+        "anchor": 215.26739214856835
+      },
+      "scale": 0.9909502262443439,
+      "x": 41.81195076680331,
+      "y": 73
+    },
+    "climb:3": {
+      "key": "climb",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 362,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 435,
+        "y": 46,
+        "w": 180,
+        "h": 309,
+        "ignoredNeighborFragments": 0,
+        "anchor": 579.955531081708
+      },
+      "scale": 0.7313915857605178,
+      "x": 53.980744257391535,
+      "y": 65
+    },
+    "hang:0": {
+      "key": "hang",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 724,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 795,
+        "y": 38,
+        "w": 158,
+        "h": 313,
+        "ignoredNeighborFragments": 0,
+        "anchor": 867.8444767881674
+      },
+      "scale": 0.7476038338658147,
+      "x": 105.54118987721668,
+      "y": 58.99999999999997
+    },
+    "hang:1": {
+      "key": "hang",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 724,
+        "y": 0,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 795,
+        "y": 38,
+        "w": 158,
+        "h": 313,
+        "ignoredNeighborFragments": 0,
+        "anchor": 867.8444767881674
+      },
+      "scale": 0.7476038338658147,
+      "x": 105.54118987721668,
+      "y": 58.99999999999997
+    },
+    "vault:0": {
+      "key": "vault",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 68,
+        "y": 454,
+        "w": 259,
+        "h": 195,
+        "ignoredNeighborFragments": 0,
+        "anchor": 268.7196499182607
+      },
+      "scale": 0.9282051282051282,
+      "x": 8,
+      "y": 74
+    },
+    "vault:1": {
+      "key": "vault",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 68,
+        "y": 454,
+        "w": 259,
+        "h": 195,
+        "ignoredNeighborFragments": 0,
+        "anchor": 268.7196499182607
+      },
+      "scale": 0.9282051282051282,
+      "x": 8,
+      "y": 74
+    },
+    "vault:2": {
+      "key": "vault",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 68,
+        "y": 454,
+        "w": 259,
+        "h": 195,
+        "ignoredNeighborFragments": 0,
+        "anchor": 268.7196499182607
+      },
+      "scale": 0.9282051282051282,
+      "x": 8,
+      "y": 74
+    },
+    "dash:0": {
+      "key": "dash",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 362,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 412,
+        "y": 435,
+        "w": 257,
+        "h": 212,
+        "ignoredNeighborFragments": 0,
+        "anchor": 557.9765834145439
+      },
+      "scale": 0.9198113207547169,
+      "x": 25.729086010207226,
+      "y": 83
+    },
+    "dash:1": {
+      "key": "dash",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 362,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 412,
+        "y": 435,
+        "w": 257,
+        "h": 212,
+        "ignoredNeighborFragments": 0,
+        "anchor": 557.9765834145439
+      },
+      "scale": 0.9198113207547169,
+      "x": 25.729086010207226,
+      "y": 83
+    },
+    "dash:2": {
+      "key": "dash",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 362,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 412,
+        "y": 435,
+        "w": 257,
+        "h": 212,
+        "ignoredNeighborFragments": 0,
+        "anchor": 557.9765834145439
+      },
+      "scale": 0.9198113207547169,
+      "x": 25.729086010207226,
+      "y": 83
+    },
+    "slide:0": {
+      "key": "slide",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 724,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 749,
+        "y": 451,
+        "w": 267,
+        "h": 188,
+        "ignoredNeighborFragments": 0,
+        "anchor": 870.8804033932095
+      },
+      "scale": 0.6861702127659575,
+      "x": 76.36929767168074,
+      "y": 134
+    },
+    "slide:1": {
+      "key": "slide",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 724,
+        "y": 362,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 749,
+        "y": 451,
+        "w": 267,
+        "h": 188,
+        "ignoredNeighborFragments": 0,
+        "anchor": 870.8804033932095
+      },
+      "scale": 0.6861702127659575,
+      "x": 76.36929767168074,
+      "y": 134
+    },
+    "attack1:0": {
+      "key": "attack1",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 724,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 70,
+        "y": 749,
+        "w": 251,
+        "h": 266,
+        "ignoredNeighborFragments": 0,
+        "anchor": 217.87818927137747
+      },
+      "scale": 0.8082706766917294,
+      "x": 40.4743958896761,
+      "y": 77
+    },
+    "attack1:1": {
+      "key": "attack1",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 724,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 70,
+        "y": 749,
+        "w": 251,
+        "h": 266,
+        "ignoredNeighborFragments": 0,
+        "anchor": 217.87818927137747
+      },
+      "scale": 0.8082706766917294,
+      "x": 40.4743958896761,
+      "y": 77
+    },
+    "attack1:2": {
+      "key": "idle",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 77,
+        "y": 11,
+        "w": 226,
+        "h": 386,
+        "ignoredNeighborFragments": 0,
+        "anchor": 193.22870338091175
+      },
+      "scale": 0.582901554404145,
+      "x": 92.25010813288823,
+      "y": 60.00000000000003
+    },
+    "attack2:0": {
+      "key": "attack2",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 362,
+        "y": 724,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 437,
+        "y": 748,
+        "w": 202,
+        "h": 266,
+        "ignoredNeighborFragments": 0,
+        "anchor": 538.7063623212438
+      },
+      "scale": 0.7180451127819549,
+      "x": 86.97024359640014,
+      "y": 100
+    },
+    "attack2:1": {
+      "key": "attack2",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 362,
+        "y": 724,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 437,
+        "y": 748,
+        "w": 202,
+        "h": 266,
+        "ignoredNeighborFragments": 0,
+        "anchor": 538.7063623212438
+      },
+      "scale": 0.7180451127819549,
+      "x": 86.97024359640014,
+      "y": 100
+    },
+    "attack2:2": {
+      "key": "idle",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 77,
+        "y": 11,
+        "w": 226,
+        "h": 386,
+        "ignoredNeighborFragments": 0,
+        "anchor": 193.22870338091175
+      },
+      "scale": 0.582901554404145,
+      "x": 92.25010813288823,
+      "y": 60.00000000000003
+    },
+    "attack3:0": {
+      "key": "attack3",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 724,
+        "y": 724,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 774,
+        "y": 743,
+        "w": 233,
+        "h": 271,
+        "ignoredNeighborFragments": 0,
+        "anchor": 905.9728983197277
+      },
+      "scale": 0.940959409594096,
+      "x": 35.81885951464733,
+      "y": 38
+    },
+    "attack3:1": {
+      "key": "attack3",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 724,
+        "y": 724,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 774,
+        "y": 743,
+        "w": 233,
+        "h": 271,
+        "ignoredNeighborFragments": 0,
+        "anchor": 905.9728983197277
+      },
+      "scale": 0.940959409594096,
+      "x": 35.81885951464733,
+      "y": 38
+    },
+    "attack3:2": {
+      "key": "idle",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 77,
+        "y": 11,
+        "w": 226,
+        "h": 386,
+        "ignoredNeighborFragments": 0,
+        "anchor": 193.22870338091175
+      },
+      "scale": 0.582901554404145,
+      "x": 92.25010813288823,
+      "y": 60.00000000000003
+    },
+    "hurt:0": {
+      "key": "hurt",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 88,
+        "y": 1096,
+        "w": 189,
+        "h": 262,
+        "ignoredNeighborFragments": 0,
+        "anchor": 187.33382797014784
+      },
+      "scale": 0.8053435114503816,
+      "x": 80.00214617671301,
+      "y": 70
+    },
+    "hurt:1": {
+      "key": "hurt",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 88,
+        "y": 1096,
+        "w": 189,
+        "h": 262,
+        "ignoredNeighborFragments": 0,
+        "anchor": 187.33382797014784
+      },
+      "scale": 0.8053435114503816,
+      "x": 80.00214617671301,
+      "y": 70
+    },
+    "stun:0": {
+      "key": "hurt",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 88,
+        "y": 1096,
+        "w": 189,
+        "h": 262,
+        "ignoredNeighborFragments": 0,
+        "anchor": 187.33382797014784
+      },
+      "scale": 0.8053435114503816,
+      "x": 80.00214617671301,
+      "y": 70
+    },
+    "stun:1": {
+      "key": "hurt",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 0,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 88,
+        "y": 1096,
+        "w": 189,
+        "h": 262,
+        "ignoredNeighborFragments": 0,
+        "anchor": 187.33382797014784
+      },
+      "scale": 0.8053435114503816,
+      "x": 80.00214617671301,
+      "y": 70
+    },
+    "special:0": {
+      "key": "special",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 362,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 420,
+        "y": 1152,
+        "w": 217,
+        "h": 193,
+        "ignoredNeighborFragments": 0,
+        "anchor": 531.4551515976927
+      },
+      "scale": 1.1554404145077721,
+      "x": 31.220213438935303,
+      "y": 61.99999999999997
+    },
+    "special:1": {
+      "key": "special",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 362,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 420,
+        "y": 1152,
+        "w": 217,
+        "h": 193,
+        "ignoredNeighborFragments": 0,
+        "anchor": 531.4551515976927
+      },
+      "scale": 1.1554404145077721,
+      "x": 31.220213438935303,
+      "y": 61.99999999999997
+    },
+    "special:2": {
+      "key": "special",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 362,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 420,
+        "y": 1152,
+        "w": 217,
+        "h": 193,
+        "ignoredNeighborFragments": 0,
+        "anchor": 531.4551515976927
+      },
+      "scale": 1.1554404145077721,
+      "x": 31.220213438935303,
+      "y": 61.99999999999997
+    },
+    "special:3": {
+      "key": "special",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 362,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 420,
+        "y": 1152,
+        "w": 217,
+        "h": 193,
+        "ignoredNeighborFragments": 0,
+        "anchor": 531.4551515976927
+      },
+      "scale": 1.1554404145077721,
+      "x": 31.220213438935303,
+      "y": 61.99999999999997
+    },
+    "flight:0": {
+      "key": "fall",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 840,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 840,
+        "y": 830,
+        "w": 334,
+        "h": 394,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1006.7230082332203
+      },
+      "scale": 0.5634517766497462,
+      "x": 66.05962480260176,
+      "y": 63
+    },
+    "flight:1": {
+      "key": "fall",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 840,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 840,
+        "y": 830,
+        "w": 334,
+        "h": 394,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1006.7230082332203
+      },
+      "scale": 0.5634517766497462,
+      "x": 66.05962480260176,
+      "y": 63
+    },
+    "flight:2": {
+      "key": "fall",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 840,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 840,
+        "y": 830,
+        "w": 334,
+        "h": 394,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1006.7230082332203
+      },
+      "scale": 0.5634517766497462,
+      "x": 66.05962480260176,
+      "y": 63
+    },
+    "flight:3": {
+      "key": "fall",
+      "sheet": "05-esquerda-locomocao",
+      "region": {
+        "x": 840,
+        "y": 830,
+        "w": 420,
+        "h": 415
+      },
+      "crop": {
+        "x": 840,
+        "y": 830,
+        "w": 334,
+        "h": 394,
+        "ignoredNeighborFragments": 0,
+        "anchor": 1006.7230082332203
+      },
+      "scale": 0.5634517766497462,
+      "x": 66.05962480260176,
+      "y": 63
+    },
+    "death:0": {
+      "key": "death",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 724,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 733,
+        "y": 1225,
+        "w": 297,
+        "h": 100,
+        "ignoredNeighborFragments": 0,
+        "anchor": 850.4250809566271
+      },
+      "scale": 0.64,
+      "x": 84.84794818775866,
+      "y": 214
+    },
+    "death:1": {
+      "key": "death",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 724,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 733,
+        "y": 1225,
+        "w": 297,
+        "h": 100,
+        "ignoredNeighborFragments": 0,
+        "anchor": 850.4250809566271
+      },
+      "scale": 0.64,
+      "x": 84.84794818775866,
+      "y": 214
+    },
+    "death:2": {
+      "key": "death",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 724,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 733,
+        "y": 1225,
+        "w": 297,
+        "h": 100,
+        "ignoredNeighborFragments": 0,
+        "anchor": 850.4250809566271
+      },
+      "scale": 0.64,
+      "x": 84.84794818775866,
+      "y": 214
+    },
+    "death:3": {
+      "key": "death",
+      "sheet": "06-esquerda-acoes",
+      "region": {
+        "x": 724,
+        "y": 1086,
+        "w": 362,
+        "h": 362
+      },
+      "crop": {
+        "x": 733,
+        "y": 1225,
+        "w": 297,
+        "h": 100,
+        "ignoredNeighborFragments": 0,
+        "anchor": 850.4250809566271
+      },
+      "scale": 0.64,
+      "x": 84.84794818775866,
+      "y": 214
+    }
+  },
+  "layoutReference": "tools/painted-layout.json",
+  "continuityReference": "docs/CONTINUIDADE_VISUAL.md",
+  "provenance": "Independently authored OpenAI raster paintings, revised for anatomical continuity; alpha crops aligned to frozen pose references. No runtime reflection or image-driven combat events.",
+  "asset": {
+    "file": "src/assets/leon/leon-painted-left.webp",
+    "bytes": 508050,
+    "quality": 0.97,
+    "sha256": "163695ebf23ffb2a7d17735d976f78dc3fb5006fb0be172ad41f5522094a502a"
+  },
+  "layoutReferenceHash": "1f3fee5a632f79314c5973eeb573f494e4acfe3c4d0f7bf18bb675c986ded568",
+  "sourceFiles": [
+    {
+      "file": "docs/arte/leon/fontes/05-esquerda-locomocao.png",
+      "sha256": "aa8eaa846afefa995e784c4a5d7cda918914c1d70274bd9cd4e4d502c124976a"
+    },
+    {
+      "file": "docs/arte/leon/fontes/06-esquerda-acoes.png",
+      "sha256": "74a7282d896a3215fa0a2b12532213d3254855f658288f0a95e91288ec749af8"
+    }
+  ]
+}
