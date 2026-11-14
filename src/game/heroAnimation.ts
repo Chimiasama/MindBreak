@@ -38,13 +38,14 @@ export class HeroAnimator {
   return{pose,frame:clipFrame(pose,elapsed)};
  }
 }
-export function heroAtlasMetadata(){
+export interface HeroFrameDefinition { w:number;h:number;scale:number;pivot:{x:number;y:number};hurtbox:{x:number;y:number;w:number;h:number};columns:number }
+export function heroAtlasMetadata(definition:HeroFrameDefinition=HERO_FRAME,version=2){
  let index=0;
  const clips=Object.fromEntries((Object.keys(HERO_CLIPS)as HeroPose[]).map(pose=>[pose,{...HERO_CLIPS[pose],frames:HERO_CLIPS[pose].durations.map((duration,i)=>{
-  const slot=index++;return{x:slot%HERO_FRAME.columns*HERO_FRAME.w,y:Math.floor(slot/HERO_FRAME.columns)*HERO_FRAME.h,w:HERO_FRAME.w,h:HERO_FRAME.h,duration,
+  const slot=index++;return{x:slot%definition.columns*definition.w,y:Math.floor(slot/definition.columns)*definition.h,w:definition.w,h:definition.h,duration,
    ...(pose.startsWith('attack')&&i===0?{event:'impact'}:{})};
  })}]));
- return{version:2,...HERO_FRAME,width:HERO_FRAME.columns*HERO_FRAME.w,height:Math.ceil(index/HERO_FRAME.columns)*HERO_FRAME.h,frameCount:index,clips};
+ return{version,...definition,width:definition.columns*definition.w,height:Math.ceil(index/definition.columns)*definition.h,frameCount:index,clips};
 }
 
 export const HERO_ATLAS = heroAtlasMetadata();

@@ -1,5 +1,7 @@
 # Direção visual V2 — anatomia, ilustração e identidade
 
+> **Incremento 24:** o Ren agora usa pinturas derivadas da prancha, com atlas e orçamento próprios. Contrato/previews em [REN_PINTADO.md](REN_PINTADO.md). Maya/Leon e demais personagens mantêm a V2 descrita abaixo; a visão geral vinculada foi atualizada.
+
 ## 1. Revisão solicitada
 
 O usuário pediu formas mais humanas, menos aparência de bonecos em blocos e liberdade para ampliar resolução/estilo. A primeira passagem dos incrementos 20–22 tinha cabeças/troncos retangulares e membros quase uniformes. A V2 substitui essa construção nos sprites integrados por ilustração 2D rasterizada de curvas, articulações e volumes afunilados.

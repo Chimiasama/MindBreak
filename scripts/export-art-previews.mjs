@@ -7,7 +7,7 @@ try {
  await page.goto(new URL('/tools/art-studio.html',process.env.PREVIEW_URL ?? 'http://localhost:3000').href);
  await page.waitForFunction(()=>window.artStudio);mkdirSync('docs/arte',{recursive:true});
  for(const hero of ['ren','maya','leon']){
-  await page.selectOption('#hero',hero);
+  await page.evaluate(hero=>window.artStudio.prepareHero(hero),hero);
   const data=await page.evaluate(hero=>({atlas:window.artStudio.getHeroAtlas(hero).toDataURL(),sheet:document.querySelector('#sheet').toDataURL(),metadata:{hero,...window.artStudio.metadata}}),hero);
   for(const kind of ['atlas','sheet'])writeFileSync(`docs/arte/${hero}-${kind}.png`,Buffer.from(data[kind].split(',')[1],'base64'));
   writeFileSync(`docs/arte/${hero}-atlas.json`,JSON.stringify(data.metadata,null,2)+'\n');

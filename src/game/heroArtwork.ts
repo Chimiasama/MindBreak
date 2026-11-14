@@ -1,3 +1,4 @@
+import { loadRenArtwork, getRenPaintedAtlas, renArtworkStatus, REN_ATLAS } from './renPainted';
 import type { CharacterId } from './types';
 import { HERO_FRAME, HERO_CLIPS, type HeroPose, HERO_ATLAS } from './heroAnimation';
 import { figureRig, paintFigure, type FigureStyle } from './illustratedFigure';
@@ -14,7 +15,12 @@ export function heroRig(hero:CharacterId,pose:HeroPose,frame:number){
  return rig;
 }
 const atlases=new Map<CharacterId,HTMLCanvasElement>();
+export function isHeroPainted(hero:CharacterId){return hero==='ren'&&getRenPaintedAtlas()!==null;}
+export function prepareHeroArtwork(hero:CharacterId){return hero==='ren'?loadRenArtwork():Promise.resolve(true);}
+export function getHeroArtworkStatus(hero:CharacterId){return hero==='ren'?renArtworkStatus():'procedural-v2';}
+export function getHeroMetadata(hero:CharacterId){return hero==='ren'&&getRenPaintedAtlas()?REN_ATLAS:HERO_ATLAS;}
 export function getHeroAtlas(hero:CharacterId){
+ if(hero==='ren'){void loadRenArtwork();const painted=getRenPaintedAtlas();if(painted){atlases.delete('ren');return painted;}}
  const cached=atlases.get(hero);if(cached)return cached;
  const meta=HERO_ATLAS,canvas=document.createElement('canvas');canvas.width=meta.width;canvas.height=meta.height;
  const ctx=canvas.getContext('2d');if(!ctx)throw Error('Hero atlas canvas unavailable');
@@ -28,6 +34,6 @@ export function getHeroAtlas(hero:CharacterId){
  atlases.set(hero,canvas);return canvas;
 }
 export function drawHeroFrame(ctx:CanvasRenderingContext2D,hero:CharacterId,pose:HeroPose,frame:number,centerX:number,feetY:number,facing:number){
- const f=HERO_ATLAS.clips[pose].frames[frame];ctx.save();ctx.translate(Math.round(centerX),Math.round(feetY));ctx.scale(facing,1);ctx.imageSmoothingEnabled=true;
- ctx.drawImage(getHeroAtlas(hero),f.x,f.y,f.w,f.h,-HERO_FRAME.pivot.x*HERO_FRAME.scale,-HERO_FRAME.pivot.y*HERO_FRAME.scale,HERO_FRAME.w*HERO_FRAME.scale,HERO_FRAME.h*HERO_FRAME.scale);ctx.restore();
+ const atlas=getHeroAtlas(hero),meta=getHeroMetadata(hero),f=meta.clips[pose].frames[frame];ctx.save();ctx.translate(Math.round(centerX),Math.round(feetY));ctx.scale(facing,1);ctx.imageSmoothingEnabled=true;
+ ctx.drawImage(atlas,f.x,f.y,f.w,f.h,-meta.pivot.x*meta.scale,-meta.pivot.y*meta.scale,meta.w*meta.scale,meta.h*meta.scale);ctx.restore();
 }

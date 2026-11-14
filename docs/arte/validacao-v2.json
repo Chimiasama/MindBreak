@@ -7,495 +7,495 @@
       "id": "ren",
       "pose": "idle",
       "frame": 0,
-      "opaque": 3088,
-      "colors": 1064,
-      "hash": 488805537
+      "opaque": 21722,
+      "colors": 10838,
+      "hash": 135220664
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "idle",
       "frame": 1,
-      "opaque": 3120,
-      "colors": 1095,
-      "hash": 1946735446
+      "opaque": 21724,
+      "colors": 10856,
+      "hash": 908205029
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "idle",
       "frame": 2,
-      "opaque": 3088,
-      "colors": 1064,
-      "hash": 488805537
+      "opaque": 21722,
+      "colors": 10833,
+      "hash": 2613191796
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "idle",
       "frame": 3,
-      "opaque": 3088,
-      "colors": 1065,
-      "hash": 1315581628
+      "opaque": 21722,
+      "colors": 10849,
+      "hash": 3721238473
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "run",
       "frame": 0,
-      "opaque": 2719,
-      "colors": 1023,
-      "hash": 3296547041
+      "opaque": 18267,
+      "colors": 8936,
+      "hash": 2534745586
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "run",
       "frame": 1,
-      "opaque": 2726,
-      "colors": 1029,
-      "hash": 570465605
+      "opaque": 15981,
+      "colors": 8396,
+      "hash": 131368387
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "run",
       "frame": 2,
-      "opaque": 2643,
-      "colors": 1042,
-      "hash": 59247171
+      "opaque": 19093,
+      "colors": 9349,
+      "hash": 364952966
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "run",
       "frame": 3,
-      "opaque": 2719,
-      "colors": 1022,
-      "hash": 2912716993
+      "opaque": 18267,
+      "colors": 8932,
+      "hash": 2687742182
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "run",
       "frame": 4,
-      "opaque": 2976,
-      "colors": 1070,
-      "hash": 2743640841
+      "opaque": 15981,
+      "colors": 8407,
+      "hash": 898699711
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "run",
       "frame": 5,
-      "opaque": 2666,
-      "colors": 1062,
-      "hash": 920016421
+      "opaque": 19093,
+      "colors": 9388,
+      "hash": 3351143521
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "jump",
       "frame": 0,
-      "opaque": 2672,
-      "colors": 988,
-      "hash": 2306598963
+      "opaque": 16405,
+      "colors": 8713,
+      "hash": 2499586167
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "jump",
       "frame": 1,
-      "opaque": 2693,
-      "colors": 989,
-      "hash": 1880640976
+      "opaque": 16405,
+      "colors": 8713,
+      "hash": 2499586167
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "fall",
       "frame": 0,
-      "opaque": 2995,
-      "colors": 1062,
-      "hash": 2176208314
+      "opaque": 18137,
+      "colors": 9137,
+      "hash": 2891762752
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "fall",
       "frame": 1,
-      "opaque": 2974,
-      "colors": 1056,
-      "hash": 2073681181
+      "opaque": 18137,
+      "colors": 9137,
+      "hash": 2891762752
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "wall",
       "frame": 0,
-      "opaque": 2848,
-      "colors": 1044,
-      "hash": 3300460633
+      "opaque": 28007,
+      "colors": 9281,
+      "hash": 2529801488
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "wall",
       "frame": 1,
-      "opaque": 2848,
-      "colors": 1044,
-      "hash": 3499397752
+      "opaque": 28007,
+      "colors": 9322,
+      "hash": 1254459659
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "climb",
       "frame": 0,
-      "opaque": 2848,
-      "colors": 1042,
-      "hash": 644035068
+      "opaque": 28007,
+      "colors": 9315,
+      "hash": 2806475049
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "climb",
       "frame": 1,
-      "opaque": 2742,
-      "colors": 1032,
-      "hash": 3718145533
+      "opaque": 31867,
+      "colors": 8748,
+      "hash": 813981240
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "climb",
       "frame": 2,
-      "opaque": 2848,
-      "colors": 1041,
-      "hash": 2212562539
+      "opaque": 28007,
+      "colors": 9324,
+      "hash": 2925102806
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "climb",
       "frame": 3,
-      "opaque": 2742,
-      "colors": 1032,
-      "hash": 3718145533
+      "opaque": 31867,
+      "colors": 8761,
+      "hash": 2386474081
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "hang",
       "frame": 0,
-      "opaque": 3270,
-      "colors": 1064,
-      "hash": 4163374182
+      "opaque": 23063,
+      "colors": 8512,
+      "hash": 1947134838
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "hang",
       "frame": 1,
-      "opaque": 3252,
-      "colors": 1066,
-      "hash": 1857564230
+      "opaque": 23063,
+      "colors": 8512,
+      "hash": 1947134838
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "vault",
       "frame": 0,
-      "opaque": 2735,
-      "colors": 1031,
-      "hash": 995350215
+      "opaque": 28786,
+      "colors": 10546,
+      "hash": 4207950645
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "vault",
       "frame": 1,
-      "opaque": 2720,
-      "colors": 1034,
-      "hash": 2196283828
+      "opaque": 28786,
+      "colors": 10546,
+      "hash": 4207950645
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "vault",
       "frame": 2,
-      "opaque": 2707,
-      "colors": 1028,
-      "hash": 132341691
+      "opaque": 28786,
+      "colors": 10449,
+      "hash": 2054705172
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "dash",
       "frame": 0,
-      "opaque": 2751,
-      "colors": 1077,
-      "hash": 3390943029
+      "opaque": 23833,
+      "colors": 10459,
+      "hash": 3211113805
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "dash",
       "frame": 1,
-      "opaque": 2751,
-      "colors": 1077,
-      "hash": 3390943029
+      "opaque": 23833,
+      "colors": 10515,
+      "hash": 3566127951
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "dash",
       "frame": 2,
-      "opaque": 2751,
-      "colors": 1077,
-      "hash": 869849470
+      "opaque": 23833,
+      "colors": 10444,
+      "hash": 3503325719
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "slide",
       "frame": 0,
-      "opaque": 2186,
-      "colors": 963,
-      "hash": 1544969125
+      "opaque": 17002,
+      "colors": 8399,
+      "hash": 2716528399
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "slide",
       "frame": 1,
-      "opaque": 2186,
-      "colors": 964,
-      "hash": 1063330422
+      "opaque": 17002,
+      "colors": 8399,
+      "hash": 2716528399
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "attack1",
       "frame": 0,
-      "opaque": 2999,
-      "colors": 1058,
-      "hash": 2251639151
+      "opaque": 29934,
+      "colors": 14214,
+      "hash": 3236556032
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "attack1",
       "frame": 1,
-      "opaque": 2985,
-      "colors": 1059,
-      "hash": 2215518635
+      "opaque": 29934,
+      "colors": 14214,
+      "hash": 3236556032
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "attack1",
       "frame": 2,
-      "opaque": 3088,
-      "colors": 1061,
-      "hash": 3882165885
+      "opaque": 21722,
+      "colors": 10831,
+      "hash": 4224398435
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "attack2",
       "frame": 0,
-      "opaque": 3109,
-      "colors": 1092,
-      "hash": 1276696362
+      "opaque": 27768,
+      "colors": 13664,
+      "hash": 3484490358
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "attack2",
       "frame": 1,
-      "opaque": 3058,
-      "colors": 1086,
-      "hash": 2527351067
+      "opaque": 27768,
+      "colors": 13664,
+      "hash": 3484490358
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "attack2",
       "frame": 2,
-      "opaque": 3088,
-      "colors": 1061,
-      "hash": 3882165885
+      "opaque": 21722,
+      "colors": 10838,
+      "hash": 4219763814
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "attack3",
       "frame": 0,
-      "opaque": 3068,
-      "colors": 1048,
-      "hash": 2620273316
+      "opaque": 43484,
+      "colors": 16058,
+      "hash": 668149686
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "attack3",
       "frame": 1,
-      "opaque": 3029,
-      "colors": 1043,
-      "hash": 1935872024
+      "opaque": 43484,
+      "colors": 16050,
+      "hash": 3491464559
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "attack3",
       "frame": 2,
-      "opaque": 3088,
-      "colors": 1062,
-      "hash": 3558144864
+      "opaque": 21722,
+      "colors": 10839,
+      "hash": 4211636344
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "hurt",
       "frame": 0,
-      "opaque": 2880,
-      "colors": 1031,
-      "hash": 1009792412
+      "opaque": 24113,
+      "colors": 11563,
+      "hash": 2823560342
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "hurt",
       "frame": 1,
-      "opaque": 2861,
-      "colors": 1020,
-      "hash": 74070464
+      "opaque": 24113,
+      "colors": 11579,
+      "hash": 2490991457
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "stun",
       "frame": 0,
-      "opaque": 2987,
-      "colors": 1007,
-      "hash": 197599858
+      "opaque": 24125,
+      "colors": 11577,
+      "hash": 2163462454
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "stun",
       "frame": 1,
-      "opaque": 2970,
-      "colors": 1005,
-      "hash": 940771494
+      "opaque": 24113,
+      "colors": 11575,
+      "hash": 234566885
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "special",
       "frame": 0,
-      "opaque": 3202,
-      "colors": 1161,
-      "hash": 836806321
+      "opaque": 44631,
+      "colors": 14571,
+      "hash": 2669210310
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "special",
       "frame": 1,
-      "opaque": 3219,
-      "colors": 1170,
-      "hash": 3470961642
+      "opaque": 44631,
+      "colors": 14571,
+      "hash": 2669210310
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "special",
       "frame": 2,
-      "opaque": 3202,
-      "colors": 1161,
-      "hash": 1646032561
+      "opaque": 44631,
+      "colors": 14571,
+      "hash": 2669210310
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "special",
       "frame": 3,
-      "opaque": 3219,
-      "colors": 1170,
-      "hash": 500036818
+      "opaque": 44631,
+      "colors": 14571,
+      "hash": 2669210310
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "flight",
       "frame": 0,
-      "opaque": 2867,
-      "colors": 1022,
-      "hash": 2145424977
+      "opaque": 18137,
+      "colors": 9175,
+      "hash": 2630130872
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "flight",
       "frame": 1,
-      "opaque": 2905,
-      "colors": 1035,
-      "hash": 2599153531
+      "opaque": 18137,
+      "colors": 9148,
+      "hash": 4054796345
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "flight",
       "frame": 2,
-      "opaque": 2867,
-      "colors": 1022,
-      "hash": 1418317583
+      "opaque": 18137,
+      "colors": 9178,
+      "hash": 2789258071
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "flight",
       "frame": 3,
-      "opaque": 2905,
-      "colors": 1035,
-      "hash": 1478872679
+      "opaque": 18137,
+      "colors": 9178,
+      "hash": 2789258071
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "death",
       "frame": 0,
-      "opaque": 2140,
-      "colors": 955,
-      "hash": 1215403323
+      "opaque": 15375,
+      "colors": 6702,
+      "hash": 1353306808
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "death",
       "frame": 1,
-      "opaque": 2148,
-      "colors": 965,
-      "hash": 2447901764
+      "opaque": 15375,
+      "colors": 6702,
+      "hash": 1353306808
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "death",
       "frame": 2,
-      "opaque": 2152,
-      "colors": 973,
-      "hash": 187987586
+      "opaque": 15375,
+      "colors": 6702,
+      "hash": 1353306808
     },
     {
       "type": "hero",
       "id": "ren",
       "pose": "death",
       "frame": 3,
-      "opaque": 2161,
-      "colors": 958,
-      "hash": 1876644503
+      "opaque": 15375,
+      "colors": 6702,
+      "hash": 1353306808
     },
     {
       "type": "hero",

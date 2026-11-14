@@ -1,6 +1,6 @@
 import { drawBossSprite } from './bossArtwork';
 import { HeroAnimator } from './heroAnimation';
-import { drawHeroFrame } from './heroArtwork';
+import { drawHeroFrame, isHeroPainted } from './heroArtwork';
 import { COMBO, SWINGS, nextComboStep } from './combat';
 import { bossBodies, bossShots, bossWarnings, BOSS_MOVES, isBossCharge, moveBoss, stepBoss } from './bosses';
 import { sound } from './audio';
@@ -2642,7 +2642,7 @@ export class GameEngine {
     }
 
     // Ren's 8-Node Kinematic Scarf drawn in world space
-    if (this.characterId === 'ren' && this.scarfNodes.length > 1) {
+    if (this.characterId === 'ren' && !isHeroPainted(this.characterId) && this.scarfNodes.length > 1) {
       ctx.save();
       ctx.strokeStyle = '#ff007f';
       ctx.lineWidth = 6;
@@ -2703,7 +2703,7 @@ export class GameEngine {
     // Psychic Slash Arc
     if (p.slashing) {
       ctx.save();
-      ctx.strokeStyle = p.atkTimer > 0 ? '#ef4444' : char.accentColor;
+      ctx.strokeStyle = p.atkTimer > 0 ? '#ef4444' : this.characterId === 'ren' && isHeroPainted(this.characterId) ? '#6be7ef' : char.accentColor;
       const swing = SWINGS[p.comboStep];
       const progress = (swing.totalTicks - p.slashTimer) / swing.activeTicks;
       ctx.globalAlpha = 1 - progress * 0.65;
