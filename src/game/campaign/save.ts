@@ -1,3 +1,4 @@
+import {gateOpened} from './routeState';
 import { CHARACTERS } from '../characters';
 import { Enemy, EnemyMind, PickupItem } from '../types';
 import { ENEMY_COMBAT, ENEMY_STATES } from '../enemyAI';
@@ -88,14 +89,14 @@ function decodeArea(raw: unknown, chapterId: number, worldTick: number): AreaSav
   const activated = array(area.activated, stage.exploration?.nodes.length ?? 0).map(string);
   if (new Set(activated).size !== activated.length || activated.some(id => !stage.exploration?.nodes.some(node => node.id === id))) throw new Error('comando inválido');
   for (const node of stage.exploration?.nodes ?? []) if (activated.includes(node.id) && !node.requires.every(id => activated.includes(id))) throw new Error('sequência inválida');
-  const complete = (stage.exploration?.nodes ?? []).every(node => activated.includes(node.id));
+  const activeSet=new Set(activated);
   const platforms = exactArray(area.platforms, stage.platforms.length).map((value, index) => {
     const p = object(value), base = stage.platforms[index];
     const range = base.type === 'moving' ? base.moveRange ?? 80 : 0;
     const x = number(p.x, base.x - (base.moveAxis === 'x' ? range : 0), base.x + (base.moveAxis === 'x' ? range : 0));
     const y = number(p.y, base.y - (base.moveAxis !== 'x' ? range : 0), base.y + (base.moveAxis !== 'x' ? range : 0));
     const broken = boolean(p.broken), crumbleTimer = integer(p.crumbleTimer, 0, 201);
-    if (base.gateId ? broken !== complete || crumbleTimer !== 0 : base.type !== 'crumble' && (broken || crumbleTimer)) throw new Error('plataforma inválida');
+    if (base.gateId ? broken !== gateOpened(stage,base.gateId,activeSet) || crumbleTimer !== 0 : base.type !== 'crumble' && (broken || crumbleTimer)) throw new Error('plataforma inválida');
     return { x, y, broken, crumbleTimer };
   });
   const props = exactArray(area.props, stage.props.length).map((value, index) => {

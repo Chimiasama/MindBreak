@@ -1,124 +1,123 @@
-# Padrão de fases exploratórias — revisão 18
+# Concepção de fases — exploração confinada por capítulo (revisão 26)
 
-## 1. Problema e objetivo
+## 1. Referência e identidade
 
-O teste do usuário mostrou que avançar quase sempre para a direita bastava para atravessar os setores. O catálogo tinha plataformas altas, salas com recursos e retornos entre subfases, mas o percurso principal ficava no piso inferior. Os testes anteriores de corredor aceitavam essa solução; ter geometria vertical opcional não garantia exploração.
+A referência apresentada pelo usuário, um mapa de **Metal Warriors**, descreve o conceito desejado: caminhos por cima, pelo meio e por baixo, conexões verticais, barreiras condicionais, desvios, mecanismos, retornos e atalhos. A referência é de **design espacial**, sem pedido para copiar sua aparência.
 
-A prioridade mudou: **estrutura e exploração antes das próximas músicas**. A campanha continua com oito fases e 26 setores. Nesta revisão, os **23 setores fora do trem** passam a exigir exploração elevada e retorno; os três do trem preservam o percurso mais linear e os desafios de travessia já existentes.
+O nome de trabalho é **fases exploratórias interconectadas com gating, loops e backtracking significativo**, ou “exploração de inspiração Metroidvania dentro de cada fase”. Não é um mundo global em que estar na fase 6 permite voltar à fase 2.
 
-## 2. Padrão adotado
+- Oito fases principais, **26 subfases/setores** mantidos.
+- Cada fase principal contém sua própria rede de exploração. Os seus setores permitem ida/volta e conservam os avanços locais.
+- Depois de avançar a outro capítulo, não existe porta de exploração para capítulos anteriores. Validador e `travel()` rejeitam essa ligação. O seletor externo de teste continua uma ferramenta separada.
+- **Trem 2A–2C:** exceção linear de ação, obstáculos, saltos, rasteiras e combate. Seus mapas não foram alterados nesta revisão.
+- Fábrica, laboratório, museu, base e outras instalações devem oferecer circulação ampla, camadas de percurso úteis no plano 2D e motivos concretos para voltar.
 
-| Momento | Função no percurso | Implementação atual |
-| --- | --- | --- |
-| Entrada e observação | Mostrar uma passagem bloqueada e indicar um destino fora do piso inferior | Objetivo textual com direção relativa; tutorial de CIMA no primeiro setor |
-| Aproximação e subida | Fazer o jogador mudar de altura e escolher apoios | Plataformas, patamares adicionais e salas cobertas com entradas laterais |
-| Ala distante | Exigir alcançar e verificar um lugar | Painel primário em uma sala elevada; um guarda próprio protege o comando |
-| Retorno | Mudar a direção do percurso e utilizar outra ala | O primeiro painel envia sinal ao segundo, colocado à esquerda; voltar é obrigatório |
-| Liberação | Recompensar a inspeção com acesso persistente | Segundo painel abre um portão sólido; libera saída superior ou acesso ao confronto |
-| Desvio opcional | Permitir procurar recursos além do objetivo principal | Objetos e baús existentes; seis depósitos laterais novos, fora da sequência de comandos |
-| Avanço e revisita | Conectar subfases e facilitar exploração posterior | Portas bidirecionais, checkpoints reposicionados e comandos/portões que permanecem resolvidos |
+## 2. O que torna uma fase exploratória
 
-```mermaid
-flowchart LR
-  E[Entrada / observação] --> H[Área de circulação]
-  H --> V[Subida por patamares]
-  V --> A[Ala elevada / guarda / painel 1]
-  A --> R[Retorno para outra ala / painel 2]
-  R --> P[Passagem liberada]
-  P --> S[Saída superior ou confronto]
-  H --> D[Depósito lateral opcional]
-  D --> H
-  S --> B[Próxima subfase / retorno por porta]
-```
+A unidade de autoria é uma **rede de regiões**, em vez de um corredor contendo plataformas altas opcionais. Cada região tem entradas, saídas, altura, referências visuais e relação com as demais. Os objetivos podem seguir uma ordem, enquanto os caminhos para alcançá-los oferecem bifurcações e conexões.
 
-Os painéis funcionam como a primeira implementação de um **contrato de percurso**. A tabela autoral já diferencia posições, alturas, salas, acessos e depósitos. Nas próximas revisões de autoria, o papel de cada comando pode virar mecanismo ambiental mais próprio do setor: comporta, antena, elevador, circuito ou arquivo. Não é necessário mudar o motor para diversificar esses encontros.
+### 2.1 Regras de concepção
 
-### 2.1 Regras obrigatórias
+1. **Apresentar bloqueios e destinos antes da solução.** O jogador deve lembrar onde havia uma passagem inacessível e reconhecer o que mudou.
+2. **Criar largura e profundidade vertical úteis.** A área adicional precisa conter circulação, encontros, recursos e conexões, não ser só um piso vazio mais longo.
+3. **Distribuir os acessos.** Subir por um poço e descer por outro permite conhecer novas relações entre lugares. Tetos/pisos sólidos delimitam os níveis, evitando que qualquer salto atravesse toda a estrutura.
+4. **Usar vai e vem com consequência.** Um comando na ala alta habilita algo na ala baixa; a ação posterior abre outra passagem. A volta não precisa repetir exatamente o caminho de ida.
+5. **Abrir atalhos persistentes.** O esforço para acessar uma passagem difícil recompensa as revisitas, sem exigir repetir o mesmo desafio toda vez.
+6. **Separar exploração obrigatória e descoberta opcional.** Há regiões para concluir a fase e outras para recursos, segredos ou atalhos. Não exigir limpar todos os inimigos do mundo.
+7. **Considerar os três personagens desde o mapa.** Todos concluem a rota principal; habilidades especiais dão acessos e vantagens opcionais. A campanha não pode exigir troca livre, pois a regra final é trocar no continue.
+8. **Preservar o que o jogador conquistou.** Painéis, brechas e atalhos abertos não fecham por morte, ida/volta ou carregamento. Guardas de mecanismos não reaparecem para desfazer progresso.
+9. **Manter orientação compreensível.** Nomear alas, sinalizar poços e bloqueios e indicar o objetivo; evitar tanto um labirinto sem referências quanto um roteiro que revele todos os segredos.
+10. **Validar a geografia jogando.** Um grafo abstrato conectado não garante que um corpo com 32 × 56 consiga fazer um salto, sair de uma sala ou voltar de um depósito.
 
-1. Segurar direita não pode concluir o setor exploratório.
-2. A rota principal exige sair do piso inferior e retornar a outra ala. Os lugares obrigatórios não podem ser apenas cenários decorativos.
-3. Ren, Maya e Leon precisam conseguir percorrer ida e retorno sem voo, item JMP, resgate ou dano para atravessar perigos. O voo da Maya pode ajudar na locomoção, preservando a necessidade de examinar os lugares.
-4. O guarda do painel é um encontro específico. Não é necessário matar todo inimigo do mapa; inimigos comuns continuam podendo ser evitados e reaparecer conforme as regras anteriores.
-5. Uma passagem ainda depende dos comandos mesmo se o jogador alcançar o outro lado do portão por salto/voo. Um chefe não começa antes da exploração e da regra de arena correspondente.
-6. Morte, retorno ao setor e carregamento conservam os comandos resolvidos. O guarda obrigatório não reaparece para fechar a rota. Plataformas essenciais de controle são permanentes.
-7. Recursos opcionais não ativam painéis nem abrem a saída. O jogador escolhe o risco de procurar o baú e mantém a recompensa por exploração.
-8. Os objetivos têm nome no mundo e indicação relativa no HUD; CIMA serve para examinar e atravessar portas. A interface não revela pontos ou limiares de vidas.
+### 2.2 Estrutura implantada nesta revisão
 
-### 2.2 Exceções e variação
+Os 23 setores exploratórios ganharam uma rede modular nova antes das alas/encontros já existentes. Assim se preservam as arenas, os chefes, as torretas/instalações e as ascensões originais, enquanto a circulação principal deixa de ser só o corredor anterior.
 
-- **2A–2C / trem:** fluxo predominante para a frente, com saltos, vãos, serviço, obstáculos e chefe. Continua sendo uma exceção identificada, não o molde da campanha inteira.
-- **3B / guindastes e 8C / elevador orbital:** a progressão longa continua vertical. Há retorno lateral no alto; não é exigido descer mil unidades só para apertar um painel.
-- **Setores finais:** a dupla de comandos libera o acesso ao confronto. As arenas e seus sobreviventes conservam a regra de encontro obrigatório; o chefe continua apenas no último setor.
-- **Revisitas:** depois de liberada, a passagem permanece aberta. Os retornos entre setores não exigem repetir o circuito.
+| Região/camada | Função |
+|---|---|
+| Ala oeste, galeria central e ala leste | Três regiões largas, cada uma com nível inferior, intermediário e superior |
+| Quatro poços e patamares | Conectar os níveis por entradas diferentes, com saltos e retornos |
+| Galeria cinética acima dos caminhos usuais | Percurso de parede/precisão e atalho do Ren |
+| Ilha suspensa acima do poço | Região de voo, recursos e comando de atalho da Maya |
+| Compartimento inferior selado | Parede que Leon rompe com golpe para alcançar um depósito |
+| Depósito lateral universal | Desvio elevado que os três alcançam por saltos, sem resolver o circuito principal |
+| Alas internas e trecho de encontro preservado | Continuação com identidade do setor, controles locais e acesso ao setor seguinte/chefe |
 
-## 3. Exemplo de leitura: 1A
+A rede usa um kit comum, com larguras diferentes por capítulo/tipo, nomes e sinais temáticos, perigos localizados e as geometrias originais distintas. **Não são 23 labirintos inteiramente desenhados do zero.** Individualizar mais mecanismos e formatos de sala é um próximo refinamento, sobre uma base já jogável e verificada.
 
-Em **Fuga do Laboratório**, o jogador sobe até o **Arquivo de contenção**, vence o guarda e examina o painel. O sinal habilita o **Comando de manutenção**, em outra plataforma à esquerda. Depois do retorno, o portão abre e a saída para os telhados fica na plataforma superior, em vez de no fim do piso inferior.
+A fábrica recebe a maior expansão horizontal: setores de **9.700, 9.840 e 10.200 unidades**, antes 2.500, 2.640 e 3.000. Os demais setores exploratórios ficam entre **7.500 e 9.640**, com três níveis na rede nova e as alturas originais preservadas. O trem mantém suas larguras anteriores.
 
-Um depósito elevado na lateral esquerda guarda o baú; são necessários saltos próprios para visitá-lo, e abrir esse baú não substitui a exploração obrigatória. As salas usam pisos e tetos sólidos com acesso lateral, permitindo trajetos e abordagens diferentes conforme o personagem.
+## 3. Progressão, mecanismos e retornos
 
-Mapas exportados diretamente do catálogo:
+Cada setor exploratório tem seis comandos obrigatórios: quatro distribuídos pela rede nova e dois nas alas internas anteriores. O primeiro novo e o primeiro interno possuem guardas próprios não repetíveis.
 
-- [1A — laboratório e depósito lateral](mapas/1A.svg)
-- [4B — esteiras, controles elevados e passagem superior](mapas/4B.svg)
-- [8C — ascensão orbital com retorno no alto](mapas/8C.svg)
+1. Alcançar a ala superior central e resolver o posto protegido.
+2. Retornar à ala inferior oeste e enviar o sinal de distribuição.
+3. Explorar a ala leste pelo nível intermediário.
+4. Voltar à galeria central e habilitar a ligação às alas internas.
+5. Inspecionar o controle elevado do trecho interno.
+6. Retornar ao comando local e liberar a passagem final/confronto.
 
-As linhas dos mapas indicam a ordem dos objetivos. Para atualizar os SVG depois de mexer nos dados, executar `./node_modules/.bin/tsx scripts/export-route-maps.ts` na raiz.
+Há **portões independentes**: o segundo comando abre a ligação intermediária; o quarto abre a ligação ao trecho interno; a dupla interna libera a saída/confronto. Os três mecanismos opcionais abrem suas próprias passagens. Examinar um painel não abre todos os portões de uma vez.
 
-## 4. Aplicação nos setores
+As linhas ciano dos mapas documentais representam sinais/dependências, **não uma linha física que o jogador deve seguir**. A navegação ocorre pelas passagens do terreno. Voar por cima de uma barreira não substitui os comandos exigidos para sair ou iniciar o chefe.
 
-| Setor | Primeira ala | Ala de retorno |
-| --- | --- | --- |
-| 1A | Arquivo de contenção | Comando de manutenção |
-| 1B | Antena leste | Relé da cobertura oeste |
-| 1C | Bomba do reservatório | Válvula de retorno |
-| 1D | Posto de vigilância | Comando do bloqueio |
-| 3A | Controle de carga | Oficina de fundação |
-| 3B | Cabine do guindaste | Relé lateral das vigas |
-| 3C | Controle de tempestade | Abrigo do heliponto |
-| 4A | Comando dos tanques | Sala de refrigeração |
-| 4B | Distribuidor de energia | Controle de alimentação |
-| 4C | Comando do reator | Válvula de descarte |
-| 5A | Sala de credenciais | Recepção de segurança |
-| 5B | Servidor da garagem | Oficina de serviço |
-| 5C | Arquivo executivo | Comando do cofre |
-| 6A | Arquivo holográfico | Sala de projeção |
-| 6B | Núcleo de irrigação | Controle do jardim oeste |
-| 6C | Catálogo restrito | Controle do acervo |
-| 7A | Central da doca | Posto de vigilância |
-| 7B | Servidor de contenção | Comando de acesso |
-| 7C | Sala de comunicações | Comando de autorização |
-| 8A | Distribuidor da torre | Comando da base |
-| 8B | Estabilizador Zero | Controle de retorno |
-| 8C | Comando orbital | Relé lateral do eixo |
-| 8D | Autorização estratosférica | Comando da plataforma |
+Os comandos ainda usam interação local por CIMA. Seus nomes variam por tema — refrigeração, contenção, distribuição, arquivos, projeção, autorização — e já abrem barreiras diferentes. Interações mais específicas, como mudar o estado de uma máquina ou drenar um tanque, continuam uma oportunidade de autoria; não são anunciadas como implementadas apenas porque um painel recebeu esse nome.
 
-Foram adicionados apoios nos caminhos que antes eram opcionais ou dependiam de movimento muito preciso. Os depósitos de **1A/3A/4A/5A/7A/8A** recebem caminhos laterais próprios e reutilizam os baús/recompensas existentes. Não foram adicionadas vidas infinitas por ativar painéis. A campanha tem **155 inimigos inicialmente ativos**, incluindo 23 guardas de comando, e duas origens dormentes de torretas; conserva 77 checkpoints e 78 objetos. São 23 portões e 382 peças de terreno no catálogo atual.
+## 4. Personagens e caminhos opcionais
 
-## 5. Contrato técnico
+| Personagem | Acesso aplicado | Recompensa espacial |
+|---|---|---|
+| Ren | Subida por parede até a trava cinética e travessia de um duto com salto/dash | Atalho alto e recurso ao final de um percurso de precisão |
+| Maya | Subida por poço aberto até a ilha suspensa, considerando teto e energia | Recurso e liberação de uma ligação superior mais direta |
+| Leon | Golpe próximo rompe uma parede física que bloqueia corpos/tiros | Entrada no compartimento de recursos e retorno pela brecha |
+| Todos | Patamares, salto duplo e corredores comuns | Campanha inteira e depósito lateral universal |
 
-- `campaign/exploration.ts`: tabela de rotas por setor e montagem determinística dos apoios, salas, depósitos, saída e portão sobre os mapas existentes. Sem aleatoriedade; cada posição é autoral e faz parte do catálogo validado.
-- `SubstageDefinition.exploration`: estilo `loop`/`vertical` e nós com ID, nome, corpo de interação, dependências e índice do guarda. Capítulo 2 não recebe esse contrato.
-- `GameEngine.inspectRouteNode()`: verifica proximidade, ação permitida, sinal anterior e guarda vivo; ativa somente depois das condições. O mesmo método atende o CIMA de teclado, toque e gamepad.
-- `routeComplete()`: autoriza a saída dianteira e o gatilho de chefe. Portas de retorno continuam disponíveis conforme as regras de combate/arena.
-- `Platform.gateId`: identifica portão físico. A resolução do circuito marca `broken`, retirando o sólido de movimento, visão e tiros; o portão nunca fecha novamente na tentativa atual.
-- `Enemy.requiredGuard`: torna o guarda do comando não repetível no SpawnManager. O histórico e as recompensas dos inimigos comuns continuam como antes.
-- `activated`: lista de comandos no cache e save corrente. O codec valida IDs, dependências, guarda já ausente e coerência de portões abertos; a restauração não inventa progresso.
-- O validador de autoria rejeita comandos sem piso permanente, corpos dentro do terreno, IDs/dependências inválidos, ciclos e guardas desconhecidos.
+A habilidade básica de parede dos outros personagens não foi retirada. A trava cinética é uma interação própria do Ren; voo e brecha são considerados pelo percurso e pelo mecanismo correspondente. Alguns lugares podem oferecer soluções alternativas de habilidade. A intenção não é transformar cada item em uma exclusividade arbitrária.
 
-O formato de save foi ajustado para o estado corrente, sem migrações ou obrigação de preservar versões antigas, conforme orientação do usuário. A troca livre de personagem permanece ferramenta de teste; a regra final de troca no continue não foi modificada.
+CIMA não rompe a parede do Leon; ataques de outros heróis também não a rompem. O golpe precisa alcançar a parede e ter linha livre. O bloqueio sai da colisão somente depois da abertura. Os comandos de habilidade são opcionais e não participam da condição de saída.
 
-## 6. Evidência e aceite
+## 5. Atlas e números atuais
 
-**378 testes passaram**, além de TypeScript, build web, build dos assets Android e sync. A contagem reflete a substituição dos antigos ensaios de corredor pelos percursos novos:
+- [Atlas interativo dos 26 setores](ATLAS_DAS_FASES.html), com seleção e zoom.
+- [4A — visão estrutural da fábrica](mapas/4A.svg), [prévia PNG](mapas/4A-visao.png) e [ensaio no jogo](mapas/fabrica-jogo.png).
+- [4B — linhas de transporte](mapas/4B.svg).
+- [3B — complexo e ascensão dos guindastes](mapas/3B.svg).
+- [8C — complexo e elevador orbital](mapas/8C.svg).
+- [2A — comparação com a exceção linear do trem](mapas/2A.svg).
+- [Catálogo de dimensões/contagens](mapas/catalogo.json).
 
-- **69 percursos de exploração**: dois comandos e saída/confronto dos 23 setores com os três heróis.
-- **69 percursos de retorno**: do último checkpoint ao acesso anterior/entrada com os três heróis.
-- **18 percursos de depósito opcional**: seis depósitos com os três heróis, abrindo o baú sem resolver o circuito.
-- O trem conserva seus ensaios de ida/retorno. Há regressões de simplesmente caminhar, voo sobre o bloqueio, sinal/guarda, interação por tick, repetição, morte, revisita, save, dependências e portões adulterados.
+A campanha contém **316 inimigos iniciais ativos**, duas origens dormentes de torretas, **123 checkpoints, 170 objetos, 1.452 peças de terreno e 138 barreiras de mecanismo**. São quantidades de autoria, não limites de respawn ou vidas. Inimigos comuns conservam repopulação e recompensas; ampliar o vai e vem torna esses sistemas mais relevantes, sem alterar suas regras.
 
-O planejador de ensaio procura comandos com a física real do motor e depois reproduz a solução por movimento/salto/descida de cano, sem editar coordenadas durante o percurso aceito. Combate é isolado nesses ensaios. Plataformas móveis opcionais são removidas da simulação de aceite para provar que não são assistência obrigatória; contatos com ácido/laser são rejeitados mesmo quando o laser estaria apagado. Isso não certifica dificuldade com todos os inimigos ativos, timing de plataformas móveis ou vitória manual da campanha inteira.
+Atualização documental: `./node_modules/.bin/tsx scripts/export-route-maps.ts`. O atlas HTML/SVG e as imagens de documentação não são componentes do jogo nem entram no APK.
 
-Chromium horizontal 915×412: segurar direita não resolve o setor; alcançar a porta bloqueada não muda de mapa; CIMA exige vencer o guarda; golpes reais e CIMA por toque liberam os comandos; a passagem e o retorno persistem depois de recarregar. As posições de combate/inspeção foram preparadas no ensaio; não equivalem ao percurso manual completo. Sem erro JavaScript.
+## 6. Contrato técnico
 
-**Músicas permanecem pausadas como trabalho de produção.** Próximos ajustes deste bloco são avaliação no celular, clareza dos acessos e densidade/dificuldade dos encontros, além de diversificar os mecanismos ambientais conforme cada setor. Nenhuma Action foi acionada e nenhum APK foi gerado. Multiplayer e migração de engine continuam futuros.
+- `campaign/exploration.ts`: mantém os apoios, comandos e identidade dos trechos internos anteriores.
+- `campaign/complexes.ts`: compõe as redes novas, ajusta dimensões/posições e conserva vínculos de inimigos, torretas, portas e arenas. Sem aleatoriedade na autoria.
+- `exploration.nodes`: comandos com dependências, guarda, `optional`, `requiredHero` e ação `smash` quando aplicável.
+- `exploration.gates`: lista de sinais exigidos por cada portão. `routeState.ts` centraliza conclusão obrigatória e abertura por mecanismo.
+- `Platform.breakNode`: conecta a parede do Leon ao comando de brecha; o ataque verifica alcance e cobertura antes da interação.
+- `routeComplete()`: considera só os seis comandos obrigatórios. Atalhos e depósitos não são exigidos para terminar com outro personagem.
+- `travel()`: recusa destinos fora da fase principal. Portas de retorno entre setores do mesmo capítulo permanecem disponíveis conforme combate/arena.
+- Save: preserva cada comando e a abertura de cada portão independentemente; valida sinais, guardas e coerência das brechas. A geometria corrente mudou sem migração/preservação de saves antigos, conforme orientação do usuário.
+- Validação de autoria: rejeita objetivos sem apoio, dependências inválidas/cíclicas, comandos de habilidade obrigatórios, portões sem sinais e brechas sem vínculo válido.
+
+A troca livre continua ferramenta de teste. Nenhum segredo novo depende dessa troca para concluir a campanha, nem altera a regra final de escolha no continue.
+
+## 7. Evidências e próximos aceites
+
+**424 testes aprovados**, TypeScript, build web, build de assets Android e Capacitor sync aprovados. Os ensaios de navegação foram distribuídos por arquivo/herói para executar a procura física sem concentrar todo o custo num único processo.
+
+- 69 percursos obrigatórios: 23 setores × três heróis, seis comandos e saída/confronto, sem voo/dano/teletransporte na solução reproduzida.
+- 69 retornos desde o último checkpoint, nos três heróis.
+- 18 acessos ao depósito universal, sem liberar a rota principal.
+- Ensaios físicos adicionais na fábrica: Ren sobe por parede e usa air dash no duto, Maya alcança a ilha pelo poço com energia finita, Leon entra/retorna pelo muro rompido.
+- Os três setores do trem mantêm seus ensaios de ida/volta nos três personagens e a mesma geometria.
+- Regressões de mecanismos intermediários, habilidades opcionais, brecha por golpe, portas entre capítulos, morte/revisita/save, guardas, combate, som e instalação de torretas.
+
+O planejador usa a física real para procurar comandos e reproduzir a solução. Guias regionais reduzem a procura em mapas maiores; o percurso aceito não edita coordenadas nem abre portões artificialmente. Combate é isolado, plataformas móveis auxiliares são removidas e contatos com ácido/laser são rejeitados mesmo no instante apagado. O voo de teste parte com energia cheia, sem recarga por tick ou teletransporte durante o acesso.
+
+Chromium horizontal com touch confirmou CIMA, guardas, seis comandos e aberturas distintas, habilidades opcionais, golpe do Leon, ida/volta de setor e restauração dos nove comandos/seis barreiras. Posições foram preparadas nesse ensaio de interface/comportamento; ele não substitui os trajetos físicos acima nem uma campanha manual completa. Sem erros JavaScript. Os 26 mapas e a ferramenta de zoom também foram conferidos.
+
+**Pendentes:** jogar com todos os inimigos ativos, medir duração/orientação, densidade e reposição de recursos, ajustar diferenças editoriais entre salas, substituir parte dos painéis por mecanismos específicos, revisar arte/landmarks e testar Android/DualShock 4. Não se promete equilíbrio final só por haver caminhos válidos. Nenhuma Action foi executada ou APK gerado.

@@ -1,24 +1,27 @@
-import { writeFileSync, mkdirSync } from 'node:fs';
-import { getSubstage } from '../src/game/campaign';
-import type { SubstageId } from '../src/game/campaign';
-const esc = (s: string) => s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
+import {writeFileSync,mkdirSync}from'node:fs';
+import {SUBSTAGES}from'../src/game/campaign';
+const esc=(s:string)=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
 mkdirSync('docs/mapas',{recursive:true});
-for (const id of ['1A','4B','8C'] as SubstageId[]) {
- const a=getSubstage(id), top=a.boundsTop-80, height=a.boundsBottom-top+150;
- const shapes: string[]=[];
+for(const a of SUBSTAGES){
+ const top=a.boundsTop-120,height=a.boundsBottom-top+220,shapes:string[]=[];
  const text=(x:number,y:number,label:string,color='#e2e8f0',size=30)=>shapes.push(`<text x="${x}" y="${y}" fill="${color}" font-size="${size}" font-family="sans-serif">${esc(label)}</text>`);
- for(const p of a.platforms){const color=p.gateId?'#f59e0b':p.type==='acid'?'#16a34a':p.type==='laser_gate'?'#fb7185':p.type==='moving'?'#a78bfa':'#334155';shapes.push(`<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" fill="${color}" stroke="#64748b" stroke-width="2"/>`);}
+ const c=a.exploration?.complex;
+ if(c){for(const r of c.rooms)for(const level of [0,300,600]){shapes.push(`<rect x="${r.x}" y="${c.floor-level-260}" width="${r.w}" height="260" fill="#164e63" opacity="0.18"/>`);}for(const x of c.shafts)text(x,c.floor-750,'↕ poço','#7dd3fc',28);for(const r of c.rooms)text(r.x,c.floor-690,r.label,'#7dd3fc',25);}
+ for(const p of a.platforms){const color=p.breakNode?'#a3a3a3':p.gateId?'#f59e0b':p.type==='acid'?'#16a34a':p.type==='laser_gate'?'#fb7185':p.type==='moving'?'#a78bfa':'#334155';shapes.push(`<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" fill="${color}" stroke="#64748b" stroke-width="2"><title>${esc(p.breakNode?'Parede frágil: Leon':p.gateId?`Portão: ${p.gateId}`:p.type)}</title></rect>`);}
  for(const p of a.props){shapes.push(`<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" fill="${p.kind==='chest'?'#facc15':'#94a3b8'}"/>`);if(p.kind==='chest')text(p.x-10,p.y-12,'★','#facc15');}
  const nodes=a.exploration?.nodes??[];
- const route=[{x:a.spawnX,y:a.spawnY},...nodes,...a.exits.filter(e=>e.x>a.boundsWidth/2)];
- shapes.push(`<polyline points="${route.map(p=>`${p.x+12},${p.y-65}`).join(' ')}" stroke="#22d3ee" stroke-width="4" stroke-dasharray="14 10" fill="none"/>`);
- for(const[i,n]of nodes.entries()){shapes.push(`<circle cx="${n.x+14}" cy="${n.y+20}" r="24" fill="#0891b2"/>`);text(n.x+4,n.y+30,String(i+1),'#fff',28);text(n.x-25,n.y-90,n.label,'#67e8f9',26);}
- for(const p of a.enemies)if(p.requiredGuard){shapes.push(`<circle cx="${p.x+17}" cy="${p.y+28}" r="20" fill="#ef4444"/>`);}
+ for(const n of nodes)for(const required of n.requires){const from=nodes.find(x=>x.id===required)!;shapes.push(`<path d="M${from.x+14},${from.y-40}L${n.x+14},${n.y-40}" stroke="#22d3ee" opacity=".65" stroke-width="3" stroke-dasharray="14 10" fill="none"/>`);}
+ let order=0;for(const n of nodes){const marker=n.optional?n.requiredHero!.slice(0,1).toUpperCase():String(++order);shapes.push(`<circle cx="${n.x+14}" cy="${n.y+20}" r="25" fill="${n.optional?'#9333ea':'#0891b2'}"/>`);text(n.x+4,n.y+30,marker,'#fff',27);text(n.x-25,n.y-90,n.label,n.optional?'#d8b4fe':'#67e8f9',25);}
+ for(const e of a.enemies)if(e.deployedBy===undefined){shapes.push(`<circle cx="${e.x+e.w/2}" cy="${e.y+e.h/2}" r="${e.requiredGuard?19:10}" fill="${e.requiredGuard?'#ef4444':'#fb7185'}"><title>${e.type}</title></circle>`);}
  for(const e of a.exits){shapes.push(`<rect x="${e.x}" y="${e.y}" width="${e.w}" height="${e.h}" fill="#a855f7"/>`);text(Math.min(e.x,a.boundsWidth-360),e.y-20,e.label,'#d8b4fe',25);}
- for(const p of a.checkpoints){shapes.push(`<path d="M${p.x},${p.y+56}v-46h28v20h-28" fill="none" stroke="#38bdf8" stroke-width="4"/>`);}
- text(a.spawnX-30,a.spawnY-40,'Entrada','#fff',26);
- text(20,top+45,`${id} · ${a.title}`,'#fff',38);
- text(20,a.boundsBottom+70,'1 → 2 → passagem · ★ depósito · vermelho: guarda · âmbar: portão','#cbd5e1',26);
- text(20,a.boundsBottom+110,'Setas indicam a ordem dos objetivos. Geometria exportada do catálogo de campanha.','#94a3b8',23);
- writeFileSync(`docs/mapas/${id}.svg`,`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-110 ${top} ${a.boundsWidth+220} ${height}" width="1120" role="img" aria-label="${esc(a.title)}"><rect x="-110" y="${top}" width="${a.boundsWidth+220}" height="${height}" fill="#0f172a"/>${shapes.join('')}</svg>\n`);
+ if(a.boss){shapes.push(`<rect x="${a.boss.x}" y="${a.boss.y}" width="${a.boss.w}" height="${a.boss.h}" fill="#f43f5e"/>`);text(a.boss.x-70,a.boss.y-35,a.boss.name,'#fda4af',27);}
+ for(const p of a.checkpoints)shapes.push(`<path d="M${p.x},${p.y+56}v-46h28v20h-28" fill="none" stroke="#38bdf8" stroke-width="4"/>`);
+ text(a.spawnX-30,a.spawnY-40,'Entrada','#fff',26);text(20,top+55,`${a.substageId} · ${a.title} · largura ${a.boundsWidth}`,'#fff',43);
+ text(20,a.boundsBottom+65,'Ciano: sinais entre comandos, não trajetória física · ★ recursos · roxo: habilidade opcional · âmbar: barreira','#cbd5e1',28);
+ text(20,a.boundsBottom+115,a.id===2?'Trem: exceção linear de ação.':'Exploração confinada à fase principal. Nenhuma porta retorna a capítulos anteriores.','#94a3b8',27);
+ writeFileSync(`docs/mapas/${a.substageId}.svg`,`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-150 ${top} ${a.boundsWidth+300} ${height}" width="1800" height="${Math.round(1800*height/(a.boundsWidth+300))}" role="img" aria-label="${esc(a.title)}"><rect x="-150" y="${top}" width="${a.boundsWidth+300}" height="${height}" fill="#0f172a"/>${shapes.join('')}</svg>\n`);
 }
+const options=SUBSTAGES.map(a=>`<option value="${a.substageId}">${a.substageId} · ${esc(a.title)}</option>`).join('');
+writeFileSync('docs/ATLAS_DAS_FASES.html',`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>MindBreak — atlas das fases</title><style>body{background:#0f172a;color:#e2e8f0;font:17px system-ui;margin:20px}select,input,button{font:inherit;padding:9px;margin:8px}#scroll{overflow:auto;border:1px solid #475569}img{display:block;max-width:none}</style><h1>Atlas das fases</h1><p>26 setores. Explore a geometria, níveis, barreiras, comandos e desvios. As linhas ciano mostram dependências dos mecanismos; não são um caminho de movimento.</p><label>Setor <select id="area">${options}</select></label><label>Zoom <input id="zoom" type="range" min="60" max="300" value="100"></label><a id="open">Abrir SVG</a><div id="scroll"><img id="map" alt="Mapa de terreno do setor"></div><script>const a=document.querySelector('#area'),z=document.querySelector('#zoom'),m=document.querySelector('#map'),o=document.querySelector('#open');function update(){m.src='mapas/'+a.value+'.svg';m.style.width=(1800*Number(z.value)/100)+'px';o.href=m.src;}a.onchange=z.oninput=update;update();</script></html>`);
+console.log(`Exportados ${SUBSTAGES.length} mapas e atlas HTML.`);
+writeFileSync('docs/mapas/catalogo.json',JSON.stringify(SUBSTAGES.map(a=>({id:a.substageId,title:a.title,chapter:a.id,width:a.boundsWidth,top:a.boundsTop,bottom:a.boundsBottom,style:a.exploration?'complex':'linear',enemies:a.enemies.filter(e=>e.deployedBy===undefined).length,dormant:a.enemies.filter(e=>e.deployedBy!==undefined).length,checkpoints:a.checkpoints.length,props:a.props.length,commands:a.exploration?.nodes.filter(n=>!n.optional).length??0,abilityNodes:a.exploration?.nodes.filter(n=>n.optional).length??0,gateCount:a.platforms.filter(p=>p.gateId).length})),null,2)+'\n');

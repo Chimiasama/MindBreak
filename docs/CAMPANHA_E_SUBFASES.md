@@ -1,41 +1,43 @@
 # Campanha, subfases e exploração — contrato atual
 
+**Revisão 26:** exploração ampla confinada a cada fase principal, 23 setores expandidos e trem preservado. Contrato, mecanismos/rotas de habilidade e atlas em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md).
+
 Implementação inicial: incremento 4, 13/11/2026. Este documento descreve código executável, não apenas o roteiro editorial.
 
 ## Conteúdo disponível
 
 A campanha mantém oito fases principais com **26 mapas próprios**, distribuídos em **4+3+3+3+3+3+3+4**. Não há adaptadores dos mapas originais no catálogo de campanha. Os oito originais continuam acessíveis por botões de teste/API `loadStage()`, fora dessa contagem.
 
-O lote contém 130 inimigos iniciais, 77 checkpoints e 78 objetos de recurso/segredo. Essas quantidades descrevem os dados atuais, não um limite de respawn ou de vidas. A meta de conteúdo foi atingida; balanceamento integral, segredos, música/arte e ensaios físicos continuam em andamento.
+No incremento 26, o catálogo contém 316 inimigos iniciais ativos, duas origens dormentes de torretas, 123 checkpoints e 170 objetos de recurso/segredo. Essas quantidades descrevem os dados atuais, não um limite de respawn ou de vidas. A meta de conteúdo foi atingida; balanceamento integral, segredos, música/arte e ensaios físicos continuam em andamento.
 
-| Setor | Identidade | Inimigos iniciais | Pontos de apoio | Papel |
-| --- | --- | ---: | ---: | --- |
-| 1A | Fuga do Laboratório | 4 | 3 | Aprender portas, exploração superior e primeiros combates |
-| 1B | Telhados de Neon | 5 | 3 | Vãos, coberturas, plataformas móveis, sniper e jetpack |
-| 1C | Esgotos de Manutenção | 4 | 3 | Ácido, esteira, reservatório e caminhos por canos |
-| 1D | Avenida Bloqueada | 5 | 2 | Bloqueio tático e encontro final com Cipher-01 |
-| 2A | Vagões e Embarque | 5 | 3 | Acoplamentos entre vagões, vento e compartimentos superiores |
-| 2B | Cabos e Manutenção | 5 | 3 | Conduítes, refrigeração, esteira e exploração por cabos |
-| 2C | Teto e Pórticos | 5 | 3 | Rasteira contra pórticos, escolta obrigatória e Valkyrie-7 |
-| 3A | Fundação da Torre | 5 | 3 | Bases de concreto, vãos e exploração nas vigas |
-| 3B | Guindastes e Vigas | 6 | 3 | Subida de mil unidades, patamar intermediário e andaimes opcionais |
-| 3C | Heliponto na Tormenta | 5 | 3 | Escolta de demolição e encontro final com Goliath-IV |
-| 4A | Tanques de Refrigeração | 5 | 3 | Canais de resíduo, comandos superiores e suprimentos |
-| 4B | Linhas de Esteiras | 5 | 3 | Transporte em sentidos opostos e terminais elevados |
-| 4C | Núcleo de Descarte | 5 | 3 | Guarda do reator e Arisawa/Cyber-T-Rex |
-| 5A | Boulevard de Mármore | 5 | 3 | Barricadas, terraços, carros e agentes executivos |
-| 5B | Garagens e Serviços | 5 | 3 | Barreiras laser, elevadores e acesso restrito |
-| 5C | Suíte Executiva | 5 | 3 | Escolta do cofre e Castor/Pólux |
-| 6A | Galerias Holográficas | 5 | 3 | Sensores, galerias e marquises |
-| 6B | Jardins Digitais | 5 | 3 | Canais e passarelas sob cerejeiras holográficas |
-| 6C | Acervo Restrito | 5 | 3 | Escolta dos arquivos e Kusanagi |
-| 7A | Docas de Blacksite | 5 | 3 | Vãos, vento e postos de vigilância |
-| 7B | Blocos de Contenção | 5 | 3 | Sensores, elevadores e passagem para o comando |
-| 7C | Centro de Comando | 5 | 3 | Guarda de comando e Vane |
-| 8A | Base da Torre | 5 | 3 | Segurança da torre em gravidade normal |
-| 8B | Núcleo Zero | 5 | 3 | Transportadores e gravidade 0,85 |
-| 8C | Elevador Orbital | 6 | 3 | Subida de 900 unidades em gravidade 0,72 |
-| 8D | Estratosfera | 5 | 3 | Última escolta, gravidade 0,65 e Oswald/Entidade Zero |
+| Setor | Identidade | Largura | Inimigos ativos | Apoios | Objetos | Papel |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| 1A | Fuga do Laboratório | 7960 | 12 | 5 | 7 | Aprender portas, exploração superior e primeiros combates |
+| 1B | Telhados de Neon | 8440 | 13 | 5 | 7 | Vãos, coberturas, plataformas móveis, sniper e jetpack |
+| 1C | Esgotos de Manutenção | 8240 | 12 | 5 | 7 | Ácido, esteira, reservatório e caminhos por canos |
+| 1D | Avenida Bloqueada | 8540 | 13 | 4 | 7 | Bloqueio tático e encontro final com Cipher-01 |
+| 2A | Vagões e Embarque | 2640 | 5 | 3 | 3 | Acoplamentos entre vagões, vento e compartimentos superiores |
+| 2B | Cabos e Manutenção | 2500 | 5 | 3 | 3 | Conduítes, refrigeração, esteira e exploração por cabos |
+| 2C | Teto e Pórticos | 2860 | 5 | 3 | 3 | Rasteira contra pórticos, escolta obrigatória e Valkyrie-7 |
+| 3A | Fundação da Torre | 8440 | 13 | 5 | 7 | Bases de concreto, vãos e exploração nas vigas |
+| 3B | Guindastes e Vigas | 7500 | 14 | 5 | 7 | Subida de mil unidades, patamar intermediário e andaimes opcionais |
+| 3C | Heliponto na Tormenta | 8600 | 13 | 5 | 7 | Escolta de demolição e encontro final com Goliath-IV |
+| 4A | Tanques de Refrigeração | 9700 | 14 | 5 | 7 | Canais de resíduo, comandos superiores e suprimentos |
+| 4B | Linhas de Esteiras | 9840 | 13 | 5 | 7 | Transporte em sentidos opostos e terminais elevados |
+| 4C | Núcleo de Descarte | 10200 | 13 | 5 | 7 | Guarda do reator e Arisawa/Cyber-T-Rex |
+| 5A | Boulevard de Mármore | 9300 | 13 | 5 | 7 | Barricadas, terraços, carros e agentes executivos |
+| 5B | Garagens e Serviços | 9160 | 13 | 5 | 7 | Barreiras laser, elevadores e acesso restrito |
+| 5C | Suíte Executiva | 9600 | 13 | 5 | 7 | Escolta do cofre e Castor/Pólux |
+| 6A | Galerias Holográficas | 8460 | 13 | 5 | 7 | Sensores, galerias e marquises |
+| 6B | Jardins Digitais | 8600 | 13 | 5 | 7 | Canais e passarelas sob cerejeiras holográficas |
+| 6C | Acervo Restrito | 8920 | 13 | 5 | 7 | Escolta dos arquivos e Kusanagi |
+| 7A | Docas de Blacksite | 8580 | 13 | 5 | 7 | Vãos, vento e postos de vigilância |
+| 7B | Blocos de Contenção | 8660 | 14 | 5 | 7 | Sensores, elevadores e passagem para o comando |
+| 7C | Centro de Comando | 9000 | 13 | 5 | 7 | Guarda de comando e Vane |
+| 8A | Base da Torre | 9080 | 13 | 5 | 7 | Segurança da torre em gravidade normal |
+| 8B | Núcleo Zero | 9220 | 13 | 5 | 7 | Transportadores e gravidade 0,85 |
+| 8C | Elevador Orbital | 7580 | 14 | 5 | 7 | Subida de 900 unidades em gravidade 0,72 |
+| 8D | Estratosfera | 9640 | 13 | 5 | 7 | Última escolta, gravidade 0,65 e Oswald/Entidade Zero |
 
 ```mermaid
 flowchart TD

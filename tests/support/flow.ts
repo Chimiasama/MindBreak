@@ -3,6 +3,7 @@ import type { GameEngine } from '../../src/game/engine';
 export function prepareForwardTravel(engine: GameEngine, state: any) {
   const { x, y } = state.player;
   for (const node of state.stage.exploration?.nodes ?? []) {
+    if(node.optional)continue;
     if (node.guardIndex !== undefined) {
       const origin = `${state.stage.substageId}:${node.guardIndex + 1}`;
       state.enemies = state.enemies.filter((enemy: any) => enemy.spawnId !== origin);

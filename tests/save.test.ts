@@ -49,7 +49,7 @@ test('a fresh process restores hero/resources at a safe checkpoint, paused with 
   assert.equal(fresh.state.paused, true);
   assert.equal(fresh.state.keys.left, false);
   assert.equal(fresh.state.player.vx, 0); assert.equal(fresh.state.player.vy, 0);
-  assert.ok(Math.abs(fresh.state.player.x - 1100) < 1);
+  assert.ok(Math.abs(fresh.state.player.x - fresh.state.stage.checkpoints.find((p:any)=>p.id==='manutencao').x) < 1);
   assert.ok(fresh.state.player.invulnTimer >= 60);
   assert.ok(!fresh.state.platforms.some((p: any) => !p.broken && p.type !== 'acid' && overlaps(p, fresh.state.player)));
   assert.equal(saved.preferences.muted, true);

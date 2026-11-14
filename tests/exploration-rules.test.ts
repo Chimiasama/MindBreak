@@ -43,18 +43,18 @@ test('remote commands, missing signal and a living guard prevent activation; com
  engine.queueAction('interact');s.hitstop=0;s.update();assert.equal(s.activated.has(first.id),true);
  assert.match(hud().routeObjective,/←/);assert.ok(s.platforms.filter((p:any)=>p.gateId).every((p:any)=>!p.broken));
  Object.assign(s.player,{x:back.x,y:back.y});engine.queueAction('interact');s.hitstop=0;s.update();
- assert.equal(s.activated.size,2);assert.ok(s.platforms.filter((p:any)=>p.gateId).every((p:any)=>p.broken));engine.stop();
+ assert.equal(s.activated.size,2);assert.ok(s.platforms.find((p:any)=>p.gateId==='linha').broken);assert.equal(s.routeComplete(),false);engine.stop();
 });
 test('activating a panel twice grants no extra rewards and checkpoints do not relock the route',()=>{
  const{engine,s}=fixture();prepareForwardTravel(engine,s);const score=s.player.score;
  const node=s.stage.exploration.nodes[0];Object.assign(s.player,{x:node.x,y:node.y});engine.inspectRouteNode(node.id);
- assert.equal(s.player.score,score);s.respawnAtCheckpoint();assert.equal(s.activated.size,2);engine.stop();
+ assert.equal(s.player.score,score);s.respawnAtCheckpoint();assert.equal(s.activated.size,s.stage.exploration.nodes.filter((n:any)=>!n.optional).length);engine.stop();
 });
 test('route and opened gates survive travel, return and a fresh engine restore',()=>{
  const{engine,s}=fixture();prepareForwardTravel(engine,s);const exit=s.stage.exits[0];Object.assign(s.player,{x:exit.x,y:exit.y});assert.equal(engine.travel(exit.id),true);
- const back=s.stage.exits.find((e:any)=>e.target==='1A');Object.assign(s.player,{x:back.x,y:back.y});assert.equal(engine.travel(back.id),true);assert.equal(s.activated.size,2);
+ const back=s.stage.exits.find((e:any)=>e.target==='1A');Object.assign(s.player,{x:back.x,y:back.y});assert.equal(engine.travel(back.id),true);assert.equal(s.activated.size,s.stage.exploration.nodes.filter((n:any)=>!n.optional).length);
  const save=engine.captureCampaignSave()!;const fresh=fixture();fresh.engine.restoreCampaignSave(save);
- assert.equal(fresh.s.activated.size,2);assert.ok(fresh.s.platforms.filter((p:any)=>p.gateId).every((p:any)=>p.broken));
+ assert.equal(fresh.s.activated.size,fresh.s.stage.exploration.nodes.filter((n:any)=>!n.optional).length);assert.ok(fresh.s.platforms.filter((p:any)=>p.gateId==='rota').every((p:any)=>p.broken));
  engine.stop();fresh.engine.stop();
 });
 test('the boss does not trigger before exploration even when the squad has been cleared',()=>{

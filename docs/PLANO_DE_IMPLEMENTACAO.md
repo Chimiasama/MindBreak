@@ -171,7 +171,7 @@ Estado após o incremento 14: 26 mapas próprios, na distribuição 4+3+3+3+3+3+
 - **4.1.0.3:** criar adaptador temporário dos oito `StageDefinition`; os mapas antigos continuam executáveis enquanto novas subfases são construídas. Não multiplicar artificialmente oito mapas iguais.
 - **4.1.0.4:** construir grafo com ida/volta onde fizer sentido, portas, requisitos e saídas explícitas; completar fase principal somente no objetivo final. Retorno de exploração não refaz chefe nem história final.
 
-### 4.2 Distribuição editorial inicial — 26 MAPAS IMPLEMENTADOS; acabamento e playtest integral pendentes
+### 4.2 Distribuição editorial — 26 mapas; revisão exploratória ampla no incremento 26, playtest integral pendente
 
 Os nomes são propostas de produção e podem ser refinados sem alterar o total. São 26 mapas distintos: 4+3+3+3+3+3+3+4.
 
@@ -188,9 +188,11 @@ Os nomes são propostas de produção e podem ser refinados sem alterar o total.
 
 - **4.2.0.1 — Implementado como lote jogável inicial; acabamento/playtest de dificuldade pendentes:** desenvolver primeiro 1A–1D como amostra completa: deslocamento, exploração opcional, respawn, checkpoint e chefe. Validar com os três heróis antes de replicar padrões.
 - **4.2.0.2 — Fases 1–8 implementadas em lotes, concluído no incremento 14:** produzir fases 2/3; depois 4/5; depois 6/7; por fim 8. Cada lote entrega mapas com começo, retorno, segredo, checkpoint e objetivo, não apenas cenário vazio.
-- **4.2.0.3 — Rotas principais verificadas nos 26 setores; segredos ainda exigem playtest:** mapear requisitos de salto/alcance por trecho; nenhuma rota obrigatória pode exigir voo exclusivo de Maya. Habilidades podem facilitar segredos, mas não bloquear campanha com outro herói.
+- **4.2.0.3 — Revisão 26: redes amplas de três níveis em 23 setores; trem preservado; rotas comuns e exemplos de habilidade verificados:** mapear requisitos de salto/alcance por trecho; nenhuma rota obrigatória pode exigir voo exclusivo de Maya. Habilidades podem facilitar segredos, mas não bloquear campanha com outro herói.
 - **4.2.0.4 — Intro no primeiro setor/fecho no último implementados; revisão editorial pendente:** elaborar diálogos por entrada e evento, evitando repetir texto a cada retorno; reservar chefes para a última subfase e encontros intermediários onde contribuírem para ritmo.
 - **4.2.0.5 — Contagem/grafo/rotas geométricas verificados; campanha integral de combate pendente:** 26 IDs únicos alcançáveis; todos os caminhos principais sem softlock; conclusão da campanha validada com Ren/Maya/Leon; contagem 24–28 verificada por ferramenta de validação de dados.
+
+**4.2.0.6 — Implementado no incremento 26:** exploração confinada ao capítulo, sem portas de fase 6 para fase 2. Redes com alas/poços, mecanismos intermediários, retornos e atalhos persistentes; Ren tem percurso cinético, Maya ilha de voo, Leon parede rompível. Nenhuma habilidade exclusiva bloqueia a rota principal. Fábrica com 9.700–10.200 unidades por setor; 26 mapas, sem ampliar a contagem de setores. Contrato e limites em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md).
 
 ### 4.3 Persistência e continuidade — IMPLEMENTADO no incremento 7; ensaio físico Android pendente
 
@@ -326,6 +328,6 @@ Chefes, transformações, contrato de estado e prévias em [ARTE_DOS_CHEFES.md](
 
 1. Ler este documento e o registro de execução.
 2. Verificar `git status`, preservar mudanças existentes e rodar a suíte da base.
-3. Manter 26 mapas, exploração do incremento 18 e catálogo sonoro do 19. O incremento 20 entrega pipeline e primeira passagem dos três heróis (7.1/7.2.0.1). O incremento 21 integra silhuetas dos 12 inimigos; o incremento 22 integra os oito chefes e duas fases. O incremento 24 concentra produção pintada no Ren a partir da prancha; consultar `REN_PINTADO.md` e `DIRECAO_VISUAL_V2.md`. O incremento 25 corrige repouso/recuperação do Ren e integra Maya com 24 pinturas; consultar `MAYA_PINTADA_E_ORIENTACAO.md`. Seguir revisão/intermediários/playtest dos dois, produção individual do Leon, cut-ins/retratos (7.2.0.3) e ambientes (7.3); depois fase 8. Consultar `ARTE_E_ANIMACAO.md`, `ARTE_DOS_INIMIGOS.md`, `ARTE_DOS_CHEFES.md` e `EXECUCAO.md`. Permanecem aceites físicos de combate, rotas, som, dificuldade e leitura Android; catálogo ou suíte verde não equivalem à aprovação final.
+3. Manter 26 mapas, áudio do incremento 19 e Ren/Maya pintados dos 24–25. A prioridade atual é a revisão 26 de exploração: ler `PADRAO_DE_FASES.md` e o atlas. Rotas geométricas dos 23 complexos passaram nos três heróis; retomar playtest com combate, orientação/tempo, recursos e individualização dos mecanismos, além dos ensaios Android. O trem continua linear e não há retorno entre capítulos. Arte do Leon/cut-ins/ambientes e fase 8 permanecem previstos, sem gerar APK ou disparar Actions automaticamente.
 4. Atualizar status somente com evidência. Antes de avançar para cada lote de subfases, validar o lote anterior.
 5. Não confundir a publicação do ambiente de desenvolvimento com a publicação do jogo, commits remotos, GitHub Actions ou APK.

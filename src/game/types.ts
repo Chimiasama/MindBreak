@@ -43,6 +43,7 @@ export type PlatformType =
 
 export interface Platform {
   gateId?: string;
+  breakNode?: string;
   x: number;
   y: number;
   w: number;

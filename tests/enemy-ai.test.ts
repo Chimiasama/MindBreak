@@ -207,8 +207,8 @@ test('engineer death cancels installation; a survivor deploys once and flees fro
     Object.assign(state.player, { x: door.x, y: door.y }); assert.equal(engine.travel('esteiras'), true);
     engine.setPaused(false);
     const engineer = state.enemies.find((e: Enemy) => e.type === 'turret_engineer');
-    Object.assign(state.player, { x: 1500, y: 604 });
-    engineer.ai = { state: 'windup', timer: 1, memory: 90, aimX: 1516, aimY: 632, facing: 1, action: 'deploy' };
+    Object.assign(state.player, {x:engineer.x+160,y:engineer.y});
+    engineer.ai = { state: 'windup', timer: 1, memory: 90, aimX:engineer.x+176,aimY:engineer.y+28, facing: 1, action: 'deploy' };
     if (killed) state.hitEnemy(engineer, 100, 0, 0);
     state.updateEnemies();
     const children = state.enemies.filter((e: Enemy) => e.deployedBy !== undefined);

@@ -112,7 +112,7 @@ test('extra-life death returns to the activated checkpoint rather than the lates
   state.player.invulnTimer = 0;
   state.damagePlayer(1000, 0, true);
   assert.equal(state.player.lives, 2);
-  assert.ok(Math.abs(state.player.x - 1100) < 1);
+  assert.ok(Math.abs(state.player.x - state.stage.checkpoints.find((p:any)=>p.id==='manutencao').x) < 1);
   engine.stop();
 });
 
@@ -133,7 +133,7 @@ test('absence in another area counts toward respawn only after sufficient simula
   const initial = manager.initial(); initial[0].hp = 0;
   manager.noteMissing(initial, 0); manager.advanceAway(1000);
   const alive = initial.slice(1);
-  const spawned = manager.update({ x: 100, y: 604, w: 32, h: 56 }, { x: -1200, y: -100, w: 200, h: 100 }, 1, alive, []);
+  const spawned = manager.update({ x: initial[0].x-500, y: initial[0].y, w: 32, h: 56 }, { x: initial[0].x-1700, y: -100, w: 200, h: 100 }, 1, alive, []);
   assert.equal(spawned.length, 1);
   assert.equal(spawned[0].spawnId, initial[0].spawnId);
   assert.notEqual(spawned[0].id, initial[0].id);
@@ -206,7 +206,7 @@ test('campaign progress is an isolated session snapshot and can be resumed from 
 test('final district boss waits for the mandatory squad to be cleared', () => {
   const { engine, state } = fixture();
   through(engine, state, 'telhados'); through(engine, state, 'esgotos'); through(engine, state, 'avenida');
-  Object.assign(state.player, { x: 2200, y: 644, invulnTimer: 100000 });
+  Object.assign(state.player, { x: state.boss.x-220, y: state.boss.y, invulnTimer: 100000 });
   state.ambushArenas[0].active = true;
   state.update(); assert.equal(state.boss.triggered, false);
   state.ambushArenas[0].active = false; state.ambushArenas[0].cleared = true;
@@ -247,7 +247,7 @@ test('holding up without a new interaction does not automatically cross a portal
 
 test('walking to a checkpoint activates it through normal simulation', () => {
   const { engine, state } = fixture();
-  Object.assign(state.player, { x: 1100, y: 604, vy: 0 });
+  Object.assign(state.player, {...state.stage.checkpoints.find((p:any)=>p.id==='manutencao'),vy:0});
   state.update();
   assert.equal(state.checkpointId, 'manutencao'); engine.stop();
 });
@@ -379,7 +379,7 @@ test('Goliath belongs only to the helipad and waits for its demolition escort', 
   state.damageBoss(10000); assert.equal(completions, 0); assert.equal(state.boss.active, false);
   through(engine, state, 'vigas'); assert.equal(state.boss.active, false);
   through(engine, state, 'heliponto'); assert.equal(state.boss.active, true);
-  Object.assign(state.player, { x: 1860, y: 384, invulnTimer: 100000 });
+  Object.assign(state.player, { x: state.boss.x-220, y: state.boss.y, invulnTimer: 100000 });
   state.ambushArenas[0].active = true;
   state.update(); assert.equal(state.boss.triggered, false);
   state.ambushArenas[0].active = false; state.ambushArenas[0].cleared = true;
@@ -392,11 +392,11 @@ test('Goliath belongs only to the helipad and waits for its demolition escort', 
 test('the construction ascent activates its intermediate checkpoint, survives reload and scrolls vertically', () => {
   const { engine, state } = fixture('ren', () => {}, 3); through(engine, state, 'vigas');
   engine.resize(1280, 720); const bottomCamera = state.camera.y;
-  Object.assign(state.player, { x: 1070, y: 584, vx: 0, vy: 0, grounded: true });
+  Object.assign(state.player, {...state.stage.checkpoints.find((p:any)=>p.id==='nucleo'),vx:0,vy:0,grounded:true});
   state.update(); assert.equal(state.checkpointId, 'nucleo');
   const carry = engine.getPlayerCarry();
   engine.restoreCampaignSave(engine.captureCampaignSave()!);
-  assert.equal(state.checkpointId, 'nucleo'); assert.ok(Math.abs(state.player.x - 1070) < 1);
+  assert.equal(state.checkpointId, 'nucleo'); assert.ok(Math.abs(state.player.x - state.stage.checkpoints.find((p:any)=>p.id==='nucleo').x) < 1);
   assert.deepEqual(engine.getPlayerCarry(), carry);
   Object.assign(state.props[0], { hp: 0, broken: true });
   engine.setPaused(false); through(engine, state, 'heliponto'); through(engine, state, 'vigas');
@@ -510,11 +510,11 @@ test('the orbital elevator scrolls through its ascent and retains checkpoint/gra
   const { engine, state } = fixture('leon', () => {}, 8);
   through(engine, state, 'nucleo'); through(engine, state, 'elevador');
   engine.resize(1280, 720); const bottom = state.camera.y;
-  Object.assign(state.player, { x: 1080, y: 584, grounded: true, vx: 0, vy: 0 });
+  Object.assign(state.player, {...state.stage.checkpoints.find((p:any)=>p.id==='eixo'),grounded:true,vx:0,vy:0});
   state.update(); assert.equal(state.checkpointId, 'eixo');
   engine.restoreCampaignSave(engine.captureCampaignSave()!);
   assert.equal(state.stage.gravityScale, 0.72); assert.equal(state.checkpointId, 'eixo');
-  assert.ok(Math.abs(state.player.x - 1080) < 1);
+  assert.ok(Math.abs(state.player.x - state.stage.checkpoints.find((p:any)=>p.id==='eixo').x) < 1);
   engine.setPaused(false); through(engine, state, 'estratosfera'); through(engine, state, 'elevador');
   engine.resize(1280, 720); assert.ok(state.camera.y < bottom - 800);
   engine.stop();

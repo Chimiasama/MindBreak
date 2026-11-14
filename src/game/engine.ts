@@ -1,3 +1,4 @@
+import { requiredRouteNodes, routeFinished, gateOpened } from './campaign/routeState';
 import { drawBossSprite } from './bossArtwork';
 import { HeroAnimator } from './heroAnimation';
 import { drawHeroFrame, isHeroPainted } from './heroArtwork';
@@ -592,15 +593,21 @@ export class GameEngine {
   }
 
   private routeComplete() {
-    return (this.stage.exploration?.nodes ?? []).every(node => this.activated.has(node.id));
+    return routeFinished(this.stage,this.activated);
   }
-  private nextRouteNode() { return this.stage.exploration?.nodes.find(node => !this.activated.has(node.id)); }
+  private nextRouteNode() { return requiredRouteNodes(this.stage).find(node => !this.activated.has(node.id)); }
   /** The same local interaction is used by keyboard, touch and gamepad. */
-  inspectRouteNode(id: string) {
+  inspectRouteNode(id: string, action:'interact'|'smash'='interact') {
     if (!this.canAct()) return false;
     const node = this.stage.exploration?.nodes.find(node => node.id === id);
     if (!node || !overlaps(this.player, node)) return false;
     if (this.activated.has(id)) { sound.playCue('confirm'); this.showAlert(`${node.label}: ATIVO`, 80); return true; }
+    if (node.requiredHero && node.requiredHero !== this.characterId) {
+      sound.playCue('denied'); this.showAlert(`PASSAGEM ESPECIAL: ${node.requiredHero.toUpperCase()}`,100); return true;
+    }
+    if ((node.action ?? 'interact') !== action) {
+      sound.playCue('denied'); this.showAlert('PAREDE FRÁGIL: LEON PODE ROMPER COM UM GOLPE.',100); return true;
+    }
     if (!node.requires.every(required => this.activated.has(required))) {
       sound.playCue('denied'); this.showAlert(`SEM SINAL: examine ${this.nextRouteNode()?.label}`, 120); return true;
     }
@@ -609,9 +616,10 @@ export class GameEngine {
       sound.playCue('denied'); this.showAlert('POSTO PROTEGIDO: derrote o guarda do painel.', 120); return true;
     }
     this.activated.add(id);
-    if (this.routeComplete()) for (const platform of this.platforms) if (platform.gateId) platform.broken = true;
-    sound.playCue(this.routeComplete() ? 'unlock' : 'panel'); this.addMangaFx('ATIVADO!', node.x, node.y - 18, '#22d3ee');
-    this.showAlert(this.routeComplete() ? (this.stage.boss ? 'ACESSO AO CONFRONTO LIBERADO.' : 'PASSAGEM LIBERADA — procure a saída superior.') : `SINAL ENVIADO — volte até ${this.nextRouteNode()?.label}`, 160);
+    let opened=0;
+    for (const platform of this.platforms) if (platform.gateId && !platform.broken && gateOpened(this.stage,platform.gateId,this.activated)){platform.broken=true;opened++;}
+    sound.playCue(opened>0 ? 'unlock' : 'panel'); this.addMangaFx(node.action==='smash'?'PASSAGEM ROMPIDA!':'ATIVADO!', node.x, node.y - 18, '#22d3ee');
+    this.showAlert(node.optional ? 'PASSAGEM ESPECIAL LIBERADA — explore os recursos e conexões.' : this.routeComplete() ? (this.stage.boss ? 'ACESSO AO CONFRONTO LIBERADO.' : 'PASSAGEM LIBERADA — procure a saída superior.') : `SINAL ENVIADO — procure ${this.nextRouteNode()?.label}`, 160);
     this.emitHud(); this.callbacks.onSaveRequest?.(); return true;
   }
 
@@ -625,6 +633,7 @@ export class GameEngine {
       sound.playCue('denied'); this.showAlert(`PASSAGEM BLOQUEADA: ${this.nextRouteNode()?.label ?? 'explore o setor'}`, 140); this.emitHud(); return false;
     }
     const target = getSubstage(exit.target);
+    if(target.id!==this.stage.id)return false; // Exploration never travels back across main chapters.
     const point = target.checkpoints.find((checkpoint) => checkpoint.id === exit.targetCheckpoint);
     if (!point) return false;
     const carry = this.getPlayerCarry();
@@ -1033,6 +1042,8 @@ export class GameEngine {
     };
 
     const meleeSolids = enemySolids(this.platforms);
+    for(const wall of this.platforms) if(wall.breakNode && !wall.broken && this.checkAABB(slashHitbox,wall) &&
+      canSeeBody(p,wall,meleeSolids.filter(solid=>solid!==wall))) this.inspectRouteNode(wall.breakNode,'smash');
     // Hit destructible props & secret chests
     this.props.forEach((pr) => {
       if (pr.broken) return;
@@ -2390,7 +2401,7 @@ export class GameEngine {
     this.platforms.forEach((plat) => {
       if (plat.broken) return;
       if (plat.gateId) {
-        ctx.fillStyle = '#78350f'; ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+        ctx.fillStyle = plat.breakNode ? '#475569' : '#78350f'; ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
         ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2; ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
         ctx.fillStyle = '#fbbf24'; for (let y = plat.y + 5; y < plat.y + plat.h - 6; y += 18) ctx.fillRect(plat.x + 3, y, plat.w - 6, 5);
         return;
@@ -2433,6 +2444,8 @@ export class GameEngine {
       ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
     });
 
+    const complex=this.stage.exploration?.complex;
+    if(complex){ctx.font='bold 16px monospace';ctx.fillStyle='#7dd3fc';for(const room of complex.rooms)for(const level of [0,300,600])ctx.fillText(room.label,room.x+30,complex.floor-level-90);}
     for (const node of this.stage.exploration?.nodes ?? []) {
       const active = this.activated.has(node.id);
       ctx.fillStyle = '#0f172a'; ctx.fillRect(node.x, node.y, node.w, node.h);

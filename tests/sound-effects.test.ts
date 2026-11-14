@@ -11,9 +11,11 @@ test('footsteps follow ground distance, stop when idle and a jump produces one l
  engine.setKey('right',false);for(let i=0;i<8;i++)s.update();const before=cues.filter(c=>c==='footstep').length;for(let i=0;i<20;i++)s.update();assert.equal(cues.filter(c=>c==='footstep').length,before);
  engine.queueAction('jump');engine.setKey('jumpHeld',false);for(let i=0;i<80;i++)s.update();assert.equal(cues.filter(c=>c==='land').length,1);assert.equal(cues.filter(c=>c==='footstep').length,before);
 });
-test('panel guard denial, first activation and final unlock produce different cues',t=>{
+test('panel guard denial, activation and local/final gate openings produce distinct cues',t=>{
  const{engine,s}=fixture();engine.startCampaign(1,'ren');engine.setPaused(false);t.after(()=>engine.stop());const cues:SoundCue[]=[];t.mock.method(sound,'playCue',(cue:SoundCue)=>{cues.push(cue);return true;});
  const[a,b]=s.stage.exploration.nodes;Object.assign(s.player,{x:a.x,y:a.y});engine.inspectRouteNode(a.id);assert.equal(cues.at(-1),'denied');
- const guard=s.enemies.find((e:any)=>e.requiredGuard);s.hitEnemy(guard,999,0,0);engine.inspectRouteNode(a.id);assert.equal(cues.at(-1),'panel');
+ const guard=s.enemies.find((e:any)=>e.spawnId===`${s.stage.substageId}:${a.guardIndex+1}`);s.hitEnemy(guard,999,0,0);engine.inspectRouteNode(a.id);assert.equal(cues.at(-1),'panel');
  Object.assign(s.player,{x:b.x,y:b.y});engine.inspectRouteNode(b.id);assert.equal(cues.at(-1),'unlock');engine.inspectRouteNode(b.id);assert.equal(cues.at(-1),'confirm');
+ for(const n of s.stage.exploration.nodes.filter((n:any)=>!n.optional).slice(2)){if(n.guardIndex!==undefined){const g=s.enemies.find((e:any)=>e.spawnId===`${s.stage.substageId}:${n.guardIndex+1}`);if(g)s.hitEnemy(g,999,0,0);}Object.assign(s.player,{x:n.x,y:n.y});engine.inspectRouteNode(n.id);}
+ assert.equal(s.routeComplete(),true);assert.equal(cues.at(-1),'unlock');
 });

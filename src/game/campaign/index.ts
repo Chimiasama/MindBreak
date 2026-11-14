@@ -1,3 +1,4 @@
+import { withComplex } from './complexes';
 import { withExploration } from './exploration';
 import { STAGES } from '../stages';
 import { overlaps } from '../collision';
@@ -18,7 +19,7 @@ export function adaptLegacy(stage: StageDefinition): SubstageDefinition {
     checkpoints: [{ id: 'entrada', label: 'Entrada do setor', x: stage.spawnX, y: stage.spawnY }] };
 }
 
-export const SUBSTAGES: SubstageDefinition[] = [...DISTRICT, ...MONORAIL, ...CONSTRUCTION, ...FACTORY, ...FINANCIAL, ...MUSEUM, ...BLACKSITE, ...TOWER].map(withExploration);
+export const SUBSTAGES: SubstageDefinition[] = [...DISTRICT, ...MONORAIL, ...CONSTRUCTION, ...FACTORY, ...FINANCIAL, ...MUSEUM, ...BLACKSITE, ...TOWER].map(withExploration).map(withComplex);
 export const CAMPAIGN: CampaignStage[] = STAGES.map((stage) => ({ id: stage.id, title: stage.title,
   entry: `${stage.id}A`, substages: SUBSTAGES.filter((area) => area.id === stage.id).map((area) => area.substageId),
   plannedCount: stage.id === 1 || stage.id === 8 ? 4 : 3 }));
@@ -57,6 +58,11 @@ export function validateCampaign(areas: SubstageDefinition[] = SUBSTAGES, chapte
       if (node.guardIndex !== undefined && !area.enemies[node.guardIndex]?.requiredGuard) errors.push(`${area.substageId}: guarda obrigatório inválido`);
       if (node.requires.some(id => id === node.id || !nodes.some(n => n.id === id))) errors.push(`${area.substageId}: dependência de comando inválida`);
     }
+    const gates=area.exploration?.gates??[];
+    if(new Set(gates.map(g=>g.id)).size!==gates.length)errors.push(`${area.substageId}: portões duplicados`);
+    for(const gate of gates)if(!gate.requires.length||gate.requires.some(id=>!nodes.some(n=>n.id===id)))errors.push(`${area.substageId}: sinal de portão inválido`);
+    for(const p of area.platforms){if(p.gateId&&gates.length&&!gates.some(g=>g.id===p.gateId))errors.push(`${area.substageId}: portão sem comando`);if(p.breakNode&&(!p.gateId||!gates.find(g=>g.id===p.gateId)?.requires.includes(p.breakNode)||!nodes.some(n=>n.id===p.breakNode&&n.action==='smash'&&n.requiredHero==='leon'&&n.optional)))errors.push(`${area.substageId}: brecha inválida`);}
+    for(const node of nodes)if(!node.optional&&(node.requiredHero||node.requires.some(id=>nodes.find(n=>n.id===id)?.optional)))errors.push(`${area.substageId}: habilidade opcional bloqueia rota principal`);
     const reached = new Set<string>();
     for (let i = 0; i < nodes.length; i++) for (const node of nodes) if (node.requires.every(id => reached.has(id))) reached.add(node.id);
     if (reached.size !== nodes.length) errors.push(`${area.substageId}: ciclo de comandos`);
