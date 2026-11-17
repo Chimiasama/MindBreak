@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { GameEngine } from '../src/game/engine';
 import { sound } from '../src/game/audio';
 import { SWINGS } from '../src/game/combat';
+import { CHARACTERS } from '../src/game/characters';
+import type { Enemy } from '../src/game/types';
 Object.defineProperty(globalThis, 'window', { configurable: true, value: { setInterval, clearInterval } });
 afterEach(() => sound.stopMusic());
 function fixture() {
@@ -13,7 +15,7 @@ function fixture() {
   s.enemies = []; s.props = []; s.pickups = []; s.ceilingPipes = []; s.ambushArenas = []; s.boss.active = false;
   s.spawns.update = () => []; s.updateEnemies = () => {};
   Object.assign(s.player, { x: 500, y: 544, vx: 0, vy: 0, grounded: true, facing: 1, invulnTimer: 0 });
-  const enemy = { id: 1, type: 'mutant', x: 545, y: 544, w: 34, h: 56, hp: 1000, maxHp: 1000,
+  const enemy: Enemy = { id: 1, type: 'mutant', x: 545, y: 544, w: 34, h: 56, hp: 1000, maxHp: 1000,
     vx: 0, vy: 0, facing: -1, airborne: false, shootTimer: 0, attackTimer: 0, telegraph: 0 };
   s.enemies.push(enemy);
   const tick = (n = 1) => { for (let i = 0; i < n; i++) { s.hitstop = 0; s.update(); } };
@@ -77,3 +79,42 @@ test('all heroes reserve their bonus for the third strike; an aerial finisher ca
     assert.equal(!!s.leonFlameZone, hero === 'leon'); engine.stop();
   }
 });
+
+test('Leon melee ignites enemies and bosses with sustained fire DoT after backing away, and Chama Intensa amplifies burn damage', () => {
+  const { engine, s, enemy, tick } = fixture();
+  engine.switchCharacter('leon');
+  enemy.maxHp = 200; enemy.hp = 200;
+  // Normal punch ignites enemy without instant kill
+  engine.triggerAttack();
+  const afterPunchHp = enemy.hp;
+  assert.equal(afterPunchHp, 165);
+  assert.ok((enemy.burnTimer ?? 0) > 100);
+  // Step far back so no melee contact or flame zone touches enemy
+  s.player.x = 100; s.leonFlameZone = null;
+  tick(48); // Two burn ticks (every 24 ticks -> 3 dmg each)
+  assert.equal(afterPunchHp - enemy.hp, 6, 'enemy must take light fire DoT ticks while Leon is away');
+
+  // Test boss ignition & Chama Intensa 2x burn amplifier
+  s.boss.active = true; s.boss.triggered = true; s.boss.maxHp = 500; s.boss.hp = 500;
+  s.boss.x = 560; s.boss.y = 512; s.boss.w = 56; s.boss.h = 88;
+  s.updateBoss = () => {};
+  s.player.x = 515; s.player.y = 544; s.player.facing = 1; s.player.psyEnergy = 50;
+  engine.triggerPsy(); // Costs 25 PSY; hitting enemy + boss grants +8 PSY each (+16)
+  assert.equal(s.player.psyEnergy, 41);
+  assert.equal(s.player.flameTimer, 480);
+  assert.ok((s.boss.burnTimer ?? 0) > 150);
+  const afterPsyBossHp = s.boss.hp;
+  // Move away from flame zone & boss
+  s.player.x = 100; s.leonFlameZone = null;
+  tick(20); // Amplified burn ticks every 20 ticks -> 8 dmg on boss
+  assert.equal(afterPsyBossHp - s.boss.hp, 8, 'Chama Intensa must amplify boss burn DoT ticks to 8 dmg');
+  engine.stop();
+});
+
+test('Ren retains top speed and jump impulse while Maya stays untouched', () => {
+  assert.ok(CHARACTERS.ren.speed > CHARACTERS.maya.speed && CHARACTERS.maya.speed > CHARACTERS.leon.speed);
+  assert.ok(CHARACTERS.ren.jumpForce > CHARACTERS.maya.jumpForce && CHARACTERS.maya.jumpForce > CHARACTERS.leon.jumpForce);
+  assert.equal(CHARACTERS.maya.speed, 5.1);
+  assert.equal(CHARACTERS.maya.jumpForce, 12.4);
+});
+

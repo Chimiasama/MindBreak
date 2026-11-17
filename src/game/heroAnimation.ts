@@ -29,6 +29,22 @@ export function clipFrame(pose:HeroPose,elapsed:number) {
  for(let frame=0;frame<c.durations.length;frame++){if(time<c.durations[frame])return frame;time-=c.durations[frame];}
  return c.durations.length-1;
 }
+export function clipSample(pose:HeroPose,elapsed:number){
+ const c=HERO_CLIPS[pose],total=c.durations.reduce((a,b)=>a+b,0);
+ const clamped=Math.max(0,elapsed);
+ let time=c.loop?clamped%total:Math.min(clamped,Math.max(0,total-0.001));
+ for(let frame=0;frame<c.durations.length;frame++){
+  const dur=c.durations[frame];
+  if(time<dur||frame===c.durations.length-1){
+   const isLast=frame===c.durations.length-1;
+   const nextFrame=c.loop?(frame+1)%c.durations.length:Math.min(c.durations.length-1,frame+1);
+   const frameAlpha=!c.loop&&isLast?0:dur>0?Math.min(1,Math.max(0,time/dur)):0;
+   return{pose,frame,nextFrame,frameAlpha,elapsed:clamped};
+  }
+  time-=dur;
+ }
+ return{pose,frame:c.durations.length-1,nextFrame:c.loop?0:c.durations.length-1,frameAlpha:0,elapsed:clamped};
+}
 export class HeroAnimator {
  private pose:HeroPose='idle';private startedAt=0;
  reset(tick=0){this.pose='idle';this.startedAt=tick;}
@@ -36,6 +52,11 @@ export class HeroAnimator {
   const pose=heroPose(p);if(pose!==this.pose){this.pose=pose;this.startedAt=tick;}
   const elapsed=pose.startsWith('attack')?SWINGS[p.comboStep].totalTicks-p.slashTimer:tick-this.startedAt;
   return{pose,frame:clipFrame(pose,elapsed)};
+ }
+ sampleInterpolated(p:HeroVisualInput,tick:number,tickAlpha=0){
+  const pose=heroPose(p);if(pose!==this.pose){this.pose=pose;this.startedAt=tick;}
+  const elapsed=pose.startsWith('attack')?SWINGS[p.comboStep].totalTicks-p.slashTimer+tickAlpha:tick+tickAlpha-this.startedAt;
+  return clipSample(pose,elapsed);
  }
 }
 export interface HeroFrameDefinition { w:number;h:number;scale:number;pivot:{x:number;y:number};hurtbox:{x:number;y:number;w:number;h:number};columns:number }

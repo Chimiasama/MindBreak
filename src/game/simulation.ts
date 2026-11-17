@@ -5,6 +5,10 @@ export class FixedStepClock {
   private previous: number | null = null;
   private accumulator = 0;
 
+  get alpha() {
+    return Math.min(1, Math.max(0, this.accumulator / STEP_MS));
+  }
+
   reset() {
     this.previous = null;
     this.accumulator = 0;

@@ -19,7 +19,10 @@ export function adaptLegacy(stage: StageDefinition): SubstageDefinition {
     checkpoints: [{ id: 'entrada', label: 'Entrada do setor', x: stage.spawnX, y: stage.spawnY }] };
 }
 
-export const SUBSTAGES: SubstageDefinition[] = [...DISTRICT, ...MONORAIL, ...CONSTRUCTION, ...FACTORY, ...FINANCIAL, ...MUSEUM, ...BLACKSITE, ...TOWER].map(withExploration).map(withComplex);
+const applyLegacyTemplate = (area: SubstageDefinition) =>
+  area.exploration || area.id === 2 ? area : withComplex(withExploration(area));
+
+export const SUBSTAGES: SubstageDefinition[] = [...DISTRICT, ...MONORAIL, ...CONSTRUCTION, ...FACTORY, ...FINANCIAL, ...MUSEUM, ...BLACKSITE, ...TOWER].map(applyLegacyTemplate);
 export const CAMPAIGN: CampaignStage[] = STAGES.map((stage) => ({ id: stage.id, title: stage.title,
   entry: `${stage.id}A`, substages: SUBSTAGES.filter((area) => area.id === stage.id).map((area) => area.substageId),
   plannedCount: stage.id === 1 || stage.id === 8 ? 4 : 3 }));

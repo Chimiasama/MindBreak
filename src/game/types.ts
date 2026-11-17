@@ -149,7 +149,11 @@ export interface Enemy {
   shieldHits?: number;
   shieldBroken?: boolean;
   stunTimer?: number;
+  hitFlashTimer?: number;
   isFlanking?: boolean;
+  burnTimer?: number;
+  burnTickTimer?: number;
+  burnDamage?: number;
 }
 
 export interface BossConfig {
@@ -204,6 +208,9 @@ export interface BossRuntime extends BossConfig {
   twinY?: number;
   shieldActive?: boolean;
   orbitalAngle?: number;
+  burnTimer?: number;
+  burnTickTimer?: number;
+  burnDamage?: number;
 }
 
 export interface AmbushArena {
@@ -265,10 +272,23 @@ export interface StageDefinition {
   outroDialogue: { speaker: string; line: string }[];
 }
 
+export interface SectorTransitionInfo {
+  key: number;
+  fromId: string;
+  toId: string;
+  fromTitle: string;
+  toTitle: string;
+  direction: 'forward' | 'backward';
+  accentColor: string;
+  substages: string[];
+}
+
 export interface HudSnapshot {
   routeObjective?: string | null;
   nearbyInteraction?: string | null;
   substageId: string;
+  chapterSubstages?: string[];
+  sectorTransition?: SectorTransitionInfo | null;
   checkpoint: string;
   nearbyExit: string | null;
   stageId: number;
@@ -296,5 +316,7 @@ export interface HudSnapshot {
   atkTimer: number;
   jmpTimer: number;
   gstTimer: number;
+  flameTimer?: number;
   arenaLocked: boolean;
+  isFlying?: boolean;
 }

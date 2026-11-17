@@ -21,18 +21,33 @@ export function navigate(engine: GameEngine, state: any, goal: { x: number; y: n
     state.wallKickLock = 0; state.standingPlatform = null; state.platformDeltas.clear(); state.clearInput();
     state.hitstop = 0; state.superCutinTimer = 0; failed = false;
   }
-  function run(from: any, move: Move, replay = false) {
+  function run(from: any, move: Move & { wallKick?: boolean }, replay = false) {
     if (!replay) restore(from);
     const samples: { x: number; y: number }[] = [];
     let still = 0, lastX = state.player.x;
-    for (let t = 0; t < 120; t++) {
-      const p = state.player, dx = move.x - p.x;
+    for (let t = 0; t < 190; t++) {
+      const p = state.player;
+      let targetX = move.x;
+      if (move.wallKick && p.onWall !== 0 && !p.grounded) {
+        if (p.onWall !== p.lastWallSide && p.y + p.h > goal.y + 12) engine.queueAction('jump');
+      }
+      if (state.wallKickLock > 0 || (move.wallKick && p.lastWallSide !== 0 && !p.grounded && p.y + p.h > goal.y + 12 && p.onWall === 0)) {
+        targetX = p.lastWallSide === 1 ? p.x - 160 : p.x + 160;
+      }
+      const dx = targetX - p.x;
       engine.setKey('left', dx < -5); engine.setKey('right', dx > 5);
-      if (move.jump >= 0 && (t === 0 || t === move.jump && p.doubleJump && p.onWall === 0)) engine.queueAction('jump');
+      if (!move.wallKick && move.jump >= 0 && (t === 0 || (t === move.jump && p.doubleJump && p.onWall === 0))) engine.queueAction('jump');
+      if (move.wallKick && (t === 0 || (p.onWall === 0 && p.doubleJump && ((p.lastWallSide === 0 && t === 14) || (p.lastWallSide !== 0 && p.vy > 0 && p.y + p.h > goal.y + 4))))) engine.queueAction('jump');
       engine.setKey('jumpHeld', false);
-      if (p.hangingCeiling && Math.abs(dx) < 12) {
-        if (goal.y + goal.h < p.y + p.h - 10) engine.queueAction('jump');
-        else engine.triggerDropDown();
+      if (p.hangingCeiling) {
+        const pipe = p.hangingPipe;
+        const nearTarget = Math.abs(move.x - p.x) < 18;
+        const atRightEdge = pipe && move.x > pipe.x + pipe.w - p.w - 6 && p.x >= pipe.x + pipe.w - p.w - 16;
+        const atLeftEdge = pipe && move.x < pipe.x + 6 && p.x <= pipe.x + 14;
+        if (nearTarget || atRightEdge || atLeftEdge) {
+          if (goal.y + goal.h < p.y + p.h + 10) engine.queueAction('jump');
+          else engine.triggerDropDown();
+        }
       }
       state.hitstop = 0; state.update(); samples.push({ x: p.x, y: p.y });
       if (terrain.some((q: any) => (q.type === 'acid' || q.type === 'laser_gate') && overlaps(p, q))) failed = true;
@@ -49,7 +64,7 @@ export function navigate(engine: GameEngine, state: any, goal: { x: number; y: n
   const open: Node[] = [{ p: original, path: [], cost: 0 }], visited = new Map<string, number>();
   const pending = new Map<string, number>([[key(original), 0]]);
   const seenPoints: any[] = [];
-  let answer: Move[] | undefined;
+  let answer: (Move & { wallKick?: boolean })[] | undefined;
   for (let expanded = 0; open.length && expanded < 5000 && visited.size < 300; expanded++) {
     open.sort((a,b) => a.cost + heuristic(a.p) - b.cost - heuristic(b.p));
     const current = open.shift()!;
@@ -60,19 +75,42 @@ export function navigate(engine: GameEngine, state: any, goal: { x: number; y: n
     for (const p of terrain) if (p.type === 'acid' || p.type === 'laser_gate') {
       for (const x of [p.x - current.p.w - 20, p.x + p.w + 20]) if (Math.abs(x - current.p.x) < 540) destinations.add(x);
     }
+    for (const pipe of (state.ceilingPipes ?? [])) {
+      const rise = current.p.y + current.p.h - pipe.y;
+      if (rise > 320 || rise < -160) continue;
+      for (const x of [pipe.x + 12, pipe.x + pipe.w - current.p.w - 12, Math.max(pipe.x + 12, Math.min(pipe.x + pipe.w - current.p.w - 12, goal.x))])
+        if (x >= 10 && x < state.stage.boundsWidth - 40 && Math.abs(x - current.p.x) < 640) destinations.add(x);
+    }
     for (const p of solids) {
       const rise = current.p.y + current.p.h - p.y;
-      if (rise > 340 / state.stage.gravityScale || rise < -500 || p.w < 45) continue;
+      if (rise > 380 / state.stage.gravityScale || rise < -500 || p.w < 45) continue;
       const a = p.x + 6, b = p.x + p.w - current.p.w - 6;
       for (const x of [a, b, Math.max(a, Math.min(b, goal.x))])
         if (x >= 10 && x < state.stage.boundsWidth - 40 && Math.abs(x - current.p.x) < 540) destinations.add(x);
     }
+    const wallTargets = new Set<number>();
+    for (const w of solids) if (w.type === 'wall' && Math.abs(w.x - current.p.x) < 360) {
+      if (w.x > current.p.x) wallTargets.add(w.x + 16);
+      else wallTargets.add(w.x + w.w - 16);
+    }
+    for (const x of destinations) if (Math.abs(x - current.p.x) < 320) wallTargets.add(x);
     for (const x of destinations) {
-      if (Math.abs(x - current.p.x) < 8 || x < 10 || x > state.stage.boundsWidth - 40 || Math.abs(x-current.p.x)>550) continue;
+      if (Math.abs(x - current.p.x) < 8 || x < 10 || x > state.stage.boundsWidth - 40 || Math.abs(x-current.p.x)>640) continue;
       for (const jump of [-1, 0, 12, 22]) {
         const move = { x, jump }, result = run(current.p, move);
         if (!result) continue;
         const cost = current.cost + result.samples.length * 4 + (jump >= 0 ? 10 : 0);
+        if ((visited.get(key(result.p)) ?? Infinity) <= cost || (pending.get(key(result.p)) ?? Infinity) <= cost) continue;
+        pending.set(key(result.p), cost);
+        open.push({ p: result.p, path: [...current.path, move], cost });
+      }
+    }
+    if (goal.y + goal.h < current.p.y + current.p.h - 30 && wallTargets.size > 0) {
+      for (const x of wallTargets) {
+        if (x < 10 || x > state.stage.boundsWidth - 40 || Math.abs(x - current.p.x) < 8) continue;
+        const move = { x, jump: 0, wallKick: true }, result = run(current.p, move);
+        if (!result) continue;
+        const cost = current.cost + result.samples.length * 4 + 8;
         if ((visited.get(key(result.p)) ?? Infinity) <= cost || (pending.get(key(result.p)) ?? Infinity) <= cost) continue;
         pending.set(key(result.p), cost);
         open.push({ p: result.p, path: [...current.path, move], cost });

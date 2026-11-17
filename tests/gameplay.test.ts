@@ -306,3 +306,30 @@ test('telekinetic capture counts as a single defeated enemy for progression', ()
   assert.equal(state.thrownEnemies.length, 1);
   engine.stop();
 });
+
+test('Maya assist gravity well pulls nearby ground and flying enemies into its singularity without moving mounted turrets', () => {
+  const { engine, state } = emptyRoom();
+  state.player.facing = 1;
+  state.player.psyEnergy = 80;
+  // Ground enemy on the right of the well, flying drone on the left/above, mounted turret within radius
+  state.enemies = [
+    { ...STAGE_ENEMY(), type: 'mib_shield', id: 201, x: 800, y: 144, w: 36, h: 56, hp: 120, maxHp: 120, vx: 0, vy: 0, airborne: false, shootTimer: 999, attackTimer: 999 },
+    { type: 'drone', id: 202, x: 520, y: 80, w: 22, h: 22, facing: 1, hp: 60, maxHp: 60, originY: 80, vx: 0, vy: 0, airborne: true, shootTimer: 999, attackTimer: 999 },
+    { type: 'turret', id: 203, x: 700, y: 160, w: 32, h: 40, facing: -1, mount: 'floor', hp: 120, maxHp: 120, vx: 0, vy: 0, airborne: false, shootTimer: 999, attackTimer: 999 },
+  ];
+  engine.triggerAssist();
+  assert.ok(state.mayaWell, 'expected Maya gravity well to spawn for Ren');
+  const wellX = state.mayaWell.x;
+  const wellY = state.mayaWell.y;
+  const startGroundDist = Math.hypot((state.enemies[0].x + 18) - wellX, (state.enemies[0].y + 28) - wellY);
+  const startDroneDist = Math.hypot((state.enemies[1].x + 11) - wellX, (state.enemies[1].y + 11) - wellY);
+  for (let i = 0; i < 45; i++) state.update();
+  const endGroundDist = Math.hypot((state.enemies[0].x + 18) - wellX, (state.enemies[0].y + 28) - wellY);
+  const endDroneDist = Math.hypot((state.enemies[1].x + 11) - wellX, (state.enemies[1].y + 11) - wellY);
+  assert.ok(endGroundDist < startGroundDist * 0.45, `ground enemy not pulled: ${startGroundDist} -> ${endGroundDist}`);
+  assert.ok(endDroneDist < startDroneDist * 0.45, `flying drone not pulled: ${startDroneDist} -> ${endDroneDist}`);
+  assert.equal(state.enemies[2].x, 700);
+  assert.equal(state.enemies[2].y, 160);
+  engine.stop();
+});
+

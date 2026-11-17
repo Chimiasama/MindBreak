@@ -2,6 +2,8 @@ import { AudioSettings } from './components/AudioSettings';
 import { registerPlugin } from '@capacitor/core';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ArrowLeft,
+  ArrowRight,
   Heart,
   Pause,
   Play,
@@ -12,6 +14,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { ConfirmationDialog } from './components/ConfirmationDialog';
+import { HeroPreviewPanel } from './components/HeroPreviewPanel';
 import { readCampaignSave, writeCampaignSave, discardCampaignSave } from './game/campaign/storage';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { TouchControls } from './components/TouchControls';
@@ -21,7 +24,7 @@ import { GameEngine } from './game/engine';
 import { STAGES } from './game/stages';
 import { ALLOW_TEST_CHARACTER_SWITCH } from './game/rules';
 import { KeyboardState, KEY_BINDINGS } from './game/input';
-import { CharacterId, GameState, HudSnapshot } from './game/types';
+import { CharacterId, GameState, HudSnapshot, SectorTransitionInfo } from './game/types';
 import { CAMPAIGN, getSubstage } from './game/campaign';
 import type { CampaignSave } from './game/campaign/save';
 
@@ -33,6 +36,7 @@ function getSavedCheckpointLabel(save: CampaignSave) {
 const GameShell = registerPlugin<{ exitApp(): Promise<void> }>('GameShell');
 
 export default function App() {
+  const mount3dRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<GameEngine | null>(null);
 
@@ -57,9 +61,12 @@ export default function App() {
   const [continueChar, setContinueChar] = useState<CharacterId>('ren');
   const [resumeAvailable, setResumeAvailable] = useState(false);
   const [legacyMode, setLegacyMode] = useState(false);
+  const [activeSectorTransition, setActiveSectorTransition] = useState<SectorTransitionInfo | null>(null);
 
   const [hud, setHud] = useState<HudSnapshot>({
     substageId: '1A',
+    chapterSubstages: ['1A', '1B', '1C', '1D'],
+    sectorTransition: null,
     checkpoint: '',
     nearbyExit: null,
     stageId: 1,
@@ -87,8 +94,22 @@ export default function App() {
     atkTimer: 0,
     jmpTimer: 0,
     gstTimer: 0,
+    flameTimer: 0,
     arenaLocked: false,
   });
+
+  useEffect(() => {
+    const tr = hud.sectorTransition;
+    if (!tr || gameState === 'TITLE_MENU') {
+      if (gameState === 'TITLE_MENU') setActiveSectorTransition(null);
+      return;
+    }
+    setActiveSectorTransition(tr);
+    const timer = window.setTimeout(() => {
+      setActiveSectorTransition((curr) => (curr?.key === tr.key ? null : curr));
+    }, 860);
+    return () => window.clearTimeout(timer);
+  }, [hud.sectorTransition?.key, gameState]);
 
   const persistCampaign = useCallback(() => {
     try {
@@ -170,6 +191,7 @@ export default function App() {
       onContinueCountdown: handleContinueCountdown,
       onGameOver: handleGameOver,
     });
+    engine.attach3DContainer(mount3dRef.current);
     engineRef.current = engine;
 
     const handleResize = () => {
@@ -180,7 +202,7 @@ export default function App() {
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      engine.stop();
+      engine.dispose();
     };
   }, [handleContinueCountdown, handleGameOver, handleStageClear]);
 
@@ -456,6 +478,7 @@ export default function App() {
   const currentStageDef = STAGES.find((s) => s.id === selectedStageId) ?? STAGES[0];
   const currentChapter = CAMPAIGN.find((stage) => stage.id === selectedStageId)!;
   const psyReady = hud.psyEnergy >= 95;
+  const hpLow = hud.maxHp > 0 && hud.hp / hud.maxHp < 0.25;
 
   return (
     <div className="relative h-full w-full bg-[#070510] text-slate-100 font-sans overflow-hidden">
@@ -468,8 +491,9 @@ export default function App() {
         message={pendingSaveAction.message} confirmLabel={pendingSaveAction.label}
         onCancel={() => setPendingSaveAction(null)} onConfirm={pendingSaveAction.execute} />}
       {saveWarning && <p role="status" className="pointer-events-none fixed inset-x-6 top-24 z-[90] rounded-lg bg-amber-950 p-3 text-center text-sm text-amber-100">{saveWarning}</p>}
-      {/* Main Full-Viewport Canvas */}
-      <canvas ref={canvasRef} className="block h-full w-full" style={{ imageRendering: 'pixelated' }} />
+      {/* Main Full-Viewport 2.5D Three.js Stage + Transparent 2D FX Overlay */}
+      <div ref={mount3dRef} className="absolute inset-0 h-full w-full" />
+      <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 block h-full w-full" />
 
       {/* =================================================================
           ACTIVE GAMEPLAY HUD & MOBILE CONTROLS
@@ -499,38 +523,65 @@ export default function App() {
 
               {/* HP Bar + Numeric readout */}
               <div className="flex items-center gap-2">
-                <div className="h-2.5 w-32 sm:w-44 overflow-hidden rounded-sm bg-slate-900/90 ring-1 ring-slate-700">
+                <div
+                  className={`h-2.5 w-32 sm:w-44 overflow-hidden rounded-sm bg-slate-900/90 ring-1 transition-all duration-300 ${
+                    hpLow
+                      ? 'ring-red-500/75 shadow-[0_0_8px_rgba(239,68,68,0.45)]'
+                      : 'ring-slate-700'
+                  }`}
+                >
                   <div
-                    className="h-full bg-cyan-400 transition-all duration-100"
+                    className={`h-full transition-all duration-300 ease-out ${
+                      hpLow ? 'bg-red-500' : 'bg-cyan-400'
+                    }`}
                     style={{ width: `${Math.max(0, (hud.hp / hud.maxHp) * 100)}%` }}
                   />
                 </div>
-                <span className="font-mono text-[11px] font-bold tabular-nums text-cyan-200 whitespace-nowrap">
+                <span
+                  className={`font-mono text-[11px] font-bold tabular-nums transition-colors duration-300 whitespace-nowrap ${
+                    hpLow ? 'text-red-300' : 'text-cyan-200'
+                  }`}
+                >
                   HP {hud.hp}/{hud.maxHp}
                 </span>
               </div>
 
               {/* Psyche Bar */}
               <div className="flex items-center gap-2">
-                <div className="h-1.5 w-28 sm:w-36 overflow-hidden rounded-sm bg-slate-900/90 ring-1 ring-slate-800">
+                <div
+                  className={`h-1.5 w-28 sm:w-36 overflow-hidden rounded-sm bg-slate-900/90 ring-1 transition-shadow duration-150 ${
+                    psyReady
+                      ? 'ring-pink-400/80 shadow-[0_0_10px_rgba(236,72,153,0.75)]'
+                      : 'ring-slate-800'
+                  }`}
+                >
                   <div
                     className={`h-full transition-all duration-100 ${
-                      psyReady ? 'bg-pink-500' : 'bg-purple-500'
+                      psyReady ? 'bg-pink-500 animate-pulse' : 'bg-purple-500'
                     }`}
                     style={{ width: `${Math.max(0, (hud.psyEnergy / hud.maxPsy) * 100)}%` }}
                   />
                 </div>
-                <span className="font-mono text-[10px] font-bold tabular-nums text-purple-300 whitespace-nowrap">
+                <span
+                  className={`font-mono text-[10px] font-bold tabular-nums whitespace-nowrap ${
+                    psyReady ? 'hud-overdrive-pulse tracking-wider text-pink-300' : 'text-purple-300'
+                  }`}
+                >
                   {psyReady ? 'OVERDRIVE PRONTO' : `FOCO ${hud.psyEnergy}%`}
                 </span>
               </div>
 
               {/* Active Power-Up Counters (only when active) */}
-              {(hud.wavAmmo > 0 || hud.atkTimer > 0 || hud.jmpTimer > 0 || hud.gstTimer > 0) && (
+              {(hud.wavAmmo > 0 || hud.atkTimer > 0 || hud.jmpTimer > 0 || hud.gstTimer > 0 || (hud.flameTimer ?? 0) > 0) && (
                 <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px] font-bold tabular-nums">
                   {hud.wavAmmo > 0 && (
                     <span className="rounded border border-cyan-400/70 bg-slate-950/90 px-1.5 py-0.5 text-cyan-300">
                       WAV x{hud.wavAmmo}
+                    </span>
+                  )}
+                  {(hud.flameTimer ?? 0) > 0 && (
+                    <span className="rounded border border-orange-400/80 bg-slate-950/90 px-1.5 py-0.5 text-orange-300">
+                      CHAMAS 2X {hud.flameTimer}s
                     </span>
                   )}
                   {hud.atkTimer > 0 && (
@@ -603,15 +654,111 @@ export default function App() {
                   <Pause className="h-4 w-4" />
                 </button>
               </div>
-              <div className="text-right">
+              <div key={hud.substageId} className="sector-badge-enter text-right">
                 <div className="font-display text-xs sm:text-sm font-bold text-slate-200 whitespace-nowrap">
                   Setor {hud.substageId} · Restam {hud.enemiesRemaining}
                 </div>
+                {hud.chapterSubstages && hud.chapterSubstages.length > 1 && (
+                  <div className="mt-0.5 flex items-center justify-end gap-1 font-mono text-[10px]">
+                    {hud.chapterSubstages.map((id, idx) => {
+                      const active = id === hud.substageId;
+                      return (
+                        <React.Fragment key={id}>
+                          {idx > 0 && <span className="h-px w-2 bg-slate-700" />}
+                          <span
+                            className={`rounded px-1 py-px transition-colors duration-300 ${
+                              active
+                                ? 'bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-400/70 font-bold'
+                                : 'text-slate-500'
+                            }`}
+                          >
+                            {id}
+                          </span>
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                )}
                 {hud.routeObjective && <div className="max-w-64 text-[11px] font-bold text-amber-200">{hud.routeObjective}</div>}
                 {hud.checkpoint && <div className="max-w-44 truncate text-[10px] text-slate-400">Apoio: {hud.checkpoint}</div>}
               </div>
             </div>
           </header>
+
+          {/* Smooth Directional Sector Transition Overlay */}
+          {activeSectorTransition && (
+            <div key={activeSectorTransition.key} aria-hidden="true" className="pointer-events-none fixed inset-0 z-[18] overflow-hidden">
+              <div
+                className={`absolute inset-y-0 -inset-x-[15%] ${
+                  activeSectorTransition.direction === 'forward' ? 'sector-wipe-forward' : 'sector-wipe-backward'
+                }`}
+                style={{
+                  background:
+                    activeSectorTransition.direction === 'forward'
+                      ? `linear-gradient(90deg, rgba(7,5,16,0.94) 0%, rgba(7,5,16,0.82) 72%, ${activeSectorTransition.accentColor}44 92%, transparent 100%)`
+                      : `linear-gradient(270deg, rgba(7,5,16,0.94) 0%, rgba(7,5,16,0.82) 72%, ${activeSectorTransition.accentColor}44 92%, transparent 100%)`,
+                }}
+              />
+              <div className="absolute inset-x-0 top-24 sm:top-28 flex justify-center px-4">
+                <div
+                  className={`flex flex-col items-center gap-1.5 rounded-xl border bg-slate-950/95 px-5 py-3 shadow-2xl ${
+                    activeSectorTransition.direction === 'forward' ? 'sector-card-forward' : 'sector-card-backward'
+                  }`}
+                  style={{
+                    borderColor: `${activeSectorTransition.accentColor}99`,
+                    boxShadow: `0 10px 32px rgba(2,6,23,0.85), 0 0 24px ${activeSectorTransition.accentColor}33`,
+                  }}
+                >
+                  <div className="flex items-center gap-2 font-mono text-xs font-bold tracking-wider">
+                    <span className="text-slate-400">SETOR {activeSectorTransition.fromId}</span>
+                    {activeSectorTransition.direction === 'forward' ? (
+                      <ArrowRight className="h-4 w-4 text-cyan-300" />
+                    ) : (
+                      <ArrowLeft className="h-4 w-4 text-cyan-300" />
+                    )}
+                    <span className="text-cyan-300">SETOR {activeSectorTransition.toId}</span>
+                  </div>
+                  <div className="font-display text-lg sm:text-xl font-extrabold uppercase tracking-wide text-white">
+                    {activeSectorTransition.toTitle}
+                  </div>
+                  {activeSectorTransition.substages.length > 1 && (
+                    <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[10px]">
+                      {activeSectorTransition.substages.map((id, idx) => {
+                        const isTo = id === activeSectorTransition.toId;
+                        const isFrom = id === activeSectorTransition.fromId;
+                        const prevId = idx > 0 ? activeSectorTransition.substages[idx - 1] : null;
+                        const linkActive =
+                          (prevId === activeSectorTransition.fromId && isTo) ||
+                          (prevId === activeSectorTransition.toId && isFrom);
+                        return (
+                          <React.Fragment key={id}>
+                            {idx > 0 && (
+                              <span
+                                className={`h-0.5 w-4 rounded-full transition-colors ${
+                                  linkActive ? 'bg-cyan-400 shadow-[0_0_8px_#22d3ee]' : 'bg-slate-700'
+                                }`}
+                              />
+                            )}
+                            <span
+                              className={`rounded px-1.5 py-0.5 ${
+                                isTo
+                                  ? 'bg-cyan-400/20 text-cyan-200 ring-1 ring-cyan-300 font-bold'
+                                  : isFrom
+                                    ? 'bg-slate-800 text-slate-300 ring-1 ring-slate-600'
+                                    : 'text-slate-500'
+                              }`}
+                            >
+                              {id}
+                            </span>
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {gameState === 'PLAYING' && (hud.nearbyInteraction || hud.nearbyExit) && (
             <div className="pointer-events-none fixed inset-x-0 top-36 z-20 flex justify-center px-4">
@@ -622,7 +769,7 @@ export default function App() {
           )}
 
           {/* Tactical Alert Banner */}
-          {hud.alertBanner && (
+          {hud.alertBanner && !activeSectorTransition && (
             <div className="pointer-events-none fixed inset-x-0 top-24 z-20 flex justify-center px-4">
               <div className="inline-flex items-center gap-2 rounded-lg border border-amber-400/70 bg-slate-950/90 px-4 py-1.5 font-display text-sm font-bold tracking-wide text-amber-300 shadow-lg">
                 <ShieldAlert className="h-4 w-4 shrink-0" />
@@ -636,6 +783,7 @@ export default function App() {
             <TouchControls
               characterId={hud.characterId}
               psyReady={psyReady}
+              isFlying={!!hud.isFlying}
               onKey={(k, pressed) => engineRef.current?.setKey(k, pressed, 'touch')}
               onJump={() => engineRef.current?.queueAction('jump', 'touch')}
               onDropDown={() => engineRef.current?.triggerDropDown()}
@@ -661,7 +809,7 @@ export default function App() {
                   MIND//BREAK <span className="text-pink-500">KINETIC REBELS</span>
                 </h1>
                 <p className="mt-1 text-xs sm:text-sm text-slate-400">
-                  Beat &apos;em Up 2D Psíquico · Mobilidade Strider · 8 Fases Urbanas · Pixel Art 16-Bits &amp; Android
+                  Beat &apos;em Up 2.5D Psíquico · Mobilidade Strider · 8 Fases Urbanas · Low-Poly 3D &amp; Android
                 </p>
               </div>
               <div className="flex max-w-full flex-wrap items-center gap-3">
@@ -754,6 +902,15 @@ export default function App() {
                     );
                   })}
                 </div>
+
+                <HeroPreviewPanel
+                  selectedHero={selectedChar}
+                  onSelectHero={(id) => {
+                    sound.init();
+                    sound.playCue('confirm');
+                    setSelectedChar(id);
+                  }}
+                />
 
                 <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
                   <div className="font-display text-base font-bold text-cyan-300">
@@ -913,7 +1070,7 @@ export default function App() {
           CLASSIC 9-SECOND ARCADE CONTINUE SCREEN (With Hero Swap!)
       ================================================================= */}
       {gameState === 'CONTINUE_COUNTDOWN' && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/85 p-4">
           <div className="w-full max-w-md rounded-2xl border-2 border-pink-500 bg-slate-950 p-6 text-center shadow-2xl">
             <div className="font-display text-xl font-bold tracking-widest text-cyan-400">
               CONTINUE?
@@ -974,7 +1131,7 @@ export default function App() {
         gameState === 'STAGE_CLEAR' ||
         gameState === 'GAME_OVER' ||
         gameState === 'CAMPAIGN_VICTORY') && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 p-4">
           <div className="max-h-[90dvh] overflow-y-auto w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
             <h2 className="font-display text-3xl font-extrabold text-white">
               {gameState === 'PAUSED' && 'Jogo Pausado'}

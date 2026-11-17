@@ -11,11 +11,18 @@ function fixture(hero:'ren'|'maya'|'leon'){
  s.enemies=[];s.spawns.update=()=>[];s.updateEnemies=()=>{};s.boss.active=false;s.ambushArenas=[];s.platforms=s.platforms.filter((p:any)=>p.type!=='moving');
  return{e,s,f:s.stage.exploration.complex.floor,scale:s.stage.exploration.complex.width/6000};
 }
-test('Ren reaches the kinetic latch by actual wall climbing, then crosses the precision duct with an air dash',t=>{
+test('Ren reaches the kinetic latch by alternating wall-kicks, then crosses the precision duct with an air dash',t=>{
  const{e,s,f,scale}=fixture('ren');t.after(()=>e.stop());navigate(e,s,{x:1400*scale,y:f-656,w:100,h:56});let failed=false;s.damagePlayer=()=>{failed=true;return false;};s.recoverPlayer=()=>{failed=true;};
- const n=s.stage.exploration.nodes.find((n:any)=>n.id==='trava-ren');e.queueAction('jump');let climbing=0;
- for(let i=0;i<550&&!overlaps(s.player,n);i++){e.setKey('right',s.player.x<n.x-5);e.setKey('up',true);s.update();if(s.player.onWall)climbing++;}
- e.clearInput();for(let i=0;i<90&&!s.player.grounded;i++)s.update();assert.ok(overlaps(s.player,n));assert.ok(climbing>20);assert.equal(e.inspectRouteNode(n.id),true);assert.equal(s.activated.has(n.id),true);
+ const n=s.stage.exploration.nodes.find((n:any)=>n.id==='trava-ren');let wallKicks=0;
+ e.setKey('right',true);
+ for(let i=0;i<260&&!overlaps(s.player,n);i++){
+  const p=s.player;
+  if(p.grounded&&p.x>=1550*scale&&p.x<1700*scale){e.queueAction('jump');}
+  else if(!p.grounded&&p.onWall!==0&&p.onWall!==p.lastWallSide){wallKicks++;e.queueAction('jump');e.setKey('right',p.onWall===-1);e.setKey('left',p.onWall===1);}
+  else if(p.y<f-960){e.setKey('right',true);e.setKey('left',false);}
+  e.setKey('jumpHeld',false);s.update();
+ }
+ e.clearInput();for(let i=0;i<90&&!s.player.grounded;i++)s.update();assert.ok(overlaps(s.player,n));assert.ok(wallKicks>=2);assert.equal(e.inspectRouteNode(n.id),true);assert.equal(s.activated.has(n.id),true);
  e.queueAction('jump');e.setKey('right',true);for(let i=0;i<250&&s.player.x<2080*scale;i++)s.update();e.clearInput();assert.ok(s.player.x>=2080*scale-10);
  e.setKey('right',true);e.queueAction('jump');for(let i=0;i<110;i++){if(i===8)e.triggerDashOrSlide();if(i===22)e.queueAction('jump');if(i>45&&s.player.grounded&&s.player.x<2530*scale)e.queueAction('jump');s.update();}
  e.clearInput();const chest=s.props.find((p:any)=>Math.abs(p.x-3850*scale)<1&&p.y===f-984);local(e,s,chest);e.triggerAttack();assert.equal(chest.broken,true);assert.equal(failed,false);assert.equal(s.routeComplete(),false);

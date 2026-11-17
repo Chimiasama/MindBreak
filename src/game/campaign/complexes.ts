@@ -37,8 +37,8 @@ export function withComplex(source:SubstageDefinition):SubstageDefinition{
  for(const x of [2170,3970]){floor(x,f-300,180);floor(x,f-600,180);}
  floor(5700,f-300,180);floor(5700,f-600,180);
  // Skill/secret wings: wall-grip tower, suspended flight island, sealed breakable chamber.
- floor(1520,f-1000,20,400,'wall');floor(1700,f-1000,20,400,'wall');
- floor(1540,f-940,580);floor(2460,f-940,1440);
+ floor(1520,f-1040,20,340,'wall');floor(1700,f-940,20,340,'wall');
+ floor(1720,f-940,400);floor(2460,f-940,1440);
  floor(2300,f-1320,180);
  floor(3300,f-300,20,300,'wall',{gateId:'brecha',breakNode:'brecha-leon'});floor(3800,f-300,20,300,'wall');
  floor(2470,f-1000,20,400,'wall',{gateId:'atalho-voo'});
@@ -56,7 +56,7 @@ export function withComplex(source:SubstageDefinition):SubstageDefinition{
  const node=(id:string,label:string,x:number,y:number,requires:string[],extra:Record<string,unknown>={})=>({id,label,x,y:y-44,w:28,h:44,requires,...extra});
  const old=source.exploration.nodes.map((n,i)=>({...n,id:i===0?'setor-rele':'setor-comando',x:n.x+shift,requires:i===0?['logistica']:['setor-rele']}));
  const nodes=[node('rele',labels[0],3200,f-600,[],{guardIndex}),node('comando',labels[1],1400,f,['rele']),node('distribuicao',labels[2],5000,f-300,['comando']),node('logistica',labels[3],2900,f-300,['distribuicao']),...old,
-  node('trava-ren','Trava cinética — Ren',1590,f-940,[],{optional:true,requiredHero:'ren'}),
+  node('trava-ren','Trava cinética — Ren',1760,f-940,[],{optional:true,requiredHero:'ren'}),
   node('nucleo-maya','Núcleo suspenso — Maya',2320,f-1320,[],{optional:true,requiredHero:'maya'}),
   node('brecha-leon','Parede frágil — Leon',3250,f,[],{optional:true,requiredHero:'leon',action:'smash'}),
  ];

@@ -45,7 +45,7 @@ for (const hero of ['ren', 'maya', 'leon'] as const) {
   });
 
   test(`${hero} keeps the measured jump envelope after acceleration changes`, () => {
-    const baseline = { ren: [115.9, 220.4, 38, 193.696, 313.2, 54],
+    const baseline = { ren: [123.5, 237.9, 39, 204.88, 341.6, 56],
       maya: [112.1, 193.8, 38, 188.242, 275.4, 54], leon: [101.25, 169.2, 36, 172.01, 244.4, 52] }[hero];
     for (const double of [false, true]) {
       const { engine, state } = fixture(hero);

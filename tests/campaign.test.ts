@@ -302,12 +302,14 @@ test('Valkyrie waits for the escort arena and is the only monorail chapter compl
   let completions = 0;
   const { engine, state } = fixture('ren', () => { completions++; }, 2);
   through(engine, state, 'manutencao'); through(engine, state, 'teto');
-  Object.assign(state.player, { x: 2160, y: 594, invulnTimer: 100000 });
-  state.ambushArenas[0].active = true;
+  const finalArena = state.ambushArenas.at(-1)!;
+  for (const arena of state.ambushArenas) { arena.active = false; arena.cleared = arena !== finalArena; }
+  Object.assign(state.player, { x: state.boss.x - 420, y: 594, invulnTimer: 100000 });
+  finalArena.active = true;
   state.update(); assert.equal(state.boss.triggered, false);
   assert.equal(completions, 0);
-  state.ambushArenas[0].active = false; state.ambushArenas[0].cleared = true;
-    prepareForwardTravel(engine, state);
+  finalArena.active = false; finalArena.cleared = true;
+  prepareForwardTravel(engine, state);
   state.update(); assert.equal(state.boss.triggered, true);
   state.damageBoss(10000); t.mock.timers.tick(1200);
   assert.equal(completions, 1); engine.stop();
@@ -319,12 +321,49 @@ test('a rooftop low gantry damages a standing hero while a timed slide avoids it
     through(engine, state, 'manutencao'); through(engine, state, 'teto');
     state.enemies = []; state.spawns.update = () => [];
     Object.assign(state.player, { x: 300, y: 594, grounded: true, invulnTimer: 0 });
-    state.lowCeilingActive = true; state.lowCeilingX = 316; state.lowCeilingTimer = 100;
+    state.lowCeilingActive = true; state.lowCeilingKind = 'gantry'; state.lowCeilingX = 316; state.lowCeilingTimer = 100;
     if (slide) { engine.setKey('down', true); engine.triggerDashOrSlide(); }
     state.update();
     assert.equal(state.player.hp, slide ? 150 : 128);
     engine.stop();
   }
+});
+
+test('Stage 2 is extended across 2A/2B/2C and a low rail sweeper requires jumping rather than sliding', () => {
+  for (const [id, minWidth] of [['2A', 6000], ['2B', 5800], ['2C', 6600]] as const) {
+    const sub = getSubstage(id);
+    assert.ok(sub.boundsWidth >= minWidth, `${id} should be stretched`);
+    assert.equal(sub.exploration, undefined);
+  }
+  for (const mode of ['stand', 'slide', 'jump'] as const) {
+    const { engine, state } = fixture('ren', () => {}, 2);
+    state.enemies = []; state.spawns.update = () => []; state.updateEnemies = () => {};
+    Object.assign(state.player, { x: 300, y: mode === 'jump' ? 520 : 594, grounded: mode !== 'jump', invulnTimer: 0 });
+    state.lowCeilingActive = true; state.lowCeilingKind = 'sweeper'; state.lowCeilingSpeed = 12;
+    state.lowCeilingX = 312; state.lowCeilingTimer = 100;
+    if (mode === 'slide') { engine.setKey('down', true); engine.triggerDashOrSlide(); }
+    state.update();
+    assert.equal(state.player.hp, mode === 'jump' ? 100 : 80, `mode ${mode}`);
+    if (mode === 'stand') {
+      assert.ok(state.player.vx < -8 && state.knockbackLock > 0, 'sweeper hit should knock the hero backward');
+    }
+    engine.stop();
+  }
+});
+
+test('a train hazard or enemy shove near a coupling knocks the hero off the train car', () => {
+  const { engine, state } = fixture('ren', () => {}, 2);
+  state.enemies = []; state.spawns.update = () => []; state.updateEnemies = () => {};
+  // Stand just right of Coupling 1 (car 2 starts at x=1060)
+  Object.assign(state.player, { x: 1085, y: 594, grounded: true, invulnTimer: 0 });
+  state.lowCeilingActive = true; state.lowCeilingKind = 'gantry'; state.lowCeilingSpeed = 14;
+  state.lowCeilingX = 1100; state.lowCeilingTimer = 100;
+  for (let tick = 0; tick < 25; tick++) {
+    state.hitstop = 0;
+    state.update();
+  }
+  assert.ok(state.player.x < 1060 && state.player.y > 650, 'knockback near coupling edge must throw hero off the train car');
+  engine.stop();
 });
 
 for (const hero of ['ren', 'maya', 'leon'] as const) {
@@ -529,3 +568,101 @@ test('industrial authoring rejects detached mounts and invalid engineer/turret a
   invalid.find((a) => a.substageId === '4B')!.enemies.at(-1)!.deployedBy = 1;
   assert.ok(validateCampaign(invalid).some((e) => e.includes('instalação inválida')));
 });
+
+test('Stage 3 construction sectors feature expanded multi-tier girders, crumble spans, pipes and turret squads', () => {
+  const areas = SUBSTAGES.filter((area) => area.id === 3);
+  assert.equal(areas.length, 3);
+  for (const area of areas) {
+    assert.ok(area.boundsWidth >= 8400, `${area.substageId}: expanded construction sector expected`);
+    assert.ok(area.ceilingPipes.length >= 3, `${area.substageId}: multiple overhead rigging pipes expected`);
+    assert.ok(area.platforms.some((p) => p.type === 'crumble'), `${area.substageId}: fragile girder spans expected`);
+    assert.ok(area.checkpoints.length >= 4, `${area.substageId}: extended pacing checkpoints expected`);
+    assert.ok(area.enemies.some((e) => e.type === 'turret'), `${area.substageId}: tactical turret encounters expected`);
+  }
+});
+
+test('Stage 4 factory sectors feature expanded bounds, acid channels, bidirectional conveyors, crumble grates and turrets', () => {
+  const areas = SUBSTAGES.filter((area) => area.id === 4);
+  assert.equal(areas.length, 3);
+  for (const area of areas) {
+    assert.ok(area.boundsWidth >= 10600, `${area.substageId}: expanded factory sector expected`);
+    assert.ok(area.ceilingPipes.length >= 2, `${area.substageId}: multiple overhead pipe runs expected`);
+    assert.ok(area.platforms.some((p) => p.type === 'acid'), `${area.substageId}: acid vat hazards expected`);
+    assert.ok(area.platforms.some((p) => p.type === 'crumble'), `${area.substageId}: fragile crumble grates expected`);
+    assert.ok(area.checkpoints.length >= 4, `${area.substageId}: extended factory checkpoints expected`);
+    assert.ok(area.enemies.some((e) => e.type === 'turret'), `${area.substageId}: turret defenses expected`);
+  }
+  const conveyorSpeeds = getSubstage('4B').platforms.filter((p) => p.type === 'conveyor').map((p) => p.conveyorSpeed!);
+  assert.ok(conveyorSpeeds.length >= 3);
+  assert.ok(conveyorSpeeds.some((s) => s < 0) && conveyorSpeeds.some((s) => s > 0));
+});
+
+test('Stage 5 financial sectors feature expanded bounds, glass crumble walkways, lifts, pipes, props and turrets', () => {
+  const areas = SUBSTAGES.filter((area) => area.id === 5);
+  assert.equal(areas.length, 3);
+  for (const area of areas) {
+    assert.ok(area.boundsWidth >= 10000, `${area.substageId}: expanded financial sector expected`);
+    assert.ok(area.ceilingPipes.length >= 3, `${area.substageId}: multiple overhead pipe runs expected`);
+    assert.ok(area.platforms.some((p) => p.type === 'crumble'), `${area.substageId}: fragile glass skywalk expected`);
+    assert.ok(area.platforms.some((p) => p.type === 'moving'), `${area.substageId}: moving lift expected`);
+    assert.ok(area.checkpoints.length >= 6, `${area.substageId}: extended checkpoints expected`);
+    assert.ok(area.enemies.some((e) => e.type === 'turret'), `${area.substageId}: turret security expected`);
+    assert.ok(area.enemies.some((e) => e.type === 'turret_engineer'), `${area.substageId}: turret engineer expected`);
+  }
+  assert.equal(getSubstage('5B').platforms.filter((p) => p.type === 'laser_gate').length, 2);
+  assert.ok(getSubstage('5B').platforms.some((p) => p.type === 'conveyor'));
+});
+
+test('Stage 6 museum sectors feature expanded bounds, crumble walkways, lifts, pipes, props and turrets', () => {
+  const areas = SUBSTAGES.filter((area) => area.id === 6);
+  assert.equal(areas.length, 3);
+  for (const area of areas) {
+    assert.ok(area.boundsWidth >= 9500, `${area.substageId}: expanded museum sector expected`);
+    assert.ok(area.ceilingPipes.length >= 3, `${area.substageId}: multiple overhead pipe runs expected`);
+    assert.ok(area.platforms.some((p) => p.type === 'crumble'), `${area.substageId}: fragile glass/bridge span expected`);
+    assert.ok(area.platforms.some((p) => p.type === 'moving'), `${area.substageId}: moving lift expected`);
+    assert.ok(area.checkpoints.length >= 6, `${area.substageId}: extended checkpoints expected`);
+    assert.ok(area.enemies.some((e) => e.type === 'turret'), `${area.substageId}: turret security expected`);
+    assert.ok(area.enemies.some((e) => e.type === 'turret_engineer'), `${area.substageId}: turret engineer expected`);
+  }
+  assert.ok(getSubstage('6B').platforms.filter((p) => p.type === 'acid').length >= 3);
+});
+
+test('sector travel emits directional spatial transition metadata and clears cleanly after ticks', () => {
+  const hudUpdates: any[] = [];
+  const canvas = { width: 1280, height: 800, getContext: () => ({ imageSmoothingEnabled: false }) } as unknown as HTMLCanvasElement;
+  const engine = new GameEngine(canvas, {
+    onHudUpdate(hud) { hudUpdates.push(hud); },
+    onStageClear() {},
+    onContinueCountdown() {},
+    onGameOver() {},
+  });
+  const state: any = engine;
+  engine.startCampaign(1, 'ren');
+  engine.setPaused(false);
+  assert.equal(hudUpdates.at(-1).sectorTransition, null);
+
+  through(engine, state, 'telhados');
+  const forwardHud = hudUpdates.at(-1);
+  assert.equal(forwardHud.substageId, '1B');
+  assert.deepEqual(forwardHud.chapterSubstages, ['1A', '1B', '1C', '1D']);
+  assert.equal(forwardHud.sectorTransition?.fromId, '1A');
+  assert.equal(forwardHud.sectorTransition?.toId, '1B');
+  assert.equal(forwardHud.sectorTransition?.direction, 'forward');
+
+  for (let i = 0; i < 40; i++) state.update();
+  assert.equal(state.sectorTransition, null);
+
+  const westDoor = state.stage.exits.find((exit: any) => exit.target === '1A');
+  Object.assign(state.player, { x: westDoor.x, y: westDoor.y, grounded: true, vy: 0, vx: 0 });
+  assert.equal(engine.travel(westDoor.id), true);
+  const backHud = hudUpdates.at(-1);
+  assert.equal(backHud.substageId, '1A');
+  assert.equal(backHud.sectorTransition?.fromId, '1B');
+  assert.equal(backHud.sectorTransition?.toId, '1A');
+  assert.equal(backHud.sectorTransition?.direction, 'backward');
+  engine.stop();
+});
+
+
+

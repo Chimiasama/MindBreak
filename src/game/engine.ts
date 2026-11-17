@@ -18,6 +18,8 @@ import { SpawnManager } from './spawns';
 import { viewportFor, cameraTarget, followCamera } from './camera';
 import { CHARACTER_ORDER, CHARACTERS } from './characters';
 import { getEnemyPixelSprite, enemyVisualFrame, enemySourceRect } from './enemyArtwork';
+import { WorldRenderer3D } from './render3d/sceneRenderer';
+import { lerpActorPosition } from './render3d/spriteInterpolation';
 import { STAGES } from './stages';
 import { CAMPAIGN, adaptLegacy, getSubstage, SubstageDefinition, SubstageId, PlayerCarry, CampaignProgress } from './campaign';
 import {
@@ -30,6 +32,7 @@ import {
   HudSnapshot,
   PickupItem,
   Platform,
+  SectorTransitionInfo,
 } from './types';
 
 interface AreaState {
@@ -128,10 +131,14 @@ export class GameEngine {
   private callbacks: EngineCallbacks;
 
   private rafId: number | null = null;
+  private loopActive = false;
+  private renderer3d: WorldRenderer3D | null = null;
+  private lastRenderTs = 0;
   private paused = true;
   private clock = new FixedStepClock();
   private transitionTimers = new Set<ReturnType<typeof setTimeout>>();
   private wallKickLock = 0;
+  private knockbackLock = 0;
   private standingPlatform: Platform | null = null;
   private platformDeltas = new Map<Platform, { x: number; y: number }>();
   private input = new GameInput();
@@ -145,6 +152,10 @@ export class GameEngine {
   private heroAnimator = new HeroAnimator();
   private heroVisualTimers = { hurt:0, vault:0, special:0 };
   private hitstop = 0;
+  private prevPlayerPos = { x: 100, y: 600 };
+  private prevCameraPos = { x: 0, y: 0 };
+  private prevEnemyPos = new Map<number, { x: number; y: number }>();
+  private prevBossPos = { x: 0, y: 0, twinX: 0, twinY: 0 };
 
   private stage: SubstageDefinition = adaptLegacy(STAGES[0]);
   private campaignMode = false;
@@ -165,6 +176,8 @@ export class GameEngine {
   private mangaTexts: MangaFx[] = [];
   private ambient: AmbientParticle[] = [];
   private scarfNodes: ScarfNode[] = [];
+  private scenarioPatterns = new Map<string, CanvasPattern | null>();
+  private hitFlashCanvas: HTMLCanvasElement | null = null;
 
   private boss: BossRuntime = {
     ...STAGES[0].boss,
@@ -224,6 +237,7 @@ export class GameEngine {
     atkTimer: 0,
     jmpTimer: 0,
     gstTimer: 0,
+    flameTimer: 0,
     score: 0,
   };
 
@@ -284,9 +298,18 @@ export class GameEngine {
   private lowCeilingTimer = 280;
   private lowCeilingActive = false;
   private lowCeilingX = 0;
+  private lowCeilingKind: 'gantry' | 'sweeper' = 'gantry';
+  private lowCeilingSpeed = 16;
+  private lowCeilingSequence = 0;
   private lightningAlpha = 0;
   private alertBanner: string | null = null;
   private alertTimer = 0;
+  private sectorTransitionSeq = 0;
+  private sectorTransition: (SectorTransitionInfo & {
+    timer: number;
+    duration: number;
+    cameraOffsetX: number;
+  }) | null = null;
 
   private stageClearTriggered = false;
   private continueTriggered = false;
@@ -301,6 +324,13 @@ export class GameEngine {
   private lastGamepadPause = false;
   private gamepadWasConnected = false;
 
+  private applyPixelatedRendering(ctx: CanvasRenderingContext2D, targetCanvas?: HTMLCanvasElement) {
+    ctx.imageSmoothingEnabled = false;
+    if (targetCanvas?.style) {
+      targetCanvas.style.imageRendering = 'pixelated';
+    }
+  }
+
   constructor(canvas: HTMLCanvasElement, callbacks: EngineCallbacks) {
     this.canvas = canvas;
     const context = canvas.getContext('2d');
@@ -308,10 +338,34 @@ export class GameEngine {
       throw new Error('Could not acquire 2D canvas context');
     }
     this.ctx = context;
-    this.ctx.imageSmoothingEnabled = false;
+    this.applyPixelatedRendering(this.ctx, this.canvas);
     this.callbacks = callbacks;
     this.initAmbient();
     this.initScarf(100, 600);
+  }
+
+  attach3DContainer(container: HTMLElement | null) {
+    if (this.renderer3d) {
+      this.renderer3d.dispose();
+      this.renderer3d = null;
+    }
+    if (!container || typeof document === 'undefined') return;
+    try {
+      this.renderer3d = new WorldRenderer3D(container);
+      this.renderer3d.resize(this.canvas.width, this.canvas.height);
+      this.canvas.style.imageRendering = 'auto';
+    } catch (err) {
+      console.warn('WebGL 2.5D fallback to 2D canvas:', err);
+      this.renderer3d = null;
+    }
+  }
+
+  dispose() {
+    this.stop();
+    if (this.renderer3d) {
+      this.renderer3d.dispose();
+      this.renderer3d = null;
+    }
   }
 
   private initAmbient() {
@@ -400,10 +454,15 @@ export class GameEngine {
     this.mangaTexts = [];
     this.mayaWell = null;
     this.leonFlameZone = null;
+    this.sectorTransition = null;
     this.superCutinTimer = 0;
     this.dimensionalSlashes = [];
+    this.knockbackLock = 0;
     this.lowCeilingActive = false;
-    this.lowCeilingTimer = 240;
+    this.lowCeilingKind = 'gantry';
+    this.lowCeilingSpeed = found.substageId === '2A' ? 14 : 16;
+    this.lowCeilingSequence = 0;
+    this.lowCeilingTimer = 190;
     this.lightningAlpha = 0;
     this.stageClearTriggered = false;
     this.continueTriggered = false;
@@ -472,15 +531,32 @@ export class GameEngine {
       atkTimer: 0,
       jmpTimer: 0,
       gstTimer: 0,
+      flameTimer: 0,
       score: preserveScore,
     };
 
     this.initScarf(found.spawnX, found.spawnY);
     this.camera = cameraTarget(this.player, this.viewport,
       { top: found.boundsTop, bottom: found.boundsBottom, width: found.boundsWidth });
+    this.syncInterpolationBaseline();
     this.showAlert(`SETOR ${found.substageId}: ${found.title.toUpperCase()}`, 140);
     this.playStageMusic();
     if (emitHud) this.emitHud();
+  }
+
+  private syncInterpolationBaseline() {
+    this.prevPlayerPos = { x: this.player.x, y: this.player.y };
+    this.prevCameraPos = { x: this.camera.x, y: this.camera.y };
+    this.prevEnemyPos.clear();
+    for (const en of this.enemies) {
+      this.prevEnemyPos.set(en.id, { x: en.x, y: en.y });
+    }
+    this.prevBossPos = {
+      x: this.boss.x,
+      y: this.boss.y,
+      twinX: this.boss.twinX ?? this.boss.x,
+      twinY: this.boss.twinY ?? this.boss.y,
+    };
   }
 
   getPlayerCarry(): PlayerCarry {
@@ -580,6 +656,7 @@ export class GameEngine {
     this.initScarf(this.player.x, this.player.y);
     this.camera = cameraTarget(this.player, this.viewport,
       { top: this.stage.boundsTop, bottom: this.stage.boundsBottom, width: this.stage.boundsWidth });
+    this.syncInterpolationBaseline();
     this.emitHud();
     return save.mode;
   }
@@ -639,6 +716,9 @@ export class GameEngine {
     if(target.id!==this.stage.id)return false; // Exploration never travels back across main chapters.
     const point = target.checkpoints.find((checkpoint) => checkpoint.id === exit.targetCheckpoint);
     if (!point) return false;
+    const fromId = this.stage.substageId;
+    const fromTitle = this.stage.title;
+    const direction: 'forward' | 'backward' = exit.x > this.stage.boundsWidth / 2 ? 'forward' : 'backward';
     const carry = this.getPlayerCarry();
     this.cacheArea();
     const cached = this.areaCache.get(target.substageId);
@@ -662,12 +742,27 @@ export class GameEngine {
     this.initScarf(point.x, point.y);
     this.camera = cameraTarget(this.player, this.viewport,
       { top: target.boundsTop, bottom: target.boundsBottom, width: target.boundsWidth });
+    this.syncInterpolationBaseline();
     if (cached) {
       // The destination is not displayed yet: returning actors are present on first reveal,
       // rather than appearing later inside the camera. All cooldown/safety rules still apply.
       const solids = this.platforms.filter((platform) => !platform.broken && platform.type !== 'acid' && platform.type !== 'laser_gate');
       this.enemies.push(...this.spawns.update(this.player, null, this.tickCount, this.enemies, solids, true));
     }
+    const chapter = CAMPAIGN.find((c) => c.id === target.id);
+    this.sectorTransition = {
+      key: ++this.sectorTransitionSeq,
+      fromId,
+      toId: target.substageId,
+      fromTitle,
+      toTitle: target.title,
+      direction,
+      accentColor: target.palette.accentNeon,
+      substages: chapter?.substages ?? [fromId, target.substageId],
+      timer: 36,
+      duration: 36,
+      cameraOffsetX: direction === 'forward' ? 68 : -68,
+    };
     sound.playCue('portal');
     this.emitHud();
     this.callbacks.onSaveRequest?.();
@@ -701,6 +796,7 @@ export class GameEngine {
     p.invulnTimer = 180;
     p.stunTimer = 0;
     p.stunGraceTimer = 90;
+    p.flameTimer = 0;
     p.vx = 0;
     p.vy = 0;
     this.respawnAtCheckpoint();
@@ -739,6 +835,7 @@ export class GameEngine {
     this.player.maxHp = profile.maxHp;
     this.player.hp = Math.max(1, Math.floor(profile.maxHp * oldRatio));
     this.player.isFlying = false;
+    this.player.flameTimer = 0;
     this.flightRequested = false;
     this.heroVisualTimers = { hurt:0, vault:0, special:0 };
     this.heroAnimator.reset(this.visualTick);
@@ -769,7 +866,9 @@ export class GameEngine {
 
   start() {
     this.stop();
+    this.loopActive = true;
     const loop = (timestamp: number) => {
+      if (!this.loopActive) return;
       try {
         this.pollGamepadPause();
         if (!this.paused) {
@@ -779,16 +878,26 @@ export class GameEngine {
             return !this.paused;
           });
         }
-        this.draw();
+        this.draw(timestamp);
       } catch (err) {
         console.error('GameLoop Safe Recover:', err);
       }
-      this.rafId = requestAnimationFrame(loop);
+      if (!this.loopActive) return;
+      if (this.renderer3d) {
+        this.renderer3d.scheduleNextFrame(() => loop(typeof performance !== 'undefined' ? performance.now() : Date.now()));
+      } else {
+        this.rafId = requestAnimationFrame(loop);
+      }
     };
-    this.rafId = requestAnimationFrame(loop);
+    if (this.renderer3d) {
+      this.renderer3d.scheduleNextFrame(() => loop(typeof performance !== 'undefined' ? performance.now() : Date.now()));
+    } else {
+      this.rafId = requestAnimationFrame(loop);
+    }
   }
 
   stop() {
+    this.loopActive = false;
     this.cancelTransitions();
     this.clearInput();
     this.clock.reset();
@@ -796,16 +905,27 @@ export class GameEngine {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
+    this.renderer3d?.cancelScheduledFrame();
     sound.stopMusic();
   }
 
   resize(width: number, height: number) {
     this.canvas.width = Math.max(1, Math.round(Number.isFinite(width) ? width : 1));
     this.canvas.height = Math.max(1, Math.round(Number.isFinite(height) ? height : 1));
-    this.ctx.imageSmoothingEnabled = false;
+    if (!this.renderer3d) {
+      this.applyPixelatedRendering(this.ctx, this.canvas);
+    } else {
+      this.renderer3d.resize(this.canvas.width, this.canvas.height);
+    }
     this.camera = cameraTarget(this.player, this.viewport,
-      { top: this.stage.boundsTop, bottom: this.stage.boundsBottom, width: this.stage.boundsWidth },
-      this.ambushArenas.find((arena) => arena.active && !arena.cleared));
+      { top: this.stage.boundsTop, bottom: this.stage.boundsBottom, width: this.stage.boundsWidth });
+      // keep arena lock centering if active
+    const activeArena = this.ambushArenas.find((arena) => arena.active && !arena.cleared);
+    if (activeArena) {
+      this.camera = cameraTarget(this.player, this.viewport,
+        { top: this.stage.boundsTop, bottom: this.stage.boundsBottom, width: this.stage.boundsWidth },
+        activeArena);
+    }
   }
 
   setKey(key: InputKey, pressed: boolean, source: InputSource = 'keyboard') {
@@ -931,7 +1051,6 @@ export class GameEngine {
         p.lastWallX !== null &&
         Math.abs(p.x - p.lastWallX) < 52;
       if (sameWall) {
-        this.addMangaFx('TROQUE DE PAREDE!', p.x, p.y - 14, '#facc15');
         return false;
       }
 
@@ -1101,6 +1220,9 @@ export class GameEngine {
           this.screenShake(9);
           this.addMangaFx('SHIELD BREAK!', en.x, en.y - 26, '#f97316');
           this.hitEnemy(en, Math.round(char.attackPower * dmgMult), p.facing * 8, -5, 5);
+          if (this.characterId === 'leon') {
+            this.applyBurnToEnemy(en);
+          }
           return;
         }
 
@@ -1130,6 +1252,9 @@ export class GameEngine {
       const liftY = isLauncher ? -11.5 : en.airborne ? -5.8 : -3.5;
       const impactFrames = attackingFromBehind || isLauncher ? 5 : 2;
       this.hitEnemy(en, baseDmg, p.facing * (isLauncher ? 4 : 6.5), liftY, impactFrames);
+      if (this.characterId === 'leon') {
+        this.applyBurnToEnemy(en);
+      }
       this.addMangaFx(
         attackingFromBehind ? 'BACKSTAB! 2X' : isLauncher ? 'LAUNCH!' : 'ZASH!',
         en.x,
@@ -1160,6 +1285,9 @@ export class GameEngine {
           this.addMangaFx('SHIELD BREAK!', this.boss.x, this.boss.y - 36, '#f97316');
         }
         this.damageBoss((char.attackPower + swing.bonusDamage) * dmgMult);
+        if (this.characterId === 'leon') {
+          this.applyBurnToBoss();
+        }
         this.boss.vx = p.facing * 4.5;
       }
     }
@@ -1259,10 +1387,12 @@ export class GameEngine {
       this.enemies.forEach((en) => {
         if (Math.hypot(en.x - p.x, en.y - p.y) < 760) {
           this.hitEnemy(en, 110, (en.x > p.x ? 1 : -1) * 10, -12, 6);
+          if (this.characterId === 'leon') this.applyBurnToEnemy(en, 6, 200);
         }
       });
       if (this.boss.active && this.boss.triggered && bossBodies(this.boss).some((body) => Math.abs(body.x - p.x) < 760)) {
         this.damageBoss(100);
+        if (this.characterId === 'leon') this.applyBurnToBoss(8, 220);
       }
       this.bullets = this.bullets.filter((b) => b.fromPlayer);
       this.emitHud();
@@ -1272,6 +1402,32 @@ export class GameEngine {
     if (p.psyEnergy < 25) {
       this.addMangaFx('SEM FOCO!', p.x, p.y - 20, '#ef4444');
       sound.sfxBlock();
+      return;
+    }
+
+    // Leon's Exclusive Flame Psy Skill: Chama Intensa (activates 2x burn DoT overclock + radial flame wave)
+    if (this.characterId === 'leon') {
+      p.psyEnergy -= 25;
+      p.flameTimer = 480; // 8s of doubled fire burn DoT
+      this.heroVisualTimers.special = 18;
+      sound.sfxPsyThrow();
+      sound.playVoiceShout('leon');
+      this.hitstop = 4;
+      this.screenShake(10);
+      this.addMangaFx('CHAMA INTENSA!', p.x, p.y - 28, '#f97316');
+      this.addParticle(p.x + p.w / 2, p.y + p.h / 2, '#f97316', 22, 9);
+      this.leonFlameZone = { x: p.x - 74, y: p.y + p.h - 14, w: 180, timer: 110 };
+      this.enemies.forEach((en) => {
+        if (Math.hypot(en.x - p.x, en.y - p.y) < 230) {
+          this.hitEnemy(en, 28, (en.x >= p.x ? 1 : -1) * 9, -6, 4);
+          this.applyBurnToEnemy(en);
+        }
+      });
+      if (this.boss.active && this.boss.triggered && bossBodies(this.boss).some((body) => Math.hypot(body.x - p.x, body.y - p.y) < 230)) {
+        this.damageBoss(24);
+        this.applyBurnToBoss();
+      }
+      this.emitHud();
       return;
     }
 
@@ -1341,11 +1497,17 @@ export class GameEngine {
 
     if (this.characterId === 'ren') {
       this.addMangaFx('MAYA: GRAVIDADE!', p.x + p.facing * 100, p.y - 30, '#00f0ff');
+      let wellX = Math.max(40, Math.min(this.stage.boundsWidth - 40, p.x + p.w / 2 + p.facing * 150));
+      const wellY = p.y + p.h / 2 - 22;
+      const probe = { x: wellX - 8, y: wellY - 8, w: 16, h: 16 };
+      if (this.platforms.some((plat) => !plat.broken && (plat.type === 'solid' || plat.type === 'wall') && overlaps(probe, plat))) {
+        wellX = Math.max(40, Math.min(this.stage.boundsWidth - 40, p.x + p.w / 2 + p.facing * 75));
+      }
       this.mayaWell = {
-        x: p.x + p.facing * 150,
-        y: p.y + 10,
-        timer: 150,
-        radius: 215,
+        x: wellX,
+        y: wellY,
+        timer: 165,
+        radius: 265,
       };
     } else if (this.characterId === 'maya') {
       this.addMangaFx('LEON: INFERNO!', p.x + p.facing * 90, p.y - 30, '#f97316');
@@ -1386,6 +1548,7 @@ export class GameEngine {
   private hitEnemy(en: Enemy, dmg: number, kx: number, ky: number, hitstopFrames = 3) {
     if (en.hp <= 0) return;
     en.hp -= dmg;
+    en.hitFlashTimer = 2;
     en.vx = en.mount ? 0 : kx;
     en.vy = en.mount ? 0 : ky;
     en.airborne = !en.mount;
@@ -1398,15 +1561,83 @@ export class GameEngine {
     if (en.hp <= 0) this.addScore(this.spawns.claimDefeatReward(en));
   }
 
-  private damageBoss(dmg: number) {
+  private applyBurnToEnemy(en: Enemy, overrideDmg?: number, overrideDuration?: number) {
+    if (en.hp <= 0) return;
+    const boosted = this.characterId === 'leon' && this.player.flameTimer > 0;
+    const dmg = overrideDmg ?? (boosted ? 6 : 3);
+    const duration = overrideDuration ?? (boosted ? 200 : 144);
+    const interval = boosted ? 20 : 24;
+    if (!en.burnTimer || en.burnTimer <= 0) {
+      en.burnTickTimer = interval;
+    }
+    en.burnTimer = Math.max(en.burnTimer ?? 0, duration);
+    en.burnDamage = Math.max(en.burnDamage ?? 0, dmg);
+  }
+
+  private applyBurnToBoss(overrideDmg?: number, overrideDuration?: number) {
+    if (!this.boss.active || !this.boss.triggered || this.boss.hp <= 0) return;
+    const boosted = this.characterId === 'leon' && this.player.flameTimer > 0;
+    const dmg = overrideDmg ?? (boosted ? 8 : 4);
+    const duration = overrideDuration ?? (boosted ? 220 : 168);
+    const interval = boosted ? 20 : 24;
+    if (!this.boss.burnTimer || this.boss.burnTimer <= 0) {
+      this.boss.burnTickTimer = interval;
+    }
+    this.boss.burnTimer = Math.max(this.boss.burnTimer ?? 0, duration);
+    this.boss.burnDamage = Math.max(this.boss.burnDamage ?? 0, dmg);
+  }
+
+  private tickBurns() {
+    const interval = this.characterId === 'leon' && this.player.flameTimer > 0 ? 20 : 24;
+    for (const en of this.enemies) {
+      if (en.hp <= 0 || !en.burnTimer || en.burnTimer <= 0) continue;
+      en.burnTimer--;
+      if (en.burnTimer % 6 === 0) {
+        this.addParticle(en.x + Math.random() * en.w, en.y + Math.random() * (en.h * 0.7), '#f97316', 1, 2.2);
+      }
+      en.burnTickTimer = (en.burnTickTimer ?? interval) - 1;
+      if (en.burnTickTimer <= 0) {
+        en.burnTickTimer = interval;
+        const dmg = en.burnDamage ?? 3;
+        en.hp -= dmg;
+        en.hitFlashTimer = 1;
+        this.addParticle(en.x + en.w / 2, en.y + en.h * 0.4, '#fb923c', 4, 3);
+        this.addMangaFx(`-${dmg}`, en.x + en.w * 0.25, en.y - 10, '#f97316');
+        if (en.hp <= 0) {
+          if (en.ai) en.ai.state = 'dead';
+          this.addScore(this.spawns.claimDefeatReward(en));
+          this.addParticle(en.x + en.w / 2, en.y + en.h / 2, '#f97316', 10, 5);
+        }
+      }
+    }
+
+    if (this.boss.active && this.boss.triggered && this.boss.burnTimer && this.boss.burnTimer > 0) {
+      this.boss.burnTimer--;
+      if (this.boss.burnTimer % 5 === 0) {
+        this.addParticle(this.boss.x + Math.random() * this.boss.w, this.boss.y + Math.random() * (this.boss.h * 0.8), '#fb923c', 2, 2.5);
+      }
+      this.boss.burnTickTimer = (this.boss.burnTickTimer ?? interval) - 1;
+      if (this.boss.burnTickTimer <= 0) {
+        this.boss.burnTickTimer = interval;
+        this.damageBoss(this.boss.burnDamage ?? 4, true);
+      }
+    }
+  }
+
+  private damageBoss(dmg: number, isDot = false) {
     if (!this.boss.active || this.stageClearTriggered) return;
     this.boss.hp -= dmg;
-    this.hitstop = Math.max(this.hitstop, 4);
-    this.screenShake(8);
-    sound.sfxHit('boss');
-    this.addParticle(this.boss.x + this.boss.w / 2, this.boss.y + this.boss.h / 2, this.boss.accentColor, 14, 6);
-    this.addMangaFx('CRUSH!', this.boss.x, this.boss.y - 24, '#ff007f');
-    this.registerHit(200);
+    if (isDot) {
+      this.addParticle(this.boss.x + this.boss.w / 2, this.boss.y + this.boss.h * 0.4, '#f97316', 5, 3.5);
+      this.addMangaFx(`-${dmg}`, this.boss.x + this.boss.w * 0.3, this.boss.y - 16, '#f97316');
+    } else {
+      this.hitstop = Math.max(this.hitstop, 4);
+      this.screenShake(8);
+      sound.sfxHit('boss');
+      this.addParticle(this.boss.x + this.boss.w / 2, this.boss.y + this.boss.h / 2, this.boss.accentColor, 14, 6);
+      this.addMangaFx('CRUSH!', this.boss.x, this.boss.y - 24, '#ff007f');
+      this.registerHit(200);
+    }
 
     if (this.boss.phase === 1 && this.boss.hp <= this.boss.maxHp * 0.5) {
       this.boss.phase = 2;
@@ -1461,6 +1692,7 @@ export class GameEngine {
       this.heroVisualTimers.hurt = 12;
       p.hp = Math.max(0, p.hp - dmg);
       p.vx = knockX;
+      if (Math.abs(knockX) >= 8) this.knockbackLock = Math.max(this.knockbackLock, 11);
       p.invulnTimer = 42;
       this.screenShake(10);
       sound.sfxHurt();
@@ -1546,12 +1778,16 @@ export class GameEngine {
   // UPDATE LOOP
   // =========================================================================
   private update() {
+    this.syncInterpolationBaseline();
     this.worldTick++;
     this.tickCount++;
 
     if (this.superCutinTimer > 0) {
       this.superCutinTimer--;
       return;
+    }
+    for (const en of this.enemies) {
+      if (en.hitFlashTimer && en.hitFlashTimer > 0) en.hitFlashTimer--;
     }
     if (this.hitstop > 0) {
       this.hitstop--;
@@ -1588,6 +1824,12 @@ export class GameEngine {
     if (p.atkTimer > 0) p.atkTimer--;
     if (p.jmpTimer > 0) p.jmpTimer--;
     if (p.gstTimer > 0) p.gstTimer--;
+    if (p.flameTimer > 0) {
+      p.flameTimer--;
+      if (this.characterId === 'leon' && this.tickCount % 6 === 0) {
+        this.addParticle(p.x + Math.random() * p.w, p.y + p.h * 0.7, '#f97316', 1, 2.5);
+      }
+    }
     if (!p.isFlying && p.psyEnergy < p.maxPsy) p.psyEnergy += 0.07;
     if (this.shakeAmount > 0) this.shakeAmount *= 0.85;
 
@@ -1620,21 +1862,51 @@ export class GameEngine {
       }
     });
 
-    // Stage 2: Low Ceiling Monorail Hazard
+    // Stage 2: Monorail Express Hazards (overhead gantries to slide/dash + low track sweepers to jump)
     if (this.stage.hasLowCeilingHazard && !this.boss.triggered) {
       this.lowCeilingTimer--;
       if (this.lowCeilingTimer <= 0 && !this.lowCeilingActive) {
+        const seq = this.lowCeilingSequence++;
+        const pattern: ('gantry' | 'sweeper')[] = ['gantry', 'sweeper', 'gantry', 'sweeper', 'sweeper', 'gantry'];
+        this.lowCeilingKind = pattern[seq % pattern.length];
+        this.lowCeilingSpeed =
+          this.lowCeilingKind === 'sweeper'
+            ? this.stage.substageId === '2A' ? 12 : 14
+            : this.stage.substageId === '2A' ? 14 : 16;
         this.lowCeilingActive = true;
-        this.lowCeilingX = p.x + 760;
-        this.lowCeilingTimer = 320;
+        this.lowCeilingX = p.x + 880;
+        this.lowCeilingTimer = this.stage.substageId === '2C' ? (seq % 3 === 2 ? 195 : 240) : 275;
         sound.sfxAlarm();
-        this.showAlert('PERIGO: PÓRTICO BAIXO — DESLIZE (▼ + DASH)!', 90);
+        this.showAlert(
+          this.lowCeilingKind === 'sweeper'
+            ? 'PERIGO BAIXO: VARREDOR NO TRILHO — PULE (PULO)!'
+            : 'PERIGO ALTO: PÓRTICO BAIXO — DESLIZE (▼ + DASH) ou DASH!',
+          90
+        );
       }
       if (this.lowCeilingActive) {
-        this.lowCeilingX -= 16;
-        const beamBox = { x: this.lowCeilingX, y: 540, w: 130, h: 66 };
-        if (this.checkAABB(p, beamBox) && !p.isSliding) {
-          this.damagePlayer(22, -8);
+        this.lowCeilingX -= this.lowCeilingSpeed;
+        if (this.lowCeilingKind === 'sweeper') {
+          const sweeperBox = { x: this.lowCeilingX, y: 612, w: 78, h: 38 };
+          const playerBox = p.isSliding ? { x: p.x, y: p.y + 34, w: p.w + 12, h: 22 } : p;
+          if (this.checkAABB(playerBox, sweeperBox)) {
+            if (p.isDashing && p.grounded) {
+              p.isDashing = false;
+              p.dashTimer = 0;
+            }
+            if (this.damagePlayer(20, -11)) {
+              p.vy = Math.min(p.vy, -5.2);
+              this.addMangaFx('VARRIDO!', p.x, p.y - 24, '#ef4444');
+            }
+          }
+        } else {
+          const beamBox = { x: this.lowCeilingX, y: 496, w: 130, h: 110 };
+          if (this.checkAABB(p, beamBox) && !p.isSliding) {
+            if (this.damagePlayer(22, -11)) {
+              p.vy = Math.min(p.vy, -4.2);
+              this.addMangaFx('IMPACTO!', p.x, p.y - 24, '#facc15');
+            }
+          }
         }
         if (this.lowCeilingX < p.x - 520) this.lowCeilingActive = false;
       }
@@ -1646,16 +1918,38 @@ export class GameEngine {
       if (Math.random() < 0.004) this.lightningAlpha = 0.65;
     }
 
+    if (this.sectorTransition) {
+      this.sectorTransition.timer--;
+      this.sectorTransition.cameraOffsetX *= 0.82;
+      if (Math.abs(this.sectorTransition.cameraOffsetX) < 0.5) this.sectorTransition.cameraOffsetX = 0;
+      if (this.sectorTransition.timer <= 0) this.sectorTransition = null;
+    }
+
     // Maya Gravity Well active
     if (this.mayaWell) {
       this.mayaWell.timer--;
+      const well = this.mayaWell;
+      const grav = 0.6 * this.stage.gravityScale;
       this.enemies.forEach((en) => {
-        const dx = this.mayaWell!.x - en.x;
-        const dy = this.mayaWell!.y - en.y;
+        if (en.hp <= 0 || en.mount) return;
+        const ex = en.x + en.w / 2;
+        const ey = en.y + en.h / 2;
+        const dx = well.x - ex;
+        const dy = well.y - ey;
         const dist = Math.hypot(dx, dy);
-        if (!en.mount && dist < this.mayaWell!.radius && dist > 6) {
-          en.vx += (dx / dist) * 2.6;
-          en.vy += (dy / dist) * 2.6;
+        if (dist <= well.radius) {
+          // Suspend normal AI movement so patrol/chase/flight does not fight the singularity
+          en.stunTimer = Math.max(en.stunTimer ?? 0, 6);
+          if (dist > 6) {
+            const pullSpeed = Math.min(8.5, Math.max(3.8, dist * 0.085));
+            const targetVx = (dx / dist) * pullSpeed;
+            const targetVy = (dy / dist) * pullSpeed;
+            en.vx = en.vx * 0.6 + targetVx * 0.55;
+            en.vy = en.vy * 0.6 + targetVy * 0.55 - grav;
+          } else {
+            en.vx *= 0.45;
+            en.vy = -grav;
+          }
           en.airborne = true;
         }
       });
@@ -1673,11 +1967,27 @@ export class GameEngine {
             Math.abs(en.y + en.h - this.leonFlameZone!.y) < 60
           ) {
             this.hitEnemy(en, 12, (en.x > p.x ? 1 : -1) * 3, -4, 1);
+            this.applyBurnToEnemy(en);
           }
         });
+        if (
+          this.boss.active &&
+          this.boss.triggered &&
+          bossBodies(this.boss).some(
+            (b) =>
+              b.x + b.w > this.leonFlameZone!.x &&
+              b.x < this.leonFlameZone!.x + this.leonFlameZone!.w &&
+              Math.abs(b.y + b.h - this.leonFlameZone!.y) < 70
+          )
+        ) {
+          this.damageBoss(12);
+          this.applyBurnToBoss();
+        }
       }
       if (this.leonFlameZone.timer <= 0) this.leonFlameZone = null;
     }
+
+    this.tickBurns();
 
     // Combat timers
     if (p.dashCooldown > 0) p.dashCooldown--;
@@ -1712,6 +2022,7 @@ export class GameEngine {
     }
 
     // Maya 8-Directional Free Flight check
+    const wasFlying = p.isFlying;
     p.isFlying =
       char.canFlight &&
       this.flightRequested &&
@@ -1723,11 +2034,14 @@ export class GameEngine {
       p.stunTimer <= 0;
     if (!p.isFlying) this.flightRequested = false;
 
-    // Briefly preserve the outward wall-kick impulse instead of overriding it with held input.
+    // Briefly preserve outward wall-kick or heavy knockback impulse instead of overriding it immediately.
     if (this.wallKickLock > 0) this.wallKickLock--;
+    if (this.knockbackLock > 0) this.knockbackLock--;
     // Horizontal movement
     if (!p.isDashing && !p.isSliding && this.wallKickLock === 0) {
-      if (p.stunTimer > 0) {
+      if (this.knockbackLock > 0) {
+        p.vx *= 0.91;
+      } else if (p.stunTimer > 0) {
         p.vx *= MOVEMENT.stunDrag;
       } else {
         const direction = this.keys.left ? -1 : this.keys.right ? 1 : 0;
@@ -1770,12 +2084,6 @@ export class GameEngine {
       else p.vy *= 0.75;
       if (this.tickCount % 5 === 0) {
         this.addParticle(p.x + p.w / 2, p.y + p.h, '#00f0ff', 2, 2.5);
-      }
-    } else if (p.onWall !== 0 && !p.grounded && this.keys.up && p.stunTimer <= 0) {
-      // Active Wall Climb!
-      p.vy = -MOVEMENT.wallClimbSpeed;
-      if (this.tickCount % 6 === 0) {
-        this.addParticle(p.x + (p.onWall === 1 ? p.w : 0), p.y + 22, char.trailColor, 3, 2);
       }
     } else {
       let gravity = MOVEMENT.gravity * this.stage.gravityScale;
@@ -1882,6 +2190,7 @@ export class GameEngine {
       this.damagePlayer(25, 0, true);
       if (p.hp > 0) {
         this.recoverPlayer();
+        if (this.stage.id === 2) this.addMangaFx('CAIU DO TREM!', p.x, p.y - 42, '#facc15');
       }
     }
 
@@ -2061,7 +2370,7 @@ export class GameEngine {
     this.camera.y = followCamera(this.camera.y, target.y);
 
     this.heroAnimator.sample(this.heroVisualInput(),this.visualTick);
-    if (this.tickCount % 4 === 0) {
+    if (this.tickCount % 4 === 0 || p.isFlying !== wasFlying) {
       this.emitHud();
     }
   }
@@ -2096,9 +2405,11 @@ export class GameEngine {
     p.stunTimer = 0;
     p.stunGraceTimer = 90;
     p.invulnTimer = Math.max(60, p.invulnTimer);
+    this.knockbackLock = 0;
     this.standingPlatform = null;
     this.clearInput();
     this.resetAttack(); this.heroVisualTimers = { hurt:0, vault:0, special:0 }; this.heroAnimator.reset(this.visualTick);
+    this.syncInterpolationBaseline();
     this.addMangaFx('RESGATE!', p.x, p.y - 20, '#38bdf8');
   }
 
@@ -2186,10 +2497,13 @@ export class GameEngine {
       const inMountArc = enemy.mount !== 'ceiling' || p.y + p.h / 2 > enemy.y + enemy.h;
       const inWallArc = enemy.mount === 'wall-left' ? p.x > enemy.x + enemy.w : enemy.mount === 'wall-right' ? p.x + p.w < enemy.x : true;
       const visible = inMountArc && inWallArc && p.gstTimer <= 0 && distance <= GROUND_ENEMY.detectionRadius && canSeeBody(enemy, p, solids);
+      const opportunisticTrain = Boolean(this.stage.hasLowCeilingHazard && (this.lowCeilingActive || this.knockbackLock > 0) && distance < 420);
+      if (opportunisticTrain && enemy.attackTimer > 10) enemy.attackTimer = 10;
+      if (opportunisticTrain && enemy.shootTimer > 16) enemy.shootTimer = 16;
       const landingX = p.x - p.facing * 56;
       const intent = stepEnemyAI(enemy, { player: p, visible, home, stunned,
         installationX: this.spawns.installationX(enemy),
-        coverFire: p.stunTimer > 10,
+        coverFire: p.stunTimer > 10 || opportunisticTrain,
         canFlank: guardEngaged && Math.abs(landingX - home) <= GROUND_ENEMY.leash &&
           hasSafeFooting(enemy, landingX - enemy.x, this.platforms) });
       if (enemy.hp <= 0 || enemy.y > this.stage.boundsBottom + 300) continue;
@@ -2243,7 +2557,13 @@ export class GameEngine {
         const dy = p.y + p.h / 2 - enemy.y - enemy.h / 2;
         if (Math.abs(dx) <= profile.range && Math.abs(dy) < 60 && dx * mind.facing >= 0 && visible && canSeeBody(enemy, p, solids)) {
           const guardShove = enemy.type === 'mib_shield' && !enemy.shieldBroken;
-          const damaged = this.damagePlayer(profile.damage, mind.facing * (guardShove ? 11 : 7));
+          const heavyShove = guardShove || enemy.type === 'suit_martial' || enemy.type === 'heavy_trooper';
+          const shoveSpeed = guardShove ? 12 : heavyShove ? 10 : this.stage.id === 2 ? 9 : 7;
+          const damaged = this.damagePlayer(profile.damage, mind.facing * shoveSpeed);
+          if (damaged && (heavyShove || this.stage.id === 2)) {
+            p.vy = Math.min(p.vy, -3.5);
+            if (this.stage.id === 2 && !guardShove) this.addMangaFx('EMPURRÃO!', p.x, p.y - 24, '#f97316');
+          }
           if (damaged && guardShove && p.hp > 0 && p.stunGraceTimer === 0) {
             p.stunTimer = 24; p.stunGraceTimer = 90;
             sound.sfxStun(); this.addMangaFx('STUN!', p.x, p.y - 24, '#00f0ff');
@@ -2301,6 +2621,7 @@ export class GameEngine {
   private emitHud() {
     const p = this.player;
     const arenaLocked = this.ambushArenas.some((a) => a.active && !a.cleared);
+    const chapter = CAMPAIGN.find((c) => c.id === this.stage.id);
     this.callbacks.onHudUpdate({
       routeObjective: (() => {
         const node = this.nextRouteNode();
@@ -2312,6 +2633,17 @@ export class GameEngine {
       })(),
       stageId: this.stage.id,
       substageId: this.stage.substageId,
+      chapterSubstages: chapter?.substages ?? [this.stage.substageId],
+      sectorTransition: this.sectorTransition ? {
+        key: this.sectorTransition.key,
+        fromId: this.sectorTransition.fromId,
+        toId: this.sectorTransition.toId,
+        fromTitle: this.sectorTransition.fromTitle,
+        toTitle: this.sectorTransition.toTitle,
+        direction: this.sectorTransition.direction,
+        accentColor: this.sectorTransition.accentColor,
+        substages: this.sectorTransition.substages,
+      } : null,
       checkpoint: this.stage.checkpoints.find((point) => point.id === this.checkpointId)?.label ?? '',
       nearbyExit: this.campaignMode && !arenaLocked && !(this.boss.active && this.boss.triggered)
         ? this.stage.exits.find((exit) => overlaps(p, exit))?.label ?? null : null,
@@ -2339,20 +2671,134 @@ export class GameEngine {
       atkTimer: Math.ceil(p.atkTimer / 60),
       jmpTimer: Math.ceil(p.jmpTimer / 60),
       gstTimer: Math.ceil(p.gstTimer / 60),
+      flameTimer: this.characterId === 'leon' ? Math.ceil(p.flameTimer / 60) : 0,
       arenaLocked,
+      isFlying: p.isFlying,
     });
   }
 
   // =========================================================================
-  // RENDERING (Pixel Art + resolution-independent world height)
+  // RENDERING (2.5D Three.js World + Crisp 2D HUD/FX Overlay)
   // =========================================================================
-  private draw() {
+  private draw(timestamp = 0) {
     const ctx = this.ctx;
     const w = this.canvas.width;
     const h = this.canvas.height;
     const pal = this.stage.palette;
 
-    ctx.imageSmoothingEnabled = false;
+    if (this.renderer3d) {
+      const dt = this.lastRenderTs > 0
+        ? Math.min(0.05, Math.max(0.004, (timestamp - this.lastRenderTs) / 1000))
+        : 1 / 60;
+      this.lastRenderTs = timestamp;
+      const tickAlpha = this.paused || this.hitstop > 0 || this.superCutinTimer > 0 ? 1 : this.clock.alpha;
+      const glideX = this.sectorTransition ? this.sectorTransition.cameraOffsetX : 0;
+      const view = this.viewport;
+      const sample = this.heroAnimator.sampleInterpolated(this.heroVisualInput(), this.visualTick, tickAlpha);
+      const char = CHARACTERS[this.characterId];
+      const p = this.player;
+
+      const interpPlayer = lerpActorPosition(this.prevPlayerPos.x, this.prevPlayerPos.y, p.x, p.y, tickAlpha);
+      const interpCam = lerpActorPosition(this.prevCameraPos.x, this.prevCameraPos.y, this.camera.x, this.camera.y, tickAlpha, 120);
+      const interpEnemies = tickAlpha >= 0.999
+        ? this.enemies
+        : this.enemies.map((en) => {
+            const prev = this.prevEnemyPos.get(en.id);
+            if (!prev) return en;
+            const pos = lerpActorPosition(prev.x, prev.y, en.x, en.y, tickAlpha);
+            return { ...en, x: pos.x, y: pos.y };
+          });
+      const interpBoss = tickAlpha >= 0.999 || !this.boss.active
+        ? this.boss
+        : (() => {
+            const pos = lerpActorPosition(this.prevBossPos.x, this.prevBossPos.y, this.boss.x, this.boss.y, tickAlpha);
+            const twinPos = this.boss.twinX !== undefined && this.boss.twinY !== undefined
+              ? lerpActorPosition(this.prevBossPos.twinX, this.prevBossPos.twinY, this.boss.twinX, this.boss.twinY, tickAlpha)
+              : null;
+            return {
+              ...this.boss,
+              x: pos.x,
+              y: pos.y,
+              ...(twinPos ? { twinX: twinPos.x, twinY: twinPos.y } : {}),
+            };
+          })();
+
+      this.renderer3d.render({
+        width: w,
+        height: h,
+        viewportWidth: view.width,
+        viewportHeight: view.height,
+        stageId: this.stage.id,
+        substageId: this.stage.substageId,
+        palette: pal,
+        cameraX: interpCam.x,
+        cameraY: interpCam.y,
+        shakeAmount: this.shakeAmount,
+        sectorOffsetX: glideX,
+        sectorDirection: this.sectorTransition?.direction ?? null,
+        tickCount: this.tickCount,
+        tickAlpha,
+        dt,
+        campaignMode: this.campaignMode,
+        checkpointId: this.checkpointId,
+        checkpoints: this.stage.checkpoints,
+        exits: this.stage.exits,
+        explorationNodes: this.stage.exploration?.nodes ?? [],
+        activatedNodes: this.activated,
+        platforms: this.platforms,
+        ceilingPipes: this.ceilingPipes,
+        props: this.props,
+        pickups: this.pickups,
+        enemies: interpEnemies,
+        thrownEnemies: this.thrownEnemies,
+        boss: interpBoss,
+        bullets: this.bullets,
+        particles: this.particles,
+        mayaWell: this.mayaWell,
+        leonFlameZone: this.leonFlameZone,
+        lowCeilingActive: this.lowCeilingActive,
+        lowCeilingKind: this.lowCeilingKind,
+        lowCeilingX: this.lowCeilingX,
+        player: {
+          characterId: this.characterId,
+          pose: sample.pose,
+          frame: sample.frame,
+          nextFrame: sample.nextFrame,
+          frameAlpha: sample.frameAlpha,
+          elapsedTicks: sample.elapsed,
+          x: interpPlayer.x,
+          y: interpPlayer.y,
+          w: p.w,
+          h: p.h,
+          vx: p.vx,
+          vy: p.vy,
+          facing: p.facing,
+          onWall: p.onWall,
+          grounded: p.grounded,
+          isDashing: p.isDashing,
+          isSliding: p.isSliding,
+          isFlying: p.isFlying,
+          slashing: p.slashing,
+          slashTimer: p.slashTimer,
+          comboStep: p.comboStep,
+          invulnTimer: p.invulnTimer,
+          gstTimer: p.gstTimer,
+          atkTimer: p.atkTimer,
+          flameTimer: p.flameTimer,
+          stunTimer: p.stunTimer,
+          hp: p.hp,
+        },
+        slashRange: char.slashRange,
+        accentColor: char.accentColor,
+        trailColor: char.trailColor,
+        lightningAlpha: this.lightningAlpha,
+      });
+
+      this.drawOverlay2D(ctx, w, h, interpCam.x + glideX);
+      return;
+    }
+
+    this.applyPixelatedRendering(ctx, this.canvas);
 
     // 1. Sky gradient
     const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
@@ -2368,20 +2814,35 @@ export class GameEngine {
       ctx.fill();
     }
 
-    // Parallax city silhouettes
+    const glideX = this.sectorTransition ? this.sectorTransition.cameraOffsetX : 0;
+    const renderCamX = this.camera.x + glideX;
+
+    // Parallax city silhouettes (with 16-bit lit pixel windows)
+    ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = pal.cityFar;
     for (let i = 0; i < 16; i++) {
-      const bx = ((i * 220 - this.camera.x * 0.22) % (w + 320)) - 140;
+      const bx = Math.round(((i * 220 - renderCamX * 0.22) % (w + 320)) - 140);
       const bh = 180 + ((i * 73) % 240);
       ctx.fillRect(bx, h - bh, 150, bh);
+      ctx.fillStyle = i % 3 === 0 ? pal.accentNeon + '18' : pal.secondaryNeon + '18';
+      for (let wy = h - bh + 18; wy < h - 40; wy += 24) {
+        for (let wx = bx + 14; wx < bx + 132; wx += 22) {
+          if (((wx + wy + i) % 5) !== 0) ctx.fillRect(wx, wy, 10, 12);
+        }
+      }
+      ctx.fillStyle = pal.cityFar;
     }
     ctx.fillStyle = pal.cityMid;
     for (let i = 0; i < 12; i++) {
-      const bx = ((i * 290 - this.camera.x * 0.45) % (w + 420)) - 180;
+      const bx = Math.round(((i * 290 - renderCamX * 0.45) % (w + 420)) - 180);
       const bh = 130 + ((i * 97) % 200);
       ctx.fillRect(bx, h - bh, 190, bh);
-      ctx.fillStyle = i % 2 === 0 ? pal.accentNeon + '22' : pal.secondaryNeon + '22';
-      ctx.fillRect(bx + 18, h - bh + 22, 48, 16);
+      ctx.fillStyle = i % 2 === 0 ? pal.accentNeon + '2a' : pal.secondaryNeon + '2a';
+      for (let wy = h - bh + 20; wy < h - 32; wy += 26) {
+        for (let wx = bx + 16; wx < bx + 168; wx += 26) {
+          if (((wx * 3 + wy) % 7) !== 0) ctx.fillRect(wx, wy, 12, 14);
+        }
+      }
       ctx.fillStyle = pal.cityMid;
     }
 
@@ -2392,7 +2853,8 @@ export class GameEngine {
     ctx.scale(this.viewport.zoom, this.viewport.zoom);
     const sx = (Math.random() - 0.5) * this.shakeAmount;
     const sy = (Math.random() - 0.5) * this.shakeAmount;
-    ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
+    ctx.translate(Math.round(-renderCamX + sx), Math.round(-this.camera.y + sy));
+    this.applyPixelatedRendering(ctx, this.canvas);
 
     if (this.campaignMode) {
       for (const point of this.stage.checkpoints) {
@@ -2415,21 +2877,18 @@ export class GameEngine {
       }
     }
 
-    // 2. Ceiling Pipes
+    // 2. Ceiling Pipes (16-bit Metallic Beams & Riveted Pipes)
     this.ceilingPipes.forEach((cp) => {
-      ctx.fillStyle = pal.pipeColor;
-      ctx.fillRect(cp.x, cp.y, cp.w, cp.h);
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.fillRect(cp.x, cp.y + 3, cp.w, 3);
+      this.drawMetalPipe16Bit(ctx, cp, pal.pipeColor);
     });
 
-    // 3. Platforms, Conveyors & Hazards
+    // 3. Platforms, Conveyors & Hazards (16-bit Asphalt, Bricks, Metal Beams)
     this.platforms.forEach((plat) => {
       if (plat.broken) return;
       if (plat.gateId) {
-        ctx.fillStyle = plat.breakNode ? '#475569' : '#78350f'; ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
-        ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2; ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
-        ctx.fillStyle = '#fbbf24'; for (let y = plat.y + 5; y < plat.y + plat.h - 6; y += 18) ctx.fillRect(plat.x + 3, y, plat.w - 6, 5);
+        this.drawBrickBlock16Bit(ctx, plat, plat.breakNode ? '#64748b' : '#b45309', '#fbbf24');
+        ctx.fillStyle = '#fbbf24';
+        for (let y = plat.y + 5; y < plat.y + plat.h - 6; y += 18) ctx.fillRect(plat.x + 3, y, plat.w - 6, 5);
         return;
       }
       if (plat.type === 'acid') {
@@ -2449,11 +2908,7 @@ export class GameEngine {
         return;
       }
       if (plat.type === 'conveyor') {
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
-        ctx.strokeStyle = '#fb923c';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
+        this.drawMetalBeam16Bit(ctx, plat, '#475569', '#fb923c', false);
         // Animated directional chevrons
         const dir = (plat.conveyorSpeed ?? 1) >= 0 ? 1 : -1;
         const shift = ((this.tickCount * 2 * dir) % 28 + 28) % 28;
@@ -2463,15 +2918,28 @@ export class GameEngine {
         }
         return;
       }
-      ctx.fillStyle = plat.type === 'crumble' ? '#78350f' : pal.platformFill;
-      ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
-      ctx.strokeStyle = plat.type === 'crumble' ? '#facc15' : pal.platformStroke;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
+      if (plat.type === 'wall' || (plat.type === 'solid' && plat.h > 48 && plat.w < 260)) {
+        this.drawBrickBlock16Bit(ctx, plat, pal.platformFill, pal.platformStroke);
+        return;
+      }
+      if (plat.type === 'solid' && plat.h >= 60 && plat.w >= 260) {
+        this.drawAsphaltPlatform16Bit(ctx, plat, pal.platformFill, pal.platformStroke, pal.accentNeon);
+        return;
+      }
+      // Elevated platforms, moving trusses & crumbling construction girders -> 16-bit Metal Beams
+      this.drawMetalBeam16Bit(
+        ctx,
+        plat,
+        plat.type === 'crumble' ? '#78350f' : pal.platformFill,
+        plat.type === 'crumble' ? '#facc15' : pal.platformStroke,
+        plat.type === 'crumble'
+      );
     });
 
     const complex=this.stage.exploration?.complex;
     if(complex){ctx.font='bold 16px monospace';ctx.fillStyle='#7dd3fc';for(const room of complex.rooms)for(const level of [0,300,600])ctx.fillText(room.label,room.x+30,complex.floor-level-90);}
+    const zones=this.stage.exploration?.zones;
+    if(zones){ctx.font='bold 15px monospace';ctx.fillStyle='#7dd3fc';for(const zone of zones)ctx.fillText(zone.label,zone.x,zone.y);}
     for (const node of this.stage.exploration?.nodes ?? []) {
       const active = this.activated.has(node.id);
       ctx.fillStyle = '#0f172a'; ctx.fillRect(node.x, node.y, node.w, node.h);
@@ -2532,23 +3000,72 @@ export class GameEngine {
       ctx.fillText(st.label, it.x + 5, it.y + 15);
     });
 
-    // 6. Low Ceiling Hazard (Stage 2)
+    // 6. Monorail Express Hazards (Stage 2: Overhead Gantry vs Low Track Sweeper)
     if (this.lowCeilingActive) {
-      ctx.fillStyle = '#facc15';
-      ctx.fillRect(this.lowCeilingX, 540, 130, 66);
-      ctx.fillStyle = '#09090b';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.fillText('DESLIZE! ▼', this.lowCeilingX + 24, 578);
+      if (this.lowCeilingKind === 'sweeper') {
+        const sx = Math.round(this.lowCeilingX);
+        const sy = 612;
+        ctx.fillStyle = '#18181b';
+        ctx.fillRect(sx, sy, 78, 38);
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(sx, sy + 6, 78, 8);
+        ctx.fillStyle = '#38bdf8';
+        for (let cx = sx + 6; cx < sx + 70; cx += 16) {
+          ctx.fillRect(cx, sy + (this.tickCount % 6 < 3 ? 2 : 20), 8, 6);
+        }
+        ctx.strokeStyle = '#fb923c';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(sx, sy, 78, 38);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('▲ PULE!', sx + 12, sy - 8);
+      } else {
+        const gx = Math.round(this.lowCeilingX);
+        const gy = 496;
+        // Support struts into the sky
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(gx + 18, gy - 260, 14, 260);
+        ctx.fillRect(gx + 98, gy - 260, 14, 260);
+        // Main warning gantry
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(gx, gy, 130, 110);
+        ctx.fillStyle = '#09090b';
+        for (let sx = gx + 6; sx < gx + 124; sx += 24) {
+          ctx.fillRect(sx, gy + 8, 12, 94);
+        }
+        ctx.fillStyle = this.tickCount % 10 < 5 ? '#ef4444' : '#fbbf24';
+        ctx.fillRect(gx + 6, gy + 88, 12, 12);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(gx + 16, gy + 38, 98, 22);
+        ctx.fillStyle = '#09090b';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillText('DESLIZE! ▼', gx + 28, gy + 53);
+      }
     }
 
     // 7. Partner Zones
     if (this.mayaWell) {
+      const well = this.mayaWell;
       ctx.save();
-      ctx.strokeStyle = '#00f0ff';
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 8]);
       ctx.beginPath();
-      ctx.arc(this.mayaWell.x, this.mayaWell.y, 44 + Math.sin(this.tickCount * 0.25) * 10, 0, Math.PI * 2);
+      ctx.arc(well.x, well.y, well.radius * 0.65, this.tickCount * 0.03, this.tickCount * 0.03 + Math.PI * 2);
       ctx.stroke();
+      ctx.setLineDash([]);
+      for (let i = 0; i < 3; i++) {
+        const phase = 1 - ((this.tickCount * 0.045 + i / 3) % 1);
+        ctx.strokeStyle = `rgba(0, 240, 255, ${(1 - phase) * 0.75 + 0.15})`;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(well.x, well.y, 14 + phase * 82, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.28)';
+      ctx.beginPath();
+      ctx.arc(well.x, well.y, 20 + Math.sin(this.tickCount * 0.28) * 5, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
     if (this.leonFlameZone) {
@@ -2591,15 +3108,17 @@ export class GameEngine {
     this.drawPlayer(ctx);
 
     // 13. Particles & Manga FX
+    ctx.imageSmoothingEnabled = false;
     this.particles.forEach((pt) => {
       ctx.fillStyle = pt.color;
       ctx.globalAlpha = pt.life;
-      ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
+      ctx.fillRect(Math.round(pt.x), Math.round(pt.y), Math.max(1, Math.round(pt.size)), Math.max(1, Math.round(pt.size)));
     });
     ctx.globalAlpha = 1;
 
     this.mangaTexts.forEach((mt) => {
       ctx.save();
+      ctx.imageSmoothingEnabled = false;
       ctx.translate(mt.x, mt.y);
       ctx.rotate(mt.rot);
       ctx.scale(mt.scale, mt.scale);
@@ -2614,18 +3133,496 @@ export class GameEngine {
     });
 
     ctx.restore();
+    this.applyPixelatedRendering(ctx, this.canvas);
 
     if (this.lightningAlpha > 0.02) {
       ctx.fillStyle = `rgba(224, 231, 255, ${this.lightningAlpha})`;
       ctx.fillRect(0, 0, w, h);
     }
 
+    if (this.lowCeilingActive && this.lowCeilingX > this.camera.x + this.viewport.width - 20) {
+      const blink = Math.floor(this.tickCount / 4) % 2 === 0;
+      const screenY = Math.max(70, Math.min(h - 90,
+        ((this.lowCeilingKind === 'sweeper' ? 620 : 540) - this.camera.y) * this.viewport.zoom));
+      ctx.fillStyle = blink ? (this.lowCeilingKind === 'sweeper' ? '#ef4444' : '#facc15') : '#0f172a';
+      ctx.fillRect(w - 178, screenY - 18, 166, 36);
+      ctx.strokeStyle = this.lowCeilingKind === 'sweeper' ? '#fca5a5' : '#fef08a';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(w - 178, screenY - 18, 166, 36);
+      ctx.fillStyle = blink ? '#09090b' : '#ffffff';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(this.lowCeilingKind === 'sweeper' ? '◀ ⚠ PULE! ▲' : '◀ ⚠ DESLIZE! ▼', w - 166, screenY + 4);
+    }
+
     if (this.superCutinTimer > 0) {
       this.drawCutIn(ctx, w, h);
+    }
+
+    if (this.sectorTransition && this.sectorTransition.timer > 0) {
+      const tr = this.sectorTransition;
+      const progress = 1 - tr.timer / tr.duration;
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const curtainAlpha = Math.max(0, (1 - easeOut) * 0.68);
+      ctx.save();
+      ctx.fillStyle = `rgba(7, 5, 16, ${curtainAlpha.toFixed(3)})`;
+      ctx.fillRect(0, 0, w, h);
+      const sweepX = tr.direction === 'forward' ? w * (1 - easeOut) : w * easeOut;
+      const bandW = Math.max(48, w * 0.14);
+      const grad = ctx.createLinearGradient(sweepX - bandW, 0, sweepX + bandW, 0);
+      grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      grad.addColorStop(0.5, tr.accentColor);
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.globalAlpha = Math.max(0, (1 - progress) * 0.5);
+      ctx.fillStyle = grad;
+      ctx.fillRect(sweepX - bandW, 0, bandW * 2, h);
+      ctx.restore();
+    }
+  }
+
+  private drawOverlay2D(ctx: CanvasRenderingContext2D, w: number, h: number, renderCamX: number) {
+    ctx.clearRect(0, 0, w, h);
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.scale(this.viewport.zoom, this.viewport.zoom);
+    ctx.translate(Math.round(-renderCamX), Math.round(-this.camera.y));
+
+    if (this.campaignMode) {
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillStyle = '#a5f3fc';
+      for (const exit of this.stage.exits) {
+        ctx.fillText(`▲ ${exit.label}`, exit.x - 12, exit.y - 12);
+      }
+    }
+
+    const complex = this.stage.exploration?.complex;
+    if (complex) {
+      ctx.font = 'bold 16px monospace';
+      ctx.fillStyle = '#7dd3fc';
+      for (const room of complex.rooms) {
+        for (const level of [0, 300, 600]) {
+          ctx.fillText(room.label, room.x + 30, complex.floor - level - 90);
+        }
+      }
+    }
+    const zones = this.stage.exploration?.zones;
+    if (zones) {
+      ctx.font = 'bold 15px monospace';
+      ctx.fillStyle = '#7dd3fc';
+      for (const zone of zones) ctx.fillText(zone.label, zone.x, zone.y);
+    }
+    for (const node of this.stage.exploration?.nodes ?? []) {
+      const active = this.activated.has(node.id);
+      ctx.fillStyle = active ? '#4ade80' : '#22d3ee';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText(active ? '✓' : '▲', node.x + 7, node.y - 10);
+      ctx.font = '11px monospace';
+      ctx.fillText(node.label, node.x - 10, node.y - 75);
+    }
+
+    for (const pr of this.props) {
+      if (!pr.broken && pr.kind === 'chest') {
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 12px monospace';
+        ctx.fillText('★', pr.x + pr.w / 2 - 4, pr.y - 18);
+      }
+    }
+
+    for (const en of this.enemies) {
+      if (en.ai?.state === 'alert') {
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = 'bold 18px monospace';
+        ctx.fillText('!', en.x + en.w / 2 - 4, en.y - 18);
+      } else if (en.telegraph) {
+        ctx.fillStyle = '#ef4444';
+        ctx.font = '900 20px "Barlow Condensed", sans-serif';
+        ctx.fillText('!', en.x + en.w / 2 - 4, en.y - 18);
+      }
+    }
+
+    if (this.boss.active) {
+      ctx.strokeStyle = '#fbbf24';
+      ctx.fillStyle = 'rgba(251,191,36,0.12)';
+      ctx.lineWidth = 2;
+      for (const zone of bossWarnings(this.boss)) {
+        ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
+        ctx.strokeRect(zone.x, zone.y, zone.w, zone.h);
+      }
+      if (this.boss.telegraph) {
+        ctx.fillStyle = '#facc15';
+        ctx.font = '900 24px "Barlow Condensed", sans-serif';
+        ctx.fillText('!', this.boss.x + this.boss.w / 2 - 5, this.boss.y - 22);
+      }
+    }
+
+    if (this.lowCeilingActive) {
+      if (this.lowCeilingKind === 'sweeper') {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('▲ PULE!', Math.round(this.lowCeilingX) + 12, 604);
+      } else {
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('DESLIZE! ▼', Math.round(this.lowCeilingX) + 28, 488);
+      }
+    }
+
+    for (const mt of this.mangaTexts) {
+      ctx.save();
+      ctx.translate(mt.x, mt.y);
+      ctx.rotate(mt.rot);
+      ctx.scale(mt.scale, mt.scale);
+      ctx.globalAlpha = mt.alpha;
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 4;
+      ctx.font = 'italic 900 20px "Barlow Condensed", sans-serif';
+      ctx.strokeText(mt.text, 0, 0);
+      ctx.fillStyle = mt.color;
+      ctx.fillText(mt.text, 0, 0);
+      ctx.restore();
+    }
+    ctx.restore();
+
+    if (this.lightningAlpha > 0.02) {
+      ctx.fillStyle = `rgba(224, 231, 255, ${this.lightningAlpha})`;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    if (this.lowCeilingActive && this.lowCeilingX > this.camera.x + this.viewport.width - 20) {
+      const blink = Math.floor(this.tickCount / 4) % 2 === 0;
+      const screenY = Math.max(70, Math.min(h - 90,
+        ((this.lowCeilingKind === 'sweeper' ? 620 : 540) - this.camera.y) * this.viewport.zoom));
+      ctx.fillStyle = blink ? (this.lowCeilingKind === 'sweeper' ? '#ef4444' : '#facc15') : '#0f172a';
+      ctx.fillRect(w - 178, screenY - 18, 166, 36);
+      ctx.strokeStyle = this.lowCeilingKind === 'sweeper' ? '#fca5a5' : '#fef08a';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(w - 178, screenY - 18, 166, 36);
+      ctx.fillStyle = blink ? '#09090b' : '#ffffff';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(this.lowCeilingKind === 'sweeper' ? '◀ ⚠ PULE! ▲' : '◀ ⚠ DESLIZE! ▼', w - 166, screenY + 4);
+    }
+
+    if (this.superCutinTimer > 0) {
+      this.drawCutIn(ctx, w, h);
+    }
+
+    if (this.sectorTransition && this.sectorTransition.timer > 0) {
+      const tr = this.sectorTransition;
+      const progress = 1 - tr.timer / tr.duration;
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const curtainAlpha = Math.max(0, (1 - easeOut) * 0.68);
+      ctx.save();
+      ctx.fillStyle = `rgba(7, 5, 16, ${curtainAlpha.toFixed(3)})`;
+      ctx.fillRect(0, 0, w, h);
+      const sweepX = tr.direction === 'forward' ? w * (1 - easeOut) : w * easeOut;
+      const bandW = Math.max(48, w * 0.14);
+      const grad = ctx.createLinearGradient(sweepX - bandW, 0, sweepX + bandW, 0);
+      grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      grad.addColorStop(0.5, tr.accentColor);
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.globalAlpha = Math.max(0, (1 - progress) * 0.5);
+      ctx.fillStyle = grad;
+      ctx.fillRect(sweepX - bandW, 0, bandW * 2, h);
+      ctx.restore();
+    }
+  }
+
+  // =========================================================================
+  // 16-BIT SCENARIO TEXTURES (Asphalt, Bricks, Metal Beams & Pipes)
+  // =========================================================================
+  private getScenarioPattern(
+    ctx: CanvasRenderingContext2D,
+    kind: 'asphalt' | 'bricks' | 'metal' | 'pipe',
+    baseColor: string,
+    accentColor: string
+  ): CanvasPattern | null {
+    const key = `${kind}:${baseColor}:${accentColor}`;
+    if (this.scenarioPatterns.has(key)) {
+      return this.scenarioPatterns.get(key) ?? null;
+    }
+    if (typeof document === 'undefined' || typeof ctx.createPattern !== 'function') {
+      this.scenarioPatterns.set(key, null);
+      return null;
+    }
+
+    const tile = document.createElement('canvas');
+    tile.width = 32;
+    tile.height = 32;
+    const tctx = tile.getContext('2d');
+    if (!tctx) {
+      this.scenarioPatterns.set(key, null);
+      return null;
+    }
+    this.applyPixelatedRendering(tctx, tile);
+
+    if (kind === 'asphalt') {
+      // Base 16-bit dark asphalt roadbed
+      tctx.fillStyle = '#151824';
+      tctx.fillRect(0, 0, 32, 32);
+
+      // 2x2 pixel-grid checkerboard tint from stage palette (crisp 16-bit dither)
+      tctx.fillStyle = baseColor;
+      for (let py = 0; py < 32; py += 2) {
+        for (let px = 0; px < 32; px += 2) {
+          if (((px + py) >> 1) % 2 === 0) {
+            tctx.fillRect(px, py, 2, 2);
+          }
+        }
+      }
+
+      // Pixel-art aggregate noise speckles & micro cracks (2x2 crisp 16-bit texels)
+      const lightSpecks = [
+        [2, 4], [10, 2], [22, 6], [28, 4],
+        [6, 12], [16, 10], [24, 14], [12, 18],
+        [4, 22], [20, 20], [30, 24], [8, 28], [26, 28],
+      ];
+      tctx.fillStyle = '#3b445e';
+      for (const [px, py] of lightSpecks) tctx.fillRect(px, py, 2, 2);
+
+      const darkSpecks = [
+        [0, 8], [14, 6], [26, 10], [8, 16],
+        [18, 14], [28, 18], [2, 26], [14, 24], [22, 30],
+      ];
+      tctx.fillStyle = '#090b12';
+      for (const [px, py] of darkSpecks) tctx.fillRect(px, py, 2, 2);
+
+      // Subtle hairline crack + accent grit
+      tctx.fillStyle = '#07090f';
+      tctx.fillRect(6, 18, 6, 2);
+      tctx.fillRect(12, 20, 4, 2);
+      tctx.fillStyle = accentColor;
+      tctx.fillRect(20, 8, 2, 2);
+      tctx.fillRect(8, 28, 2, 2);
+    } else if (kind === 'bricks') {
+      // Dark mortar background
+      tctx.fillStyle = '#090b13';
+      tctx.fillRect(0, 0, 32, 32);
+
+      // 4 staggered running-bond brick courses (each brick 14x6 + 2px mortar)
+      const rows = [
+        { y: 0, offsets: [0, 16] },
+        { y: 8, offsets: [-8, 8, 24] },
+        { y: 16, offsets: [0, 16] },
+        { y: 24, offsets: [-8, 8, 24] },
+      ];
+      for (let r = 0; r < rows.length; r++) {
+        for (let c = 0; c < rows[r].offsets.length; c++) {
+          const bx = rows[r].offsets[c];
+          const by = rows[r].y;
+          // Brick body
+          tctx.fillStyle = baseColor;
+          tctx.fillRect(bx, by, 14, 6);
+          // Crisp 16-bit alternate brick dither shading
+          tctx.fillStyle = (r + c) % 2 === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.22)';
+          tctx.fillRect(bx, by, 14, 6);
+          // Top pixel highlight & accent glint
+          tctx.fillStyle = 'rgba(255,255,255,0.24)';
+          tctx.fillRect(bx, by, 14, 2);
+          tctx.fillStyle = accentColor;
+          tctx.fillRect(bx + 2, by, 2, 2);
+          // Bottom shadow lip & right brick edge
+          tctx.fillStyle = 'rgba(0,0,0,0.42)';
+          tctx.fillRect(bx, by + 4, 14, 2);
+          tctx.fillRect(bx + 12, by + 2, 2, 2);
+        }
+      }
+    } else if (kind === 'metal') {
+      // 16-bit riveted steel beam / industrial truss texture
+      tctx.fillStyle = '#1b2234';
+      tctx.fillRect(0, 0, 32, 32);
+      // 2x2 steel dither tint using baseColor
+      tctx.fillStyle = baseColor;
+      for (let py = 4; py < 28; py += 2) {
+        for (let px = 0; px < 32; px += 2) {
+          if (((px + py) >> 1) % 2 === 0) {
+            tctx.fillRect(px, py, 2, 2);
+          }
+        }
+      }
+
+      // Horizontal steel plate banding
+      tctx.fillStyle = '#475569';
+      tctx.fillRect(0, 0, 32, 4);
+      tctx.fillRect(0, 28, 32, 4);
+      // Specular metallic glint pixels
+      tctx.fillStyle = '#cbd5e1';
+      tctx.fillRect(2, 0, 12, 2);
+      tctx.fillRect(18, 0, 10, 2);
+      // Recessed diagonal steel X-truss
+      tctx.fillStyle = '#0f172a';
+      tctx.fillRect(0, 6, 32, 20);
+      tctx.fillStyle = '#334155';
+      for (let i = 0; i < 10; i++) {
+        const d = i * 2;
+        tctx.fillRect(4 + d, 6 + d, 4, 2);
+        tctx.fillRect(24 - d, 6 + d, 4, 2);
+      }
+      // Corner steel rivets
+      tctx.fillStyle = accentColor;
+      tctx.fillRect(2, 10, 2, 2);
+      tctx.fillRect(28, 10, 2, 2);
+      tctx.fillRect(2, 20, 2, 2);
+      tctx.fillRect(28, 20, 2, 2);
+    } else {
+      // 16-bit ribbed cylindrical steel ceiling pipe pattern
+      tctx.fillStyle = '#334155';
+      tctx.fillRect(0, 0, 32, 32);
+      // Horizontal metallic shading bands
+      tctx.fillStyle = accentColor;
+      tctx.fillRect(0, 0, 32, 4);
+      tctx.fillStyle = '#f8fafc';
+      tctx.fillRect(0, 2, 32, 2);
+      tctx.fillStyle = '#475569';
+      tctx.fillRect(0, 4, 32, 4);
+      tctx.fillStyle = '#1e293b';
+      tctx.fillRect(0, 12, 32, 20);
+      // Vertical pixel rib seams & bolts every 16px
+      tctx.fillStyle = '#0f172a';
+      tctx.fillRect(14, 0, 2, 32);
+      tctx.fillRect(30, 0, 2, 32);
+      tctx.fillStyle = '#94a3b8';
+      tctx.fillRect(12, 2, 2, 10);
+      tctx.fillRect(28, 2, 2, 10);
+    }
+
+    const pattern = ctx.createPattern(tile, 'repeat');
+    this.scenarioPatterns.set(key, pattern);
+    return pattern;
+  }
+
+  private drawAsphaltPlatform16Bit(
+    ctx: CanvasRenderingContext2D,
+    plat: Platform,
+    fillColor: string,
+    strokeColor: string,
+    neonAccent: string
+  ) {
+    ctx.imageSmoothingEnabled = false;
+    const px = Math.round(plat.x);
+    const py = Math.round(plat.y);
+    const pw = Math.round(plat.w);
+    const ph = Math.round(plat.h);
+
+    const pat = this.getScenarioPattern(ctx, 'asphalt', fillColor, strokeColor);
+    ctx.fillStyle = pat ?? fillColor;
+    ctx.fillRect(px, py, pw, ph);
+
+    // 16-bit Concrete Curb / Sidewalk Edge along the top 8px
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(px, py, pw, 8);
+    ctx.fillStyle = strokeColor;
+    ctx.fillRect(px, py, pw, 2);
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(px, py + 8, pw, 2);
+    for (let cx = px; cx < px + pw; cx += 32) {
+      ctx.fillRect(cx, py + 2, 2, 6);
+    }
+
+    // Dashed 16-bit Street Lane Markings with pixel drop-shadow
+    for (let lx = px + 18; lx < px + pw - 22; lx += 64) {
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(lx, py + 20, 22, 4);
+      ctx.fillStyle = neonAccent;
+      ctx.fillRect(lx, py + 24, 22, 2);
+    }
+  }
+
+  private drawBrickBlock16Bit(
+    ctx: CanvasRenderingContext2D,
+    plat: Platform,
+    fillColor: string,
+    strokeColor: string
+  ) {
+    ctx.imageSmoothingEnabled = false;
+    const px = Math.round(plat.x);
+    const py = Math.round(plat.y);
+    const pw = Math.round(plat.w);
+    const ph = Math.round(plat.h);
+
+    const pat = this.getScenarioPattern(ctx, 'bricks', fillColor, strokeColor);
+    ctx.fillStyle = pat ?? fillColor;
+    ctx.fillRect(px, py, pw, ph);
+
+    // Crisp 16-bit pixel cornice & edge outline
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.fillRect(px, py, pw, 2);
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px, py, pw, ph);
+  }
+
+  private drawMetalBeam16Bit(
+    ctx: CanvasRenderingContext2D,
+    plat: Platform,
+    fillColor: string,
+    strokeColor: string,
+    hazardStripes: boolean
+  ) {
+    ctx.imageSmoothingEnabled = false;
+    const px = Math.round(plat.x);
+    const py = Math.round(plat.y);
+    const pw = Math.round(plat.w);
+    const ph = Math.round(plat.h);
+
+    const pat = this.getScenarioPattern(ctx, 'metal', fillColor, strokeColor);
+    ctx.fillStyle = pat ?? fillColor;
+    ctx.fillRect(px, py, pw, ph);
+
+    // Top & Bottom Metallic I-Beam Flanges
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(px, py, pw, 4);
+    ctx.fillRect(px, py + ph - 4, pw, 4);
+    ctx.fillStyle = strokeColor;
+    ctx.fillRect(px, py, pw, 2);
+
+    // Rivets along girder
+    ctx.fillStyle = '#e2e8f0';
+    for (let rx = px + 8; rx < px + pw - 6; rx += 24) {
+      ctx.fillRect(rx, py + 2, 2, 2);
+      if (ph >= 16) ctx.fillRect(rx, py + ph - 4, 2, 2);
+    }
+
+    // Zebra hazard stripes on crumbling construction beams
+    if (hazardStripes) {
+      ctx.fillStyle = '#facc15';
+      for (let hx = px + 4; hx < px + pw - 10; hx += 16) {
+        ctx.fillRect(hx, py + 2, 8, 4);
+      }
+    }
+
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px, py, pw, ph);
+  }
+
+  private drawMetalPipe16Bit(ctx: CanvasRenderingContext2D, cp: CeilingPipe, pipeColor: string) {
+    ctx.imageSmoothingEnabled = false;
+    const cx = Math.round(cp.x);
+    const cy = Math.round(cp.y);
+    const cw = Math.round(cp.w);
+    const ch = Math.round(cp.h);
+
+    // Pixelated cylindrical pipe fill pattern
+    const pat = this.getScenarioPattern(ctx, 'pipe', '#334155', pipeColor);
+    ctx.fillStyle = pat ?? '#334155';
+    ctx.fillRect(cx, cy, cw, ch);
+
+    // Top specular highlight & lower pixel rim
+    ctx.fillStyle = pipeColor;
+    ctx.fillRect(cx, cy, cw, 2);
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(cx, cy + ch - 2, cw, 2);
+
+    // Bolted metallic pipe collars every 48px
+    for (let px = cx + 12; px < cx + cw - 8; px += 48) {
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(px, cy - 2, 6, ch + 4);
+      ctx.fillStyle = pipeColor;
+      ctx.fillRect(px + 2, cy - 2, 2, ch + 4);
     }
   }
 
   private drawWeather(ctx: CanvasRenderingContext2D, w: number, h: number) {
+    ctx.imageSmoothingEnabled = false;
     const weather = this.stage.palette.weather;
     if (weather === 'none') return;
 
@@ -2667,11 +3664,12 @@ export class GameEngine {
   }
 
   private heroVisualInput() {
-    return { ...this.player, climbHeld:this.keys.up, hurtTicks:this.heroVisualTimers.hurt,
+    return { ...this.player, climbHeld: false, hurtTicks:this.heroVisualTimers.hurt,
       specialTicks:this.heroVisualTimers.special, vaultTicks:this.heroVisualTimers.vault };
   }
 
   private drawPlayer(ctx: CanvasRenderingContext2D) {
+    ctx.imageSmoothingEnabled = false;
     const p = this.player;
     const char = CHARACTERS[this.characterId];
     if (p.gstTimer > 0) {
@@ -2683,6 +3681,7 @@ export class GameEngine {
     // Ren's 8-Node Kinematic Scarf drawn in world space
     if (this.characterId === 'ren' && !isHeroPainted(this.characterId) && this.scarfNodes.length > 1) {
       ctx.save();
+      ctx.imageSmoothingEnabled = false;
       ctx.strokeStyle = '#ff007f';
       ctx.lineWidth = 6;
       ctx.lineCap = 'square';
@@ -2705,6 +3704,13 @@ export class GameEngine {
       ctx.strokeRect(p.x - 3, p.y - 3, p.w + 6, p.h + 6);
     }
 
+    // Leon Chama Intensa 2X burn aura
+    if (this.characterId === 'leon' && p.flameTimer > 0) {
+      ctx.strokeStyle = this.tickCount % 6 < 3 ? '#f97316' : '#facc15';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(p.x - 5, p.y - 5, p.w + 10, p.h + 10);
+    }
+
     // Maya 8-dir flight halo
     if (p.isFlying) {
       ctx.strokeStyle = '#00f0ff';
@@ -2722,6 +3728,7 @@ export class GameEngine {
     const sample = this.heroAnimator.sample(this.heroVisualInput(),this.visualTick);
     const facing = sample.pose === 'wall' || sample.pose === 'climb' ? p.onWall : p.facing;
     drawHeroFrame(ctx,this.characterId,sample.pose,sample.frame,p.x+p.w/2,p.y+p.h,facing);
+    ctx.imageSmoothingEnabled = false;
 
     // Wall Claws
     if (p.onWall !== 0 && !p.grounded) {
@@ -2742,6 +3749,7 @@ export class GameEngine {
     // Psychic Slash Arc
     if (p.slashing) {
       ctx.save();
+      ctx.imageSmoothingEnabled = false;
       ctx.strokeStyle = p.atkTimer > 0 ? '#ef4444' : isHeroPainted(this.characterId) ? '#6be7ef' : char.accentColor;
       const swing = SWINGS[p.comboStep];
       const progress = (swing.totalTicks - p.slashTimer) / swing.activeTicks;
@@ -2762,26 +3770,68 @@ export class GameEngine {
     ctx.globalAlpha = 1;
   }
 
+  private drawEnemySprite(
+    ctx: CanvasRenderingContext2D,
+    sprite: HTMLCanvasElement,
+    source: { x: number; y: number; w: number; h: number },
+    dx: number,
+    dy: number,
+    dw: number,
+    dh: number,
+    hitFlash: boolean
+  ) {
+    ctx.imageSmoothingEnabled = false;
+    if (!hitFlash || typeof document === 'undefined') {
+      ctx.drawImage(sprite, source.x, source.y, source.w, source.h, dx, dy, dw, dh);
+      return;
+    }
+
+    if (!this.hitFlashCanvas) {
+      this.hitFlashCanvas = document.createElement('canvas');
+    }
+    if (this.hitFlashCanvas.width !== source.w || this.hitFlashCanvas.height !== source.h) {
+      this.hitFlashCanvas.width = source.w;
+      this.hitFlashCanvas.height = source.h;
+    }
+    const fctx = this.hitFlashCanvas.getContext('2d');
+    if (!fctx) {
+      ctx.drawImage(sprite, source.x, source.y, source.w, source.h, dx, dy, dw, dh);
+      return;
+    }
+
+    this.applyPixelatedRendering(fctx, this.hitFlashCanvas);
+    fctx.globalCompositeOperation = 'source-over';
+    fctx.clearRect(0, 0, source.w, source.h);
+    fctx.drawImage(sprite, source.x, source.y, source.w, source.h, 0, 0, source.w, source.h);
+    fctx.globalCompositeOperation = 'source-in';
+    fctx.fillStyle = '#ffffff';
+    fctx.fillRect(0, 0, source.w, source.h);
+    fctx.globalCompositeOperation = 'source-over';
+
+    ctx.drawImage(this.hitFlashCanvas, 0, 0, source.w, source.h, dx, dy, dw, dh);
+  }
+
   private drawEnemy(ctx: CanvasRenderingContext2D, en: Enemy) {
     ctx.save();
+    ctx.imageSmoothingEnabled = false;
     if (en.stealthAlpha) ctx.globalAlpha = en.stealthAlpha;
+    const hitFlash = (en.hitFlashTimer ?? 0) > 0;
 
     if (en.type === 'turret') {
       const cx = en.x + en.w / 2, cy = en.y + en.h / 2;
-      ctx.fillStyle = '#1e293b';
+      ctx.fillStyle = hitFlash ? '#ffffff' : '#1e293b';
       if (en.mount === 'ceiling') ctx.fillRect(en.x, en.y, en.w, 8);
       else if (en.mount === 'wall-left') ctx.fillRect(en.x, en.y, 8, en.h);
       else if (en.mount === 'wall-right') ctx.fillRect(en.x + en.w - 8, en.y, 8, en.h);
       else ctx.fillRect(en.x, en.y + en.h - 8, en.w, 8);
       const extension = !en.mount ? 1 : !en.ai || en.ai.state === 'patrol' ? 0 : en.ai.state === 'alert' ? 1 - en.ai.timer / 12 : 1;
-      ctx.imageSmoothingEnabled = true;
       const source = enemySourceRect('turret');
-      ctx.drawImage(getEnemyPixelSprite('turret'),source.x,source.y,source.w,source.h, en.x + 4, en.y + 5, en.w - 8, en.h - 10);
-      if (en.deployedBy) { ctx.fillStyle = '#f59e0b'; ctx.fillRect(en.x + 6,en.y + 8,3,en.h - 16); }
+      this.drawEnemySprite(ctx, getEnemyPixelSprite('turret'), source, en.x + 4, en.y + 5, en.w - 8, en.h - 10, hitFlash);
+      if (en.deployedBy) { ctx.fillStyle = hitFlash ? '#ffffff' : '#f59e0b'; ctx.fillRect(en.x + 6,en.y + 8,3,en.h - 16); }
       if (extension > 0) {
         const angle = en.ai ? Math.atan2(en.ai.aimY - cy, en.ai.aimX - cx) : en.mount === 'ceiling' ? Math.PI / 2 : en.facing === 1 ? 0 : Math.PI;
         ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle);
-        ctx.fillStyle = en.telegraph ? '#fff' : '#ef4444';
+        ctx.fillStyle = hitFlash || en.telegraph ? '#fff' : '#ef4444';
         ctx.fillRect(0, -5, en.w / 2 * extension, 4); ctx.fillRect(0, 2, en.w / 2 * extension, 4); ctx.restore();
       }
     } else {
@@ -2794,13 +3844,12 @@ export class GameEngine {
       ctx.save();
       ctx.translate(en.x + en.w / 2, en.y + en.h / 2);
       ctx.scale(en.facing, 1);
-      ctx.imageSmoothingEnabled = true;
       const source = enemySourceRect(en.type);
-      ctx.drawImage(sprite,source.x,source.y,source.w,source.h, -en.w / 2, -en.h / 2, en.w, en.h);
+      this.drawEnemySprite(ctx, sprite, source, -en.w / 2, -en.h / 2, en.w, en.h, hitFlash);
       ctx.restore();
 
       if ((en.type === 'mib_shield' || en.type === 'heavy_trooper') && !en.shieldBroken) {
-        ctx.fillStyle = '#00f0ff';
+        ctx.fillStyle = hitFlash ? '#ffffff' : '#00f0ff';
         const sx = en.facing === 1 ? en.x + en.w - 4 : en.x - 8;
         ctx.fillRect(sx, en.y - 2, 10, en.h + 4);
       }
@@ -2827,15 +3876,25 @@ export class GameEngine {
     }
     ctx.fillStyle = '#ff007f';
     ctx.fillRect(en.x, en.y - 9, Math.max(0, (en.hp / en.maxHp) * en.w), 4);
+    if (en.burnTimer && en.burnTimer > 0) {
+      const flicker = Math.sin(this.tickCount * 0.4 + en.id) * 3;
+      ctx.fillStyle = 'rgba(249, 115, 22, 0.85)';
+      ctx.fillRect(en.x + 2, en.y + en.h - 14 - Math.abs(flicker), 6, 12 + Math.abs(flicker));
+      ctx.fillRect(en.x + en.w - 8, en.y + en.h - 12 - Math.max(0, flicker), 6, 10 + Math.max(0, flicker));
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(en.x + en.w / 2 - 3, en.y + en.h - 10, 6, 8);
+    }
     ctx.restore();
   }
 
   private drawBoss(ctx: CanvasRenderingContext2D, b: BossRuntime) {
     ctx.save();
+    ctx.imageSmoothingEnabled = false;
     ctx.strokeStyle = '#fbbf24'; ctx.fillStyle = 'rgba(251,191,36,0.12)'; ctx.lineWidth = 2;
     for (const zone of bossWarnings(b)) { ctx.fillRect(zone.x, zone.y, zone.w, zone.h); ctx.strokeRect(zone.x, zone.y, zone.w, zone.h); }
     ctx.restore();
     drawBossSprite(ctx,b);
+    ctx.imageSmoothingEnabled = false;
 
     // Cipher-01 Orbiting Psychic Daggers
     if (b.behavior === 'cipher') {
@@ -2856,17 +3915,27 @@ export class GameEngine {
     }
     if (b.behavior === 'twins' && b.twinX !== undefined && b.twinY !== undefined) {
       drawBossSprite(ctx,b,true);
+      ctx.imageSmoothingEnabled = false;
     }
     if (b.telegraph) {
       ctx.fillStyle = '#facc15';
       ctx.font = '900 24px "Barlow Condensed", sans-serif';
       ctx.fillText('!', b.x + b.w / 2 - 5, b.y - 20);
     }
+    if (b.burnTimer && b.burnTimer > 0) {
+      const flicker = Math.sin(this.tickCount * 0.35) * 4;
+      ctx.fillStyle = 'rgba(249, 115, 22, 0.85)';
+      ctx.fillRect(b.x + 4, b.y + b.h - 18 - Math.abs(flicker), 8, 16 + Math.abs(flicker));
+      ctx.fillRect(b.x + b.w - 12, b.y + b.h - 16 - Math.max(0, flicker), 8, 14 + Math.max(0, flicker));
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(b.x + b.w / 2 - 4, b.y + b.h - 14, 8, 12);
+    }
   }
 
   private drawCutIn(ctx: CanvasRenderingContext2D, w: number, h: number) {
     const char = CHARACTERS[this.characterId];
     ctx.save();
+    ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = '#05030d';
     ctx.fillRect(0, h * 0.34, w, h * 0.3);
     ctx.strokeStyle = char.accentColor;
