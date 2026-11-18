@@ -28,6 +28,8 @@ export interface CharacterProfile {
   overdriveName: string;
   assistName: string;
   canFlight: boolean;
+  canWallJump: boolean;
+  canPsyJump: boolean;
   superArmor: boolean;
   shieldBreaker: boolean;
 }

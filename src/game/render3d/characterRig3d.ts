@@ -15,6 +15,8 @@ import {
   type FaceState,
   type FacialExpression,
   type IdleChoreographyResult,
+  MEDITATION_RAMP_TICKS,
+  MEDITATION_START_TICKS,
   createNeutralFaceState,
   evaluateHeroIdleChoreography,
   resolveHeroFaceState,
@@ -1134,8 +1136,8 @@ export function updateHeroRig3D(rig: HumanoidRigParts, input: HeroRigInput, dt: 
   const idleTicks = input.idleTicks ?? 0;
 
   // Face direction: during deep meditation, face slightly more forward (~0.55 rad) so eyes/breath/aura read clearly!
-  const isMeditating = input.pose === 'idle' && idleTicks >= 300;
-  const medBlend = isMeditating ? Math.min(1, (idleTicks - 300) / 90) : 0;
+  const isMeditating = input.pose === 'idle' && idleTicks >= MEDITATION_START_TICKS;
+  const medBlend = isMeditating ? Math.min(1, (idleTicks - MEDITATION_START_TICKS) / MEDITATION_RAMP_TICKS) : 0;
   const frontAngle = input.facing > 0 ? 0.52 : -0.52;
   const normalAngle = input.facing > 0 ? 1.18 : -1.18;
   const targetTurn =

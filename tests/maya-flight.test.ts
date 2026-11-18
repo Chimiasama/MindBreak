@@ -65,7 +65,14 @@ test('Maya: gamepad polling needs a release and a new button edge, then stops on
  buttons[0].pressed=false;tick();assert.equal(s.player.isFlying,false);
 });
 
-for(const hero of ['ren','leon'] as const)test(`${hero} keeps an ordinary double jump even when the second press is held`,t=>{
- const{engine,s,tick}=room(hero);t.after(()=>engine.stop());engine.queueAction('jump');tick(8);engine.setKey('jumpHeld',false);engine.queueAction('jump');tick(8);
+test('ren keeps an ordinary double jump even when the second press is held',t=>{
+ const{engine,s,tick}=room('ren');t.after(()=>engine.stop());engine.queueAction('jump');tick(8);engine.setKey('jumpHeld',false);engine.queueAction('jump');tick(1);
+ assert.ok(s.player.vy<-8);tick(7);
  assert.equal(s.player.isFlying,false);assert.equal(s.player.doubleJump,false);assert.equal(s.player.psyEnergy,100);
+});
+
+test('leon has neither flight nor Psy double jump on a second aerial jump press',t=>{
+ const{engine,s,tick}=room('leon');t.after(()=>engine.stop());engine.queueAction('jump');tick(8);
+ const vyBefore=s.player.vy;engine.setKey('jumpHeld',false);engine.queueAction('jump');tick(1);
+ assert.ok(s.player.vy>vyBefore);assert.equal(s.player.isFlying,false);assert.equal(s.player.doubleJump,false);assert.equal(s.player.psyEnergy,100);
 });

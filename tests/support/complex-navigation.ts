@@ -6,11 +6,13 @@ interface GraphEdge {
   b: string;
   via: [number, number][];
   gate?: string;
+  oneWay?: boolean;
 }
 
 const pt = (x: number, y: number, w = 110, h = 56) => ({ x, y: y - h, w, h });
 
-function stage1Graph(substageId: string): { hubs: Record<string, { x: number; y: number; w: number; h: number }>; edges: GraphEdge[] } | null {
+function stage1Graph(substageId: string, heroId: string): { hubs: Record<string, { x: number; y: number; w: number; h: number }>; edges: GraphEdge[] } | null {
+  const canClimbShaft = heroId !== 'leon';
   if (substageId === '1A') {
     return {
       hubs: {
@@ -32,19 +34,23 @@ function stage1Graph(substageId: string): { hubs: Record<string, { x: number; y:
       },
       edges: [
         { a: 'ENTRY', b: 'WG', via: [] },
-        { a: 'WG', b: 'WM', via: [[680, 420]] },
-        { a: 'WM', b: 'WH', via: [[650, 420], [400, 180]] },
+        ...(canClimbShaft ? [{ a: 'WG', b: 'WM', via: [[680, 420]] as [number, number][] }] : []),
+        { a: 'WG', b: 'CENT', via: [[1100, 660], [1700, 660], [1970, 650]] },
+        { a: 'CENT', b: 'WM', via: [[2130, 580], [2035, 500], [1900, 420]] },
+        { a: 'WM', b: 'WH', via: [[680, 340]] },
         { a: 'WM', b: 'CENT', via: [[1960, 420]] },
-        { a: 'WG', b: 'CENT', via: [[1100, 660], [1700, 660]] },
-        { a: 'CENT', b: 'CM', via: [[2460, 420]] },
-        { a: 'CM', b: 'CH', via: [[3320, 420], [3680, 180]] },
-        { a: 'CM', b: 'CE', via: [[3860, 420]] },
+        { a: 'CENT', b: 'CM', via: [[2130, 580], [2260, 500], [2460, 420]] },
+        ...(canClimbShaft
+          ? [{ a: 'CM', b: 'CH', via: [[3320, 420], [3680, 180]] as [number, number][] }]
+          : [{ a: 'CH', b: 'CM', via: [], oneWay: true }]),
+        { a: 'CM', b: 'CE', via: [[3520, 660]], oneWay: true },
+        { a: 'CE', b: 'CH', via: [[4240, 580], [4120, 500], [4120, 420], [4120, 340], [4220, 260]] },
         { a: 'CE', b: 'EW', via: [], gate: 'linha' },
         { a: 'EW', b: 'E_MID', via: [] },
-        { a: 'EW', b: 'E_GAL', via: [[4780, 400]] },
+        { a: 'EW', b: 'E_GAL', via: [[4450, 585], [4540, 510], [4620, 440], [4780, 400]] },
         { a: 'E_GAL', b: 'E_MID', via: [] },
         { a: 'E_MID', b: 'E_WALL', via: [] },
-        { a: 'E_WALL', b: 'EM', via: [[6720, 400], [7040, 180]] },
+        { a: 'E_WALL', b: 'EM', via: [[7710, 580], [7580, 500], [7710, 420], [7580, 340], [7725, 260]] },
         { a: 'EM', b: 'EE', via: [] },
         { a: 'E_WALL', b: 'EE', via: [] },
         { a: 'EE', b: 'EXIT', via: [], gate: 'rota' },
@@ -74,20 +80,26 @@ function stage1Graph(substageId: string): { hubs: Record<string, { x: number; y:
       },
       edges: [
         { a: 'ENTRY', b: 'B1W', via: [] },
-        { a: 'B1W', b: 'B1M', via: [[700, 420]] },
-        { a: 'B1M', b: 'B2M', via: [[1880, 420], [2120, 380], [2720, 420]] },
-        { a: 'B2M', b: 'B2H', via: [[3540, 420], [3880, 180]] },
+        { a: 'B1W', b: 'B1R', via: [] },
+        { a: 'B1R', b: 'B1M', via: [[1910, 580], [1925, 500], [1800, 420]] },
+        { a: 'B1M', b: 'B2M', via: [[2050, 380], [2380, 380], [2720, 420]] },
         { a: 'B2M', b: 'B2R', via: [[3860, 660]] },
-        { a: 'B2L', b: 'B2M', via: [[2720, 420]] },
-        { a: 'B2M', b: 'B3L', via: [[4420, 420]] },
-        { a: 'B2R', b: 'B3L', via: [[3860, 660], [3880, 180], [4280, 420], [4420, 420]] },
+        { a: 'B2R', b: 'B2H', via: [[4240, 580], [4125, 500], [4280, 420], [4160, 340], [4264, 260]] },
+        { a: 'B2L', b: 'B2M', via: [[2450, 580], [2560, 500], [2720, 420]] },
+        { a: 'B2M', b: 'B3L', via: [[4580, 420], [4670, 580]], oneWay: true },
+        { a: 'B3L', b: 'B2M', via: [[4670, 580], [4600, 505], [4540, 420]], oneWay: true },
+        { a: 'B2R', b: 'B3L', via: [[4240, 580], [4125, 500], [4280, 420], [4580, 420], [4670, 580]], oneWay: true },
         { a: 'B3L', b: 'B3G', via: [], gate: 'linha' },
-        { a: 'B3G', b: 'B3M', via: [[5200, 400]] },
+        ...(canClimbShaft ? [{ a: 'B3G', b: 'B3M', via: [[5200, 400]] as [number, number][] }] : []),
         { a: 'B3G', b: 'B3R', via: [[5600, 660]] },
-        { a: 'B3M', b: 'B4M', via: [[6420, 160], [6820, 380]] },
-        { a: 'B4L', b: 'B4M', via: [[7280, 380]] },
-        { a: 'B4M', b: 'B4H', via: [[7600, 380], [7860, 140]] },
+        ...(canClimbShaft ? [{ a: 'B3M', b: 'B4M', via: [[6420, 160], [6820, 380]] as [number, number][] }] : []),
+        { a: 'B3R', b: 'B3M', via: [[6500, 580], [6610, 500], [6510, 420], [6000, 400]] },
+        { a: 'B3R', b: 'B4M', via: [[6500, 580], [6610, 500], [6510, 420], [6820, 380]] },
+        { a: 'B3R', b: 'B4L', via: [[6500, 580], [6610, 500], [6510, 420], [6820, 380]], oneWay: true },
+        ...(canClimbShaft ? [{ a: 'B4L', b: 'B4M', via: [[7280, 380]] as [number, number][] }] : []),
         { a: 'B4L', b: 'B4R', via: [[7600, 660]] },
+        { a: 'B4R', b: 'B4H', via: [[8060, 580], [7940, 500], [8060, 420], [7940, 340], [8180, 265], [8070, 200]] },
+        { a: 'B4H', b: 'B4M', via: [[7600, 380]] },
         { a: 'B4R', b: 'EXIT', via: [], gate: 'rota' },
       ],
     };
@@ -113,21 +125,21 @@ function stage1Graph(substageId: string): { hubs: Record<string, { x: number; y:
       },
       edges: [
         { a: 'ENTRY', b: 'W1', via: [] },
-        { a: 'W1', b: 'W2', via: [[680, 440]] },
-        { a: 'W2', b: 'W3', via: [] },
-        { a: 'W3', b: 'C1', via: [] },
         { a: 'W1', b: 'C1', via: [[1240, 720], [1800, 720]] },
-        { a: 'C1', b: 'C2', via: [[2760, 440]] },
-        { a: 'C2', b: 'C3', via: [[3580, 440], [3920, 200]] },
-        { a: 'C2', b: 'C_END', via: [[3600, 440], [3920, 720]] },
+        { a: 'C1', b: 'W3', via: [[2460, 640], [2345, 565], [2240, 495], [2140, 440]] },
+        { a: 'W3', b: 'W2', via: [] },
+        { a: 'C1', b: 'C2', via: [[2900, 646], [2795, 572], [2900, 498], [3100, 440]] },
+        { a: 'C2', b: 'C_END', via: [[3600, 440], [3920, 720]], oneWay: true },
+        { a: 'C_END', b: 'C3', via: [[4600, 640], [4450, 560], [4575, 480], [4525, 400], [4615, 325], [4455, 255]] },
+        ...(canClimbShaft ? [{ a: 'C2', b: 'C3', via: [[3600, 440]] as [number, number][] }] : []),
+        { a: 'C3', b: 'C2', via: [[3540, 440]], oneWay: true },
         { a: 'C_END', b: 'E1', via: [], gate: 'linha' },
-        { a: 'E1', b: 'E_GAL', via: [[5180, 420]] },
         { a: 'E1', b: 'E_MID', via: [[5900, 720]] },
-        { a: 'E_GAL', b: 'E_MID', via: [] },
         { a: 'E_MID', b: 'E_WALL', via: [] },
-        { a: 'E_WALL', b: 'E2', via: [[7040, 420], [7340, 180]] },
-        { a: 'E2', b: 'E3', via: [] },
         { a: 'E_WALL', b: 'E3', via: [] },
+        { a: 'E3', b: 'E2', via: [[7945, 640], [7800, 560], [7910, 470], [8150, 380], [8025, 304], [7920, 245]] },
+        { a: 'E2', b: 'E_GAL', via: [[6800, 420]], oneWay: true },
+        { a: 'E_GAL', b: 'E_MID', via: [], oneWay: true },
         { a: 'E3', b: 'EXIT', via: [], gate: 'rota' },
       ],
     };
@@ -150,16 +162,19 @@ function stage1Graph(substageId: string): { hubs: Record<string, { x: number; y:
       },
       edges: [
         { a: 'ENTRY', b: 'W1', via: [] },
-        { a: 'W1', b: 'VM', via: [[720, 440]] },
+        ...(canClimbShaft ? [{ a: 'W1', b: 'VM', via: [[720, 440]] as [number, number][] }] : []),
         { a: 'VM', b: 'VME', via: [[2500, 440]] },
-        { a: 'VME', b: 'VH', via: [[3880, 200]] },
-        { a: 'VME', b: 'AVC', via: [] },
+        ...(canClimbShaft ? [{ a: 'VME', b: 'VH', via: [[3600, 440]] as [number, number][] }] : []),
+        { a: 'VH', b: 'VME', via: [], oneWay: true },
+        { a: 'VME', b: 'AVE', via: [], oneWay: true },
         { a: 'ENTRY', b: 'AVC', via: [[840, 700], [1500, 700], [2200, 700], [2860, 700]] },
+        { a: 'AVC', b: 'VME', via: [[3560, 620], [3440, 530], [3540, 440]] },
         { a: 'AVC', b: 'AVE', via: [] },
+        { a: 'AVE', b: 'VH', via: [[4495, 620], [4635, 540], [4765, 460], [4665, 380], [4555, 305], [4470, 240]] },
         { a: 'AVE', b: 'EG', via: [], gate: 'linha' },
-        { a: 'EG', b: 'EM', via: [[5180, 440]] },
-        { a: 'EM', b: 'EH', via: [[5840, 190]] },
         { a: 'EG', b: 'E_PRE', via: [[5800, 700]] },
+        { a: 'E_PRE', b: 'EH', via: [[6360, 620], [6490, 540], [6610, 460], [6515, 380], [6420, 305], [6345, 240]] },
+        { a: 'EH', b: 'EM', via: [[5320, 440]] },
         { a: 'E_PRE', b: 'GOAL', via: [[7500, 700]], gate: 'rota' },
       ],
     };
@@ -169,7 +184,7 @@ function stage1Graph(substageId: string): { hubs: Record<string, { x: number; y:
 
 /** Region waypoints guide the physical search; every accepted leg is replayed by real input ticks. */
 export function navigate(engine:GameEngine,s:any,goal:{x:number;y:number;w:number;h:number}){
- const custom=stage1Graph(s.stage.substageId);
+ const custom=stage1Graph(s.stage.substageId, s.characterId);
  if(custom){
   const metrics={jumps:0,left:0,right:0};
   const step=(g:{x:number;y:number;w:number;h:number})=>{const m=local(engine,s,g);metrics.jumps+=m.jumps;metrics.left+=m.left;metrics.right+=m.right;};
@@ -179,7 +194,7 @@ export function navigate(engine:GameEngine,s:any,goal:{x:number;y:number;w:numbe
   while(queue.length){
    const id=queue.shift()!;if(id===target)break;
    for(const e of custom.edges){
-    const reverse=e.b===id,next=e.a===id?e.b:reverse?e.a:null;
+    const reverse=!e.oneWay&&e.b===id,next=e.a===id?e.b:reverse?e.a:null;
     if(!next||seen.has(next)||e.gate&&s.platforms.some((p:any)=>p.gateId===e.gate&&!p.broken))continue;
     seen.add(next);back.set(next,{from:id,edge:e,reverse});queue.push(next);
    }

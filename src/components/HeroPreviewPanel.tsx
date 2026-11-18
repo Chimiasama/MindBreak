@@ -6,6 +6,11 @@ import { MOVEMENT_PROFILES } from '../game/movement';
 import { HERO_CLIPS, type HeroPose } from '../game/heroAnimation';
 import { drawHeroFrame, prepareHeroArtwork } from '../game/heroArtwork';
 import { buildHeroRig3D, updateHeroRig3D } from '../game/render3d/characterRig3d';
+import {
+  IDLE_VARIATION_START_TICKS,
+  MEDITATION_RAMP_TICKS,
+  MEDITATION_START_TICKS,
+} from '../game/render3d/idleChoreography';
 import { sampleSpriteClipAt } from '../game/render3d/spriteInterpolation';
 import { detectSoftwareWebGL, disposeMaterialTree, makeToonMaterial } from '../game/render3d/materials';
 import type { CharacterId } from '../game/types';
@@ -16,7 +21,7 @@ interface HeroPreviewPanelProps {
 }
 
 type PreviewMode = 'details' | 'compare';
-type PreviewPoseKind = 'idle' | 'combat' | 'traversal';
+type PreviewPoseKind = 'idle' | 'meditate' | 'jump' | 'combat' | 'traversal';
 
 interface HeroGameplayProfile {
   roleLabel: string;
@@ -34,12 +39,12 @@ const HERO_GAMEPLAY_DETAILS: Record<CharacterId, HeroGameplayProfile> = {
       'Ideal para avançar pelas rotas superiores com máxima velocidade no chão e no ar.',
     strengths: [
       'Maior velocidade (6.1) e aceleração (2.4) do grupo',
-      'Maior impulso de salto (13.0) para alcançar plataformas altas e wall-kicks',
-      'Combo equilibrado de 26 de dano com boa cadência e alcance médio (76 px)',
+      'Exclusivo: Wall-Jump alternado + Pulo Psy duplo e maior impulso (13.0)',
+      'Combo equilibrado de 26 de dano com corte que rebate projéteis',
     ],
-    exclusiveTraitLabel: 'Mobilidade Máxima',
+    exclusiveTraitLabel: 'Wall-Jump & Mobilidade Máxima',
     exclusiveTraitDetail:
-      'Agilidade superior para encadear wall-kicks, cruzar plataformas altas e manter pressão contínua.',
+      'Único capaz de encadear wall-jumps pressionando contra a parede + pulo para escalar chaminés e alcançar atalhos.',
     psyPowerSummary: 'Onda cortante e captura telecinética em distância (25 PSY)',
   },
   maya: {
@@ -48,7 +53,7 @@ const HERO_GAMEPLAY_DETAILS: Record<CharacterId, HeroGameplayProfile> = {
       'Especialista em explorar áreas elevadas, evitar perigos no solo e atacar à distância.',
     strengths: [
       'Única com Voo Direcional em 8 direções (aperte e segure PULO no ar)',
-      'Maior alcance de golpe corpo a corpo (90 px) para manter inimigos afastados',
+      'Maior alcance de golpe corpo a corpo (90 px) + Pulo Psy duplo',
       'Atrai inimigos próximos com a Singularidade gravitacional (25 PSY)',
     ],
     exclusiveTraitLabel: 'Voo em 8 Direções',
@@ -59,7 +64,7 @@ const HERO_GAMEPLAY_DETAILS: Record<CharacterId, HeroGameplayProfile> = {
   leon: {
     roleLabel: 'Tanque Pirocinético',
     playstyle:
-      'Feito para encarar linhas de frente pesadas, quebrar defesas e absorver fogo cruzado.',
+      'Brawler firme no chão (sem pulo psy nem wall-jump), feito para quebrar defesas e absorver fogo cruzado.',
     strengths: [
       'Maior reserva de vida (150 HP) e maior poder de ataque base (35)',
       'Punhos flamejantes: golpes causam queimadura contínua (dano por tempo)',
@@ -67,7 +72,7 @@ const HERO_GAMEPLAY_DETAILS: Record<CharacterId, HeroGameplayProfile> = {
     ],
     exclusiveTraitLabel: 'Chamas Contínuas & Quebra-Escudo',
     exclusiveTraitDetail:
-      'Incendeia inimigos e chefes para causar dano mesmo ao recuar; destrói escudos no primeiro golpe.',
+      'Foco total no combate direto e força bruta; sem pulo psy ou wall-jump, usa impulsos firmes e canos para avançar.',
     psyPowerSummary: 'Chama Intensa: onda de fogo que dobra o dano da queimadura por 8s (25 PSY)',
   },
 };
@@ -80,10 +85,44 @@ const MAX_STAT_BASE = {
   jumpForce: Math.max(...CHARACTER_ORDER.map((id) => CHARACTERS[id].jumpForce)),
 };
 
-function resolvePose(heroId: CharacterId, kind: PreviewPoseKind): HeroPose {
-  if (kind === 'combat') return 'attack1';
-  if (kind === 'traversal') return heroId === 'maya' ? 'flight' : 'run';
-  return 'idle';
+function resolvePose(heroId: CharacterId, kind: PreviewPoseKind, elapsedTicks = 0): {
+  pose: HeroPose;
+  comboStep: number;
+  idleTicks: number;
+  vy: number;
+} {
+  if (kind === 'combat') {
+    const step = Math.floor(elapsedTicks / 18) % 3;
+    const pose: HeroPose = step === 0 ? 'attack1' : step === 1 ? 'attack2' : 'attack3';
+    return { pose, comboStep: step, idleTicks: 0, vy: 0 };
+  }
+  if (kind === 'jump') {
+    const cycle = elapsedTicks % 48;
+    const rising = cycle < 22;
+    return {
+      pose: rising ? 'jump' : 'fall',
+      comboStep: 0,
+      idleTicks: 0,
+      vy: rising ? -9 + cycle * 0.35 : (cycle - 22) * 0.35,
+    };
+  }
+  if (kind === 'meditate') {
+    return {
+      pose: 'idle',
+      comboStep: 0,
+      idleTicks: MEDITATION_START_TICKS + MEDITATION_RAMP_TICKS + (elapsedTicks % 480),
+      vy: 0,
+    };
+  }
+  if (kind === 'traversal') {
+    return { pose: heroId === 'maya' ? 'flight' : 'run', comboStep: 0, idleTicks: 0, vy: 0 };
+  }
+  return {
+    pose: 'idle',
+    comboStep: 0,
+    idleTicks: IDLE_VARIATION_START_TICKS + (elapsedTicks % 460),
+    vy: 0,
+  };
 }
 
 export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
@@ -196,12 +235,14 @@ export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
         elapsedTicks += dt * 60;
 
         const activeId = selectedHeroRef.current;
-        const activePose = resolvePose(activeId, poseKindRef.current);
+        const resolved = resolvePose(activeId, poseKindRef.current, elapsedTicks);
+        const activePose = resolved.pose;
         for (const id of CHARACTER_ORDER) {
           rigs[id].root.visible = id === activeId;
         }
         const r = rigs[activeId];
-        const sample = sampleSpriteClipAt(activePose, activePose === 'attack1' ? elapsedTicks % 18 : elapsedTicks);
+        const localTick = activePose.startsWith('attack') ? elapsedTicks % 18 : elapsedTicks;
+        const sample = sampleSpriteClipAt(activePose, localTick);
         updateHeroRig3D(
           r,
           {
@@ -210,22 +251,23 @@ export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
             frame: sample.frame,
             nextFrame: sample.nextFrame,
             frameAlpha: sample.frameAlpha,
-            elapsedTicks,
-            vx: activePose === 'run' ? 5.2 : 0,
-            vy: 0,
+            elapsedTicks: localTick,
+            idleTicks: resolved.idleTicks,
+            vx: activePose === 'run' || activePose === 'flight' ? 5.2 : 0,
+            vy: resolved.vy,
             facing: 1,
             onWall: 0,
-            grounded: activePose !== 'flight',
+            grounded: activePose !== 'flight' && activePose !== 'jump' && activePose !== 'fall',
             isDashing: false,
             isSliding: false,
             isFlying: activePose === 'flight',
-            slashing: activePose === 'attack1',
-            slashTimer: activePose === 'attack1' ? 14 - (elapsedTicks % 14) : 0,
-            comboStep: Math.floor(elapsedTicks / 20) % 3,
+            slashing: activePose.startsWith('attack'),
+            slashTimer: activePose.startsWith('attack') ? 14 - (elapsedTicks % 14) : 0,
+            comboStep: resolved.comboStep,
             invulnTimer: 0,
             gstTimer: 0,
             atkTimer: 0,
-            flameTimer: activeId === 'leon' && activePose === 'attack1' ? 10 : 0,
+            flameTimer: activeId === 'leon' && activePose.startsWith('attack') ? 10 : 0,
             stunTimer: 0,
             hp: 100,
             tickCount: elapsedTicks,
@@ -280,7 +322,7 @@ export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const pose = resolvePose(selectedHero, poseKind);
+    const { pose } = resolvePose(selectedHero, poseKind);
     const clip = HERO_CLIPS[pose];
     const reducedMotion =
       typeof window !== 'undefined' &&
@@ -438,19 +480,21 @@ export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
             )}
 
             <div className="w-full space-y-2">
-              <div className="grid grid-cols-3 gap-1 rounded-md bg-slate-900 p-1">
+              <div className="grid grid-cols-5 gap-1 rounded-md bg-slate-900 p-1">
                 {(
                   [
-                    { id: 'idle', label: 'Parado' },
-                    { id: 'combat', label: 'Golpe' },
-                    { id: 'traversal', label: hero.canFlight ? 'Voo' : 'Corrida' },
+                    { id: 'idle', label: 'Idle' },
+                    { id: 'meditate', label: 'Meditar' },
+                    { id: 'jump', label: 'Salto' },
+                    { id: 'combat', label: 'Golpes' },
+                    { id: 'traversal', label: hero.canFlight ? 'Voo' : 'Correr' },
                   ] as const
                 ).map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setPoseKind(item.id)}
-                    className={`min-h-[32px] rounded px-1.5 py-1 text-[11px] font-semibold transition whitespace-nowrap ${
+                    className={`min-h-[30px] rounded px-1 py-1 text-[10px] font-semibold transition whitespace-nowrap ${
                       poseKind === item.id
                         ? 'bg-slate-800 text-white'
                         : 'text-slate-400 hover:text-slate-200'
@@ -461,7 +505,19 @@ export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
                 ))}
               </div>
               <div className="text-center text-[11px] text-slate-400">
-                {hero.powerName}
+                {poseKind === 'meditate'
+                  ? selectedHero === 'ren'
+                    ? 'Meditação Oculta (escurece e some)'
+                    : selectedHero === 'maya'
+                      ? 'Levitação Serena (olhos fechados)'
+                      : 'Combustão Calma (respiração funda)'
+                  : poseKind === 'idle'
+                    ? selectedHero === 'ren'
+                      ? 'Vigilância tática & furtividade'
+                      : selectedHero === 'maya'
+                        ? 'Postura serena & foco psíquico'
+                        : 'Soquinhos, peito estufado & tosse'
+                    : hero.powerName}
               </div>
             </div>
           </div>
@@ -603,6 +659,30 @@ export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
                 {CHARACTER_ORDER.map((id) => (
                   <td key={id} className="py-2 px-2 font-mono tabular-nums">
                     {CHARACTERS[id].jumpForce.toFixed(1)}
+                  </td>
+                ))}
+              </tr>
+              <tr>
+                <td className="py-2 pr-3 text-slate-400">Wall-Jump</td>
+                {CHARACTER_ORDER.map((id) => (
+                  <td key={id} className="py-2 px-2">
+                    {CHARACTERS[id].canWallJump ? (
+                      <span className="font-semibold text-pink-300">Sim (Exclusivo)</span>
+                    ) : (
+                      <span className="text-slate-500">Não</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+              <tr>
+                <td className="py-2 pr-3 text-slate-400">Pulo Psy (Duplo)</td>
+                {CHARACTER_ORDER.map((id) => (
+                  <td key={id} className="py-2 px-2">
+                    {CHARACTERS[id].canPsyJump ? (
+                      <span className="font-semibold text-cyan-300">Sim</span>
+                    ) : (
+                      <span className="text-slate-500">Não</span>
+                    )}
                   </td>
                 ))}
               </tr>

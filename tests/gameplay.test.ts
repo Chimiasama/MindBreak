@@ -333,3 +333,96 @@ test('Maya assist gravity well pulls nearby ground and flying enemies into its s
   engine.stop();
 });
 
+test('Ren wall-jump activates only when pressing horizontally into a wall and supports alternating kicks and air dash approach', () => {
+  const { engine, state } = emptyRoom();
+  state.platforms = [
+    { x: 0, y: 500, w: 800, h: 40, type: 'solid' },
+    { x: 120, y: 120, w: 40, h: 380, type: 'wall' },
+    { x: 320, y: 120, w: 40, h: 380, type: 'wall' },
+  ];
+
+  // Touching right wall without pressing right: onWall stays 0 and jump does NOT trigger wall kick
+  Object.assign(state.player, { x: 320 - state.player.w, y: 280, vy: 2, vx: 0, grounded: false, doubleJump: false, onWall: 0 });
+  state.update();
+  assert.equal(state.player.onWall, 0);
+  engine.triggerJump();
+  state.update();
+  assert.ok(state.player.vy >= 0, 'Without inward directional input, touching a wall must not trigger wall jump');
+
+  // Pressing RIGHT into the right wall + jump kicks LEFT
+  state.jumpBuffer = 0;
+  Object.assign(state.player, { x: 320 - state.player.w, y: 280, vy: 1, vx: 0, grounded: false, doubleJump: false, lastWallSide: 0, lastWallX: null });
+  engine.setKey('right', true);
+  state.update();
+  assert.equal(state.player.onWall, 1);
+  engine.triggerJump();
+  state.update();
+  assert.ok(state.player.vx < 0 && state.player.vy < 0, 'Right wall + pressing right + jump must kick left');
+  assert.equal(state.player.lastWallSide, 1);
+
+  // Dash toward opposite left wall does not disrupt wall-kick when pressing LEFT + jump upon contact
+  state.player.dashCooldown = 0;
+  state.player.facing = -1;
+  engine.setKey('right', false);
+  engine.setKey('left', true);
+  engine.triggerDashOrSlide();
+  assert.equal(state.player.isDashing, true);
+  Object.assign(state.player, { x: 160, y: 240, vy: 1 });
+  state.update();
+  assert.equal(state.player.onWall, -1);
+  assert.equal(state.player.isDashing, false, 'Wall collision clears active dash cleanly without blocking wall jump');
+  engine.triggerJump();
+  state.update();
+  assert.ok(state.player.vx > 0 && state.player.vy < 0, 'Left wall + pressing left + jump after dash kicks right');
+  assert.equal(state.player.lastWallSide, -1);
+
+  engine.stop();
+});
+
+test('Leon has neither wall-jump nor Psy double-jump, retaining only Air Step pickup jump', () => {
+  const { engine, state } = emptyRoom();
+  engine.switchCharacter('leon');
+  state.platforms = [
+    { x: 0, y: 500, w: 800, h: 40, type: 'solid' },
+    { x: 320, y: 120, w: 40, h: 380, type: 'wall' },
+  ];
+
+  // Against right wall while holding right -> Leon never enters wall-slide / wall-kick
+  Object.assign(state.player, { x: 320 - state.player.w, y: 260, vy: 2, grounded: false });
+  engine.setKey('right', true);
+  state.update();
+  assert.equal(state.player.onWall, 0);
+  engine.triggerJump();
+  state.update();
+  assert.ok(state.player.vy > 0, 'Leon cannot wall-jump or Psy double-jump');
+
+  // With jmpTimer (Air Step powerup) Leon gets the temporary extra air jump
+  state.player.jmpTimer = 60;
+  engine.triggerJump();
+  state.update();
+  assert.ok(state.player.vy < -10, 'Leon still benefits from temporary Air Step pickup jump');
+
+  engine.stop();
+});
+
+test('Legacy Stages 1-6 remain clear of <56px headroom traps and maintain single-jump Leon progression', async () => {
+  const { STAGES } = await import('../src/game/stages');
+  for (let idx = 0; idx < 6; idx++) {
+    const stage = STAGES[idx];
+    for (let i = 0; i < stage.platforms.length; i++) {
+      const a = stage.platforms[i];
+      if (a.type === 'acid' || a.type === 'laser_gate') continue;
+      for (let j = 0; j < stage.platforms.length; j++) {
+        if (i === j) continue;
+        const b = stage.platforms[j];
+        if (b.type === 'acid' || b.type === 'laser_gate') continue;
+        const overlapX = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+        if (overlapX <= 4) continue;
+        const gap = b.y - (a.y + (a.h || 18));
+        assert.ok(!(gap >= 1 && gap < 56), `Stage ${stage.id} has headroom trap gap=${gap}px`);
+      }
+    }
+  }
+});
+
+

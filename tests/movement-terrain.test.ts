@@ -46,7 +46,7 @@ for (const hero of ['ren', 'maya', 'leon'] as const) {
 
   test(`${hero} keeps the measured jump envelope after acceleration changes`, () => {
     const baseline = { ren: [123.5, 237.9, 39, 204.88, 341.6, 56],
-      maya: [112.1, 193.8, 38, 188.242, 275.4, 54], leon: [101.25, 169.2, 36, 172.01, 244.4, 52] }[hero];
+      maya: [112.1, 193.8, 38, 188.242, 275.4, 54], leon: [101.25, 169.2, 36, 101.25, 169.2, 36] }[hero];
     for (const double of [false, true]) {
       const { engine, state } = fixture(hero);
       engine.setKey('right', true);
@@ -59,6 +59,7 @@ for (const hero of ['ren', 'maya', 'leon'] as const) {
         engine.setKey('jumpHeld', false); state.update();
         apex = Math.max(apex, 600 - state.player.y - state.player.h); ticks++;
       } while (!state.player.grounded && ticks < 200);
+      if (hero === 'leon') assert.equal(state.player.doubleJump, false);
       const offset = double ? 3 : 0;
       assert.ok(Math.abs(apex - baseline[offset]) < 0.001);
       assert.ok(Math.abs(state.player.x - start - baseline[offset + 1]) < 0.001);

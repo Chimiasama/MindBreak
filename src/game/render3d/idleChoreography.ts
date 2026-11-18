@@ -6,8 +6,10 @@ import {
   createNeutralKeyPose,
 } from './spriteInterpolation';
 
-export const MEDITATION_START_TICKS = 300; // 5.0s at 60Hz before meditation begins
-export const MEDITATION_RAMP_TICKS = 90;   // 1.5s smooth transition into full meditation
+export const IDLE_VARIATION_START_TICKS = 150; // 2.5s calm base stance before personality idle beats start
+export const IDLE_VARIATION_BLEND_TICKS = 36;  // 0.6s smooth cross-fade into varied idle cycle
+export const MEDITATION_START_TICKS = 720;     // 12.0s at 60Hz before meditation begins
+export const MEDITATION_RAMP_TICKS = 120;      // 2.0s smooth transition into full meditation
 
 export type FacialExpression =
   | 'neutral'
@@ -112,7 +114,7 @@ function setPose(out: SkeletonKeyPose, overrides: Partial<SkeletonKeyPose>): voi
 const REN_IDLE_SEGMENTS: IdleSegment[] = [
   {
     name: 'alert_stance',
-    duration: 74,
+    duration: 100,
     expression: 'serious',
     evaluate(t, ticks, out, look) {
       const b = Math.sin(ticks * 0.085);
@@ -140,7 +142,7 @@ const REN_IDLE_SEGMENTS: IdleSegment[] = [
   },
   {
     name: 'scan_flanks',
-    duration: 64,
+    duration: 86,
     expression: 'suspicious',
     evaluate(t, ticks, out, look) {
       // Quick turn right, pause, snap check behind/left
@@ -172,7 +174,7 @@ const REN_IDLE_SEGMENTS: IdleSegment[] = [
   },
   {
     name: 'crouch_sneak',
-    duration: 78,
+    duration: 102,
     expression: 'suspicious',
     evaluate(t, ticks, out, look) {
       const duck = bell(t, 0.2, 0.78);
@@ -203,7 +205,7 @@ const REN_IDLE_SEGMENTS: IdleSegment[] = [
   },
   {
     name: 'look_up_ceiling',
-    duration: 54,
+    duration: 74,
     expression: 'suspicious',
     evaluate(t, _ticks, out, look) {
       const up = bell(t, 0.24, 0.72);
@@ -231,7 +233,7 @@ const REN_IDLE_SEGMENTS: IdleSegment[] = [
   },
   {
     name: 'blade_check',
-    duration: 68,
+    duration: 92,
     expression: 'determined',
     evaluate(t, _ticks, out, look) {
       const inspect = bell(t, 0.25, 0.75);
@@ -265,7 +267,7 @@ const REN_IDLE_SEGMENTS: IdleSegment[] = [
 const MAYA_IDLE_SEGMENTS: IdleSegment[] = [
   {
     name: 'serene_poise',
-    duration: 102,
+    duration: 112,
     expression: 'serene',
     evaluate(_t, ticks, out, look) {
       const b = Math.sin(ticks * 0.055);
@@ -293,7 +295,7 @@ const MAYA_IDLE_SEGMENTS: IdleSegment[] = [
   },
   {
     name: 'psychic_palm_focus',
-    duration: 94,
+    duration: 102,
     expression: 'calm',
     evaluate(t, ticks, out, look) {
       const w = bell(t, 0.24, 0.76);
@@ -322,7 +324,7 @@ const MAYA_IDLE_SEGMENTS: IdleSegment[] = [
   },
   {
     name: 'horizon_glance',
-    duration: 86,
+    duration: 94,
     expression: 'serene',
     evaluate(t, ticks, out, look) {
       const turn = Math.sin(t * Math.PI) * 0.34;
@@ -351,7 +353,7 @@ const MAYA_IDLE_SEGMENTS: IdleSegment[] = [
   },
   {
     name: 'gentle_hover_stretch',
-    duration: 98,
+    duration: 106,
     expression: 'serene',
     evaluate(t, ticks, out, look) {
       const lift = bell(t, 0.25, 0.75);
@@ -386,7 +388,7 @@ const MAYA_IDLE_SEGMENTS: IdleSegment[] = [
 const LEON_IDLE_SEGMENTS: IdleSegment[] = [
   {
     name: 'boxer_bounce',
-    duration: 68,
+    duration: 94,
     expression: 'determined',
     evaluate(_t, ticks, out, look) {
       const bounce = Math.abs(Math.sin(ticks * 0.14));
@@ -415,7 +417,7 @@ const LEON_IDLE_SEGMENTS: IdleSegment[] = [
   },
   {
     name: 'shadow_jabs',
-    duration: 72,
+    duration: 96,
     expression: 'determined',
     evaluate(t, _ticks, out, look) {
       // Three snappy playful air punches: quick left jab, right cross, playful uppercut!
@@ -446,7 +448,7 @@ const LEON_IDLE_SEGMENTS: IdleSegment[] = [
   },
   {
     name: 'chest_thump_taunt',
-    duration: 60,
+    duration: 84,
     expression: 'smug',
     evaluate(t, _ticks, out, look) {
       // Proudly puffs chest & thumps chest twice with fist!
@@ -478,7 +480,7 @@ const LEON_IDLE_SEGMENTS: IdleSegment[] = [
   },
   {
     name: 'chest_cough',
-    duration: 74,
+    duration: 98,
     expression: 'wince',
     evaluate(t, _ticks, out, look) {
       // Immediately after thumping too hard: winces, hunches forward & coughs 3 times into fist!
@@ -510,7 +512,7 @@ const LEON_IDLE_SEGMENTS: IdleSegment[] = [
   },
   {
     name: 'shoulder_roll_ready',
-    duration: 62,
+    duration: 84,
     expression: 'determined',
     evaluate(t, _ticks, out, look) {
       const roll = Math.sin(t * Math.PI * 2);
@@ -654,8 +656,31 @@ export function evaluateHeroIdleChoreography(
   outPose: SkeletonKeyPose
 ): IdleChoreographyResult {
   const segments = HERO_IDLE_TABLES[heroId];
+
+  // During initial gameplay pause (1..IDLE_VARIATION_START_TICKS), remain in calm base stance
+  // before smoothly blending into the full personality idle cycle.
+  if (idleTicks > 0 && idleTicks < IDLE_VARIATION_START_TICKS) {
+    const baseSeg = segments[0];
+    baseSeg.evaluate(0, tickCount, outPose, _lookBuf);
+    return {
+      segmentName: baseSeg.name,
+      expression: baseSeg.expression,
+      meditationFactor: 0,
+      stealthOpacity: 1,
+      darkenFactor: 0,
+      flameIgnite: 0,
+      psychicGlow: 0,
+      eyeLookX: 0,
+      eyeLookY: 0,
+      winceBeat: 0,
+    };
+  }
+
   const cycleTicks = segments.reduce((sum, s) => sum + s.duration, 0);
-  const tCycle = ((Math.max(0, tickCount) % cycleTicks) + cycleTicks) % cycleTicks;
+  const phaseTick = idleTicks >= IDLE_VARIATION_START_TICKS
+    ? idleTicks - IDLE_VARIATION_START_TICKS
+    : tickCount;
+  const tCycle = ((Math.max(0, phaseTick) % cycleTicks) + cycleTicks) % cycleTicks;
 
   let cursor = tCycle;
   let segIndex = 0;
@@ -672,9 +697,9 @@ export function evaluateHeroIdleChoreography(
   const localT = seg.duration > 0 ? Math.min(1, Math.max(0, cursor / seg.duration)) : 0;
 
   seg.evaluate(localT, tickCount, _segPoseA, _lookBuf);
-  const lookX = _lookBuf.x;
-  const lookY = _lookBuf.y;
-  const winceBeat = _lookBuf.wince;
+  let lookX = _lookBuf.x;
+  let lookY = _lookBuf.y;
+  let winceBeat = _lookBuf.wince;
 
   // Smooth cross-fade across the final 10 ticks of each segment so idle beats flow seamlessly
   const tailWindow = Math.min(10, seg.duration * 0.22);
@@ -685,6 +710,16 @@ export function evaluateHeroIdleChoreography(
     blendPoseTargets(_segPoseA, _segPoseB, blend, outPose);
   } else {
     Object.assign(outPose, _segPoseA);
+  }
+
+  // Smooth entry ramp when crossing IDLE_VARIATION_START_TICKS
+  if (idleTicks >= IDLE_VARIATION_START_TICKS && idleTicks < IDLE_VARIATION_START_TICKS + IDLE_VARIATION_BLEND_TICKS) {
+    const entryBlend = smooth((idleTicks - IDLE_VARIATION_START_TICKS) / IDLE_VARIATION_BLEND_TICKS);
+    segments[0].evaluate(0, tickCount, _segPoseB, _lookBuf);
+    blendPoseTargets(_segPoseB, outPose, entryBlend, outPose);
+    lookX *= entryBlend;
+    lookY *= entryBlend;
+    winceBeat *= entryBlend;
   }
 
   // Long-idle meditation transition

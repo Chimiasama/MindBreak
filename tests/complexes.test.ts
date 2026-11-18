@@ -76,7 +76,7 @@ test('Stage 1 enforces multi-story elevation gaps and requires wall-kicks and ce
   onHudUpdate() {}, onStageClear() {}, onContinueCountdown() {}, onGameOver() {},
  });
  const s: any = e;
- e.startCampaign(1, 'leon');
+ e.startCampaign(1, 'ren');
  e.setPaused(false);
  s.enemies = []; s.spawns.update = () => []; s.updateEnemies = () => {};
  Object.assign(s.player, { x: 520, y: 604, vx: 0, vy: 0, grounded: true, doubleJump: true });

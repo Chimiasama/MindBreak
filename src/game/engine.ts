@@ -20,6 +20,7 @@ import { CHARACTER_ORDER, CHARACTERS } from './characters';
 import { getEnemyPixelSprite, enemyVisualFrame, enemySourceRect } from './enemyArtwork';
 import { WorldRenderer3D } from './render3d/sceneRenderer';
 import { lerpActorPosition } from './render3d/spriteInterpolation';
+import { MEDITATION_START_TICKS } from './render3d/idleChoreography';
 import { STAGES } from './stages';
 import { CAMPAIGN, adaptLegacy, getSubstage, SubstageDefinition, SubstageId, PlayerCarry, CampaignProgress } from './campaign';
 import {
@@ -145,6 +146,8 @@ export class GameEngine {
   private jumpBuffer = 0;
   private flightRequested = false;
   private coyoteTicks = 0;
+  private wallContactGrace = 0;
+  private wallContactSide: -1 | 0 | 1 = 0;
   private slideHitIds = new Set<number>();
   private spawns = new SpawnManager(STAGES[0]);
   private tickCount = 0;
@@ -152,6 +155,7 @@ export class GameEngine {
   private heroAnimator = new HeroAnimator();
   private heroVisualTimers = { hurt:0, vault:0, special:0 };
   private hitstop = 0;
+  private idleTicks = 0;
   private prevPlayerPos = { x: 100, y: 600 };
   private prevCameraPos = { x: 0, y: 0 };
   private prevEnemyPos = new Map<number, { x: number; y: number }>();
@@ -260,6 +264,8 @@ export class GameEngine {
     this.input.clear();
     this.jumpBuffer = 0;
     this.coyoteTicks = 0;
+    this.wallContactGrace = 0;
+    this.wallContactSide = 0;
     this.lastGamepadJump = false;
     this.lastGamepadAttack = false;
     this.lastGamepadDash = false;
@@ -423,6 +429,7 @@ export class GameEngine {
     this.platformDeltas.clear();
     this.hitstop = 0;
     this.tickCount = 0;
+    this.idleTicks = 0;
     this.visualTick = 0; this.heroAnimator.reset(); this.heroVisualTimers = { hurt:0, vault:0, special:0 };
     this.checkpointId = found.entryCheckpoint;
     this.stage = found;
@@ -496,7 +503,7 @@ export class GameEngine {
       vx: 0,
       vy: 0,
       grounded: false,
-      doubleJump: true,
+      doubleJump: char.canPsyJump,
       onWall: 0,
       lastWallSide: 0,
       lastWallX: null,
@@ -836,8 +843,13 @@ export class GameEngine {
     this.player.hp = Math.max(1, Math.floor(profile.maxHp * oldRatio));
     this.player.isFlying = false;
     this.player.flameTimer = 0;
+    this.player.onWall = 0;
+    this.wallContactGrace = 0;
+    this.wallContactSide = 0;
+    this.player.doubleJump = profile.canPsyJump && this.player.grounded;
     this.flightRequested = false;
     this.heroVisualTimers = { hurt:0, vault:0, special:0 };
+    this.idleTicks = 0;
     this.heroAnimator.reset(this.visualTick);
     this.addParticle(this.player.x + 16, this.player.y + 28, profile.accentColor, 14, 6);
     this.addMangaFx(`TAG: ${profile.name.toUpperCase()}!`, this.player.x, this.player.y - 24, profile.accentColor);
@@ -1037,53 +1049,77 @@ export class GameEngine {
       p.y = p.hangingPipe.y - p.h - 2;
       p.vy = -jumpForce * MOVEMENT.vaultJump;
       p.hangingPipe = null;
-      p.doubleJump = true;
+      p.doubleJump = char.canPsyJump;
       sound.sfxJump();
       this.addParticle(p.x + p.w / 2, p.y + p.h, this.stage.palette.pipeColor, 8, 4);
       this.addMangaFx('VAULT!', p.x, p.y - 16, this.stage.palette.pipeColor);
       return true;
     }
 
-    // Strict Alternating Wall-Kick
-    if (p.onWall !== 0 && !p.grounded) {
-      const sameWall =
-        p.onWall === p.lastWallSide &&
-        p.lastWallX !== null &&
-        Math.abs(p.x - p.lastWallX) < 52;
-      if (sameWall) {
-        return false;
+    // Strict Alternating Wall-Kick (Ren only, requires pressing against the wall + jump; dash does not alter kick)
+    if (char.canWallJump && !p.grounded && !p.hangingCeiling) {
+      let wallSide: -1 | 0 | 1 = p.onWall;
+      if (wallSide === 0) {
+        const solids = this.platforms.filter((plat) => !plat.broken && plat.type !== 'acid' && plat.type !== 'laser_gate');
+        if (this.keys.right && !this.keys.left && this.hasWallContact(solids, 1)) wallSide = 1;
+        else if (this.keys.left && !this.keys.right && this.hasWallContact(solids, -1)) wallSide = -1;
       }
+      if (wallSide !== 0) {
+        const sameWall =
+          wallSide === p.lastWallSide &&
+          p.lastWallX !== null &&
+          Math.abs(p.x - p.lastWallX) < 52;
+        if (sameWall) {
+          return false;
+        }
 
-      p.lastWallSide = p.onWall;
-      p.lastWallX = p.x;
-      p.vy = -jumpForce * MOVEMENT.wallKickJump;
-      p.vx = -p.onWall * (char.speed * MOVEMENT.wallKickSpeed);
-      this.wallKickLock = MOVEMENT.wallKickLockTicks;
-      p.facing = (-p.onWall) as 1 | -1;
-      p.doubleJump = true;
-      sound.sfxWallKick();
-      this.addParticle(p.x + (p.onWall === 1 ? p.w : 0), p.y + 20, char.trailColor, 10, 5);
-      this.addMangaFx('WALL KICK!', p.x, p.y - 16, char.trailColor);
-      return true;
+        p.lastWallSide = wallSide;
+        p.lastWallX = p.x;
+        p.isDashing = false;
+        p.dashTimer = 0;
+        p.vy = -jumpForce * MOVEMENT.wallKickJump;
+        p.vx = -wallSide * (char.speed * MOVEMENT.wallKickSpeed);
+        this.wallKickLock = MOVEMENT.wallKickLockTicks;
+        p.facing = (-wallSide) as 1 | -1;
+        p.onWall = 0;
+        this.wallContactGrace = 0;
+        this.wallContactSide = 0;
+        p.doubleJump = char.canPsyJump;
+        sound.sfxWallKick();
+        this.addParticle(p.x + (wallSide === 1 ? p.w : 0), p.y + 20, char.trailColor, 10, 5);
+        this.addMangaFx('WALL KICK!', p.x, p.y - 16, char.trailColor);
+        return true;
+      }
     }
 
     if (p.grounded || this.coyoteTicks > 0) {
       this.coyoteTicks = 0;
       p.vy = -jumpForce;
       p.grounded = false;
-      p.doubleJump = true;
+      p.doubleJump = char.canPsyJump;
       sound.sfxJump();
       this.addParticle(p.x + p.w / 2, p.y + p.h, '#cbd5e1', 5, 3);
       return true;
     }
 
-    if (p.doubleJump || p.jmpTimer > 0) {
+    if ((p.doubleJump && char.canPsyJump) || p.jmpTimer > 0) {
       p.vy = -jumpForce * MOVEMENT.aerialJump;
       if (p.jmpTimer <= 0) p.doubleJump = false;
       sound.sfxDoubleJump();
       this.addParticle(p.x + p.w / 2, p.y + p.h, char.accentColor, 12, 5);
       this.addMangaFx(p.jmpTimer > 0 ? 'AIR STEP!' : 'PSY JUMP!', p.x, p.y - 12, char.accentColor);
       return true;
+    }
+    return false;
+  }
+
+  private hasWallContact(solids: Platform[], side: -1 | 1): boolean {
+    const p = this.player;
+    for (const solid of solids) {
+      const verticalOverlap = Math.min(p.y + p.h, solid.y + solid.h) - Math.max(p.y, solid.y);
+      if (verticalOverlap < 16) continue;
+      if (side === 1 && Math.abs((p.x + p.w) - solid.x) <= 2) return true;
+      if (side === -1 && Math.abs(p.x - (solid.x + solid.w)) <= 2) return true;
     }
     return false;
   }
@@ -1799,6 +1835,7 @@ export class GameEngine {
     const p = this.player;
     const char = CHARACTERS[this.characterId];
     this.coyoteTicks = p.grounded ? MOVEMENT.coyoteTicks : Math.max(0, this.coyoteTicks - 1);
+    this.wallContactGrace = Math.max(0, this.wallContactGrace - 1);
     let interactRequested = false;
     for (const { action } of this.input.drain()) {
       if (action === 'interact') interactRequested = true;
@@ -2062,7 +2099,7 @@ export class GameEngine {
           p.hangingPipe = pipe;
           p.y = pipe.y + pipe.h;
           p.vy = 0;
-          p.doubleJump = true;
+          p.doubleJump = char.canPsyJump;
           p.lastWallSide = 0;
           p.lastWallX = null;
           sound.sfxGrabPipe();
@@ -2113,9 +2150,15 @@ export class GameEngine {
       if (!this.canAct()) return;
     }
     const wasGrounded = p.grounded, footstepStartX = p.x;
+    const preCollisionVx = p.vx;
     const wall = moveAgainstSolids(p, p.vx, 'x', solids);
-    p.onWall = wall && !p.grounded ? (p.vx > 0 ? 1 : -1) : 0;
-    if (wall) p.vx = 0;
+    if (wall) {
+      p.vx = 0;
+      if (p.isDashing) {
+        p.isDashing = false;
+        p.dashTimer = 0;
+      }
+    }
     const minBoundX = activeArena ? activeArena.minX : 10;
     const maxBoundX = activeArena ? activeArena.maxX - p.w : this.stage.boundsWidth - p.w - 10;
     p.x = Math.max(minBoundX, Math.min(maxBoundX, p.x));
@@ -2131,7 +2174,7 @@ export class GameEngine {
         if (this.checkAABB(p, plat)) {
           this.damagePlayer(18, -p.facing * 4);
           p.vy = -12;
-          p.doubleJump = true;
+          p.doubleJump = char.canPsyJump;
         }
         return;
       }
@@ -2147,7 +2190,7 @@ export class GameEngine {
           p.y = plat.y - p.h;
           p.vy = 0;
           p.grounded = true;
-          p.doubleJump = true;
+          p.doubleJump = char.canPsyJump;
           p.lastWallSide = 0;
           p.lastWallX = null;
 
@@ -2173,6 +2216,32 @@ export class GameEngine {
         }
       }
     });
+
+    if (!char.canWallJump || p.grounded || p.hangingCeiling) {
+      p.onWall = 0;
+      this.wallContactGrace = 0;
+      this.wallContactSide = 0;
+    } else {
+      const pressingRight = this.keys.right && !this.keys.left;
+      const pressingLeft = this.keys.left && !this.keys.right;
+      const touchRight = (!!wall && preCollisionVx > 0) || this.hasWallContact(solids, 1);
+      const touchLeft = (!!wall && preCollisionVx < 0) || this.hasWallContact(solids, -1);
+      if (pressingRight && touchRight) {
+        p.onWall = 1;
+        this.wallContactSide = 1;
+        this.wallContactGrace = 4;
+      } else if (pressingLeft && touchLeft) {
+        p.onWall = -1;
+        this.wallContactSide = -1;
+        this.wallContactGrace = 4;
+      } else if (this.wallContactGrace > 0 && this.wallContactSide !== 0 && this.hasWallContact(solids, this.wallContactSide)) {
+        p.onWall = this.wallContactSide;
+      } else {
+        p.onWall = 0;
+        this.wallContactGrace = 0;
+        this.wallContactSide = 0;
+      }
+    }
 
     if (p.grounded || p.onWall !== 0 || p.hangingCeiling) {
       this.flightRequested = false;
@@ -2369,6 +2438,41 @@ export class GameEngine {
     this.camera.x = followCamera(this.camera.x, target.x);
     this.camera.y = followCamera(this.camera.y, target.y);
 
+    const isStationaryIdle =
+      p.grounded &&
+      Math.abs(p.vx) <= 0.35 &&
+      Math.abs(p.vy) <= 0.35 &&
+      !p.slashing &&
+      !p.isDashing &&
+      !p.isSliding &&
+      !p.isFlying &&
+      !p.hangingCeiling &&
+      p.onWall === 0 &&
+      p.stunTimer <= 0 &&
+      this.heroVisualTimers.hurt <= 0 &&
+      this.heroVisualTimers.special <= 0 &&
+      this.heroVisualTimers.vault <= 0 &&
+      !this.keys.left &&
+      !this.keys.right &&
+      !this.keys.up &&
+      !this.keys.down &&
+      !this.keys.jumpHeld &&
+      !interactRequested;
+    if (isStationaryIdle) {
+      this.idleTicks++;
+      if (this.idleTicks >= MEDITATION_START_TICKS) {
+        if (this.characterId === 'ren' && this.idleTicks % 16 === 0) {
+          this.addParticle(p.x + Math.random() * p.w, p.y + p.h * 0.85, '#312e81', 1, 2.6);
+        } else if (this.characterId === 'maya' && this.idleTicks % 14 === 0) {
+          this.addParticle(p.x + p.w * (0.15 + Math.random() * 0.7), p.y + p.h * 0.65, '#22d3ee', 1, 2.2);
+        } else if (this.characterId === 'leon' && this.idleTicks % 10 === 0) {
+          this.addParticle(p.x + Math.random() * p.w, p.y + p.h * 0.75, this.idleTicks % 20 === 0 ? '#facc15' : '#f97316', 1, 2.8);
+        }
+      }
+    } else {
+      this.idleTicks = 0;
+    }
+
     this.heroAnimator.sample(this.heroVisualInput(),this.visualTick);
     if (this.tickCount % 4 === 0 || p.isFlying !== wasFlying) {
       this.emitHud();
@@ -2401,14 +2505,17 @@ export class GameEngine {
     p.hangingCeiling = false;
     p.hangingPipe = null;
     p.isFlying = p.isDashing = p.isSliding = false;
-    p.doubleJump = true;
+    p.onWall = 0;
+    this.wallContactGrace = 0;
+    this.wallContactSide = 0;
+    p.doubleJump = CHARACTERS[this.characterId].canPsyJump;
     p.stunTimer = 0;
     p.stunGraceTimer = 90;
     p.invulnTimer = Math.max(60, p.invulnTimer);
     this.knockbackLock = 0;
     this.standingPlatform = null;
     this.clearInput();
-    this.resetAttack(); this.heroVisualTimers = { hurt:0, vault:0, special:0 }; this.heroAnimator.reset(this.visualTick);
+    this.resetAttack(); this.heroVisualTimers = { hurt:0, vault:0, special:0 }; this.idleTicks = 0; this.heroAnimator.reset(this.visualTick);
     this.syncInterpolationBaseline();
     this.addMangaFx('RESGATE!', p.x, p.y - 20, '#38bdf8');
   }
@@ -2766,6 +2873,7 @@ export class GameEngine {
           nextFrame: sample.nextFrame,
           frameAlpha: sample.frameAlpha,
           elapsedTicks: sample.elapsed,
+          idleTicks: this.idleTicks,
           x: interpPlayer.x,
           y: interpPlayer.y,
           w: p.w,

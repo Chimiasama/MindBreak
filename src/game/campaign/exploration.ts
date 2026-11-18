@@ -16,18 +16,18 @@ export const ROUTE_PLANS: Partial<Record<SubstageId, RoutePlan>> = {
   '1B': { rooms: ['Antena leste', 'Relé da cobertura oeste'], first: [1450,330], returnTo: [400,540], exit: [2250,440], links: [[900,540]] },
   '1C': { rooms: ['Bomba do reservatório', 'Válvula de retorno'], first: [1120,480], returnTo: [410,600], exit: [2160,560] },
   '1D': { rooms: ['Posto de vigilância', 'Comando do bloqueio'], first: [1240,430], returnTo: [900,540] },
-  '3A': { cache: [80,420], rooms: ['Controle de carga', 'Oficina de fundação'], first: [980,500], returnTo: [620,480], exit: [2980,420], links: [[790,640],[1430,670],[1570,550],[2280,560],[2680,650]] },
+  '3A': { cache: [80,420], rooms: ['Controle de carga', 'Oficina de fundação'], first: [980,500], returnTo: [620,480], exit: [2980,420], links: [[635,680],[790,640],[710,560],[1180,735],[1210,640],[1430,670],[1570,550],[2280,560],[2490,735],[2680,650],[2740,490],[2565,405],[2510,325]] },
   '3B': { rooms: ['Cabine do guindaste', 'Relé lateral das vigas'], first: [1920,-20], returnTo: [1470,180] },
-  '3C': { rooms: ['Controle de tempestade', 'Abrigo do heliponto'], first: [1240,150], returnTo: [930,270], links: [[710,350]] },
-  '4A': { cache: [80,320], rooms: ['Comando dos tanques', 'Sala de refrigeração'], first: [1360,400], returnTo: [500,320], exit: [3060,440], links: [[300,460],[800,600],[800,440],[1020,420],[1850,580],[2840,570]] },
-  '4B': { rooms: ['Distribuidor de energia', 'Controle de alimentação'], first: [1150,330], returnTo: [400,420], exit: [3200,490], links: [[720,540],[900,450],[2960,570]] },
-  '4C': { rooms: ['Comando do reator', 'Válvula de descarte'], first: [1460,430], returnTo: [640,500] },
-  '5A': { cache: [80,290], rooms: ['Sala de credenciais', 'Recepção de segurança'], first: [1110,320], returnTo: [700,430], exit: [3080,420], links: [[760,570],[950,450],[2020,550],[2440,560],[2780,480]] },
-  '5B': { rooms: ['Servidor da garagem', 'Oficina de serviço'], first: [1250,300], returnTo: [740,480], exit: [3120,360], links: [[900,610],[1740,620],[1950,500],[1080,460],[2050,400],[2500,620],[2820,490]] },
-  '5C': { rooms: ['Arquivo executivo', 'Comando do cofre'], first: [1170,260], returnTo: [840,380], links: [[650,500]] },
-  '6A': { rooms: ['Arquivo holográfico', 'Sala de projeção'], first: [860,350], returnTo: [300,500], exit: [3060,370], links: [[1460,560],[1710,460],[2720,560],[2900,460]] },
-  '6B': { rooms: ['Núcleo de irrigação', 'Controle do jardim oeste'], first: [1320,390], returnTo: [330,500], exit: [3140,430], links: [[580,620],[910,650],[1080,540],[1190,450],[1970,570],[2920,610],[2980,490]] },
-  '6C': { rooms: ['Catálogo restrito', 'Controle do acervo'], first: [1150,290], returnTo: [830,400], links: [[650,520]] },
+  '3C': { rooms: ['Controle de tempestade', 'Abrigo do heliponto'], first: [1240,150], returnTo: [930,270], links: [[710,350],[1145,210]] },
+  '4A': { cache: [80,320], rooms: ['Comando dos tanques', 'Sala de refrigeração'], first: [1360,400], returnTo: [500,320], exit: [3060,440], links: [[255,550],[300,460],[315,385],[760,635],[800,550],[800,465],[1020,420],[1140,640],[1240,470],[2015,580],[2815,560],[2945,495]] },
+  '4B': { rooms: ['Distribuidor de energia', 'Controle de alimentação'], first: [1150,330], returnTo: [400,420], exit: [3200,490], links: [[170,580],[290,500],[895,490],[1005,410],[3050,570]] },
+  '4C': { rooms: ['Comando do reator', 'Válvula de descarte'], first: [1460,430], returnTo: [640,500], links: [[555,555],[1040,620],[1230,545],[1350,485]] },
+  '5A': { cache: [80,290], rooms: ['Sala de credenciais', 'Recepção de segurança'], first: [1110,320], returnTo: [700,430], exit: [3080,420], links: [[760,605],[890,520],[1005,375],[2020,610],[2820,535],[2940,470]] },
+  '5B': { rooms: ['Servidor da garagem', 'Oficina de serviço'], first: [1250,300], returnTo: [740,480], exit: [3120,360], links: [[900,675],[750,590],[930,515],[1050,440],[1155,370],[1740,620],[1950,500],[1995,400],[2910,595],[2790,515],[2910,435]] },
+  '5C': { rooms: ['Arquivo executivo', 'Comando do cofre'], first: [1170,260], returnTo: [840,380], links: [[710,455],[1050,315]] },
+  '6A': { rooms: ['Arquivo holográfico', 'Sala de projeção'], first: [860,350], returnTo: [300,500], exit: [3060,370], links: [[490,505],[1460,565],[1710,460],[2705,525],[2840,445]] },
+  '6B': { rooms: ['Núcleo de irrigação', 'Controle do jardim oeste'], first: [1320,390], returnTo: [330,500], exit: [3140,430], links: [[445,655],[560,570],[930,655],[1040,565],[1160,475],[1970,570],[2910,575],[3020,500]] },
+  '6C': { rooms: ['Catálogo restrito', 'Controle do acervo'], first: [1150,290], returnTo: [830,400], links: [[690,480],[1020,340]] },
   '7A': { cache: [80,300], rooms: ['Central da doca', 'Posto de vigilância'], first: [1120,460], returnTo: [620,300], exit: [2280,520], links: [[900,580],[850,420]] },
   '7B': { rooms: ['Servidor de contenção', 'Comando de acesso'], first: [1430,300], returnTo: [410,430], exit: [2190,440], links: [[260,570],[970,600],[1170,460],[2040,580],[2120,500]] },
   '7C': { rooms: ['Sala de comunicações', 'Comando de autorização'], first: [1160,280], returnTo: [830,390], links: [[650,520]] },
@@ -48,7 +48,7 @@ export function withExploration(source: SubstageDefinition): SubstageDefinition 
     p = { x, y, w: 180, h: 18, type: 'solid' }; area.platforms.push(p); return p;
   };
   for (const link of plan.links ?? []) landing(link);
-  if (plan.cache) {
+  if (plan.cache && source.id === 1) {
     const [x,y] = plan.cache;
     landing([x + 280,y + 270]); landing([x + 170,y + 140]);
     const shelf = landing(plan.cache);

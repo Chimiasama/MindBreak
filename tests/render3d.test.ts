@@ -9,6 +9,7 @@ import { FixedStepClock, STEP_MS } from '../src/game/simulation';
 import { HERO_CLIPS, HeroAnimator } from '../src/game/heroAnimation';
 import {
   SPRITE_KEYFRAMES,
+  createNeutralKeyPose,
   interpolateKeyframes,
   lerpActorPosition,
   sampleSpriteClipAt,
@@ -27,6 +28,13 @@ import {
   updateEnemyRig3D,
   updateHeroRig3D,
 } from '../src/game/render3d/characterRig3d';
+import {
+  IDLE_VARIATION_START_TICKS,
+  MEDITATION_RAMP_TICKS,
+  MEDITATION_START_TICKS,
+  evaluateHeroIdleChoreography,
+  resolveHeroFaceState,
+} from '../src/game/render3d/idleChoreography';
 import {
   buildCeilingPipe3D,
   buildPickupMesh3D,
@@ -368,3 +376,230 @@ test('2.5D sprite-frame interpolation produces continuous 60fps skeletal transit
   assert.deepEqual(lerpActorPosition(100, 200, 110, 200, 0.5), { x: 105, y: 200 });
   assert.deepEqual(lerpActorPosition(100, 200, 900, 200, 0.5), { x: 900, y: 200 });
 });
+
+test('character-specific idle choreography reflects Ren paranoia, Maya serenity, and Leon goofy brawler personality', () => {
+  const outPose = createNeutralKeyPose();
+
+  // Ren: varied timing segments including scanning flanks, looking up, crouching stealthily, and checking blade
+  const renSegments = new Set<string>();
+  let sawCrouchDrop = false;
+  let sawLookUp = false;
+  for (let t = 0; t < 480; t += 10) {
+    const res = evaluateHeroIdleChoreography('ren', 0, t, outPose);
+    renSegments.add(res.segmentName);
+    if (res.segmentName === 'crouch_sneak' && outPose.hipsYOffset < -0.15) {
+      sawCrouchDrop = true;
+    }
+    if (res.segmentName === 'look_up_ceiling' && outPose.headRotX < -0.2) {
+      sawLookUp = true;
+    }
+  }
+  assert.ok(renSegments.has('alert_stance'));
+  assert.ok(renSegments.has('scan_flanks'));
+  assert.ok(renSegments.has('crouch_sneak') && sawCrouchDrop, 'Ren crouch_sneak idle should lower hips');
+  assert.ok(renSegments.has('look_up_ceiling') && sawLookUp, 'Ren look_up_ceiling idle should tilt head upward');
+  assert.ok(renSegments.has('blade_check'));
+
+  // Maya: serene, calm posture without sudden hostility
+  const mayaExpressions = new Set<string>();
+  for (let t = 0; t < 420; t += 15) {
+    const res = evaluateHeroIdleChoreography('maya', 0, t, outPose);
+    mayaExpressions.add(res.expression);
+  }
+  assert.ok(mayaExpressions.has('serene') || mayaExpressions.has('calm'));
+  assert.ok(!mayaExpressions.has('angry'));
+
+  // Leon: shadow jabs, chest thump taunt (smug), and chest cough (wince + hunched torso)
+  const leonSegments = new Set<string>();
+  let sawCoughHunch = false;
+  let sawSmugChestThump = false;
+  for (let t = 0; t < 500; t += 8) {
+    const res = evaluateHeroIdleChoreography('leon', 0, t, outPose);
+    leonSegments.add(res.segmentName);
+    if (res.segmentName === 'chest_thump_taunt' && res.expression === 'smug') {
+      sawSmugChestThump = true;
+    }
+    if (res.segmentName === 'chest_cough' && res.expression === 'wince' && outPose.torsoRotX > 0.2) {
+      sawCoughHunch = true;
+    }
+  }
+  assert.ok(leonSegments.has('shadow_jabs'));
+  assert.ok(leonSegments.has('chest_thump_taunt') && sawSmugChestThump);
+  assert.ok(leonSegments.has('chest_cough') && sawCoughHunch);
+});
+
+test('long-idle meditation activates Ren stealth darkening, Maya levitation, and Leon calm flame ignition', () => {
+  const fullMedTicks = MEDITATION_START_TICKS + MEDITATION_RAMP_TICKS + 30;
+  const outPose = createNeutralKeyPose();
+  const basePlayer = {
+    vx: 0,
+    vy: 0,
+    facing: 1 as const,
+    onWall: 0 as const,
+    grounded: true,
+    isDashing: false,
+    isSliding: false,
+    isFlying: false,
+    slashing: false,
+    slashTimer: 0,
+    comboStep: 0,
+    invulnTimer: 0,
+    gstTimer: 0,
+    atkTimer: 0,
+    flameTimer: 0,
+    stunTimer: 0,
+    hp: 100,
+    pose: 'idle' as const,
+    frame: 0,
+    nextFrame: 0,
+    frameAlpha: 0,
+    tickCount: 900,
+    idleTicks: fullMedTicks,
+  };
+
+  // Ren: standing centered, gradually darkened and semi-invisible
+  const renEval = evaluateHeroIdleChoreography('ren', fullMedTicks, 900, outPose);
+  assert.ok(renEval.meditationFactor > 0.95);
+  assert.ok(renEval.darkenFactor > 0.6, 'Ren meditation should darken materials');
+  assert.ok(renEval.stealthOpacity < 0.4, 'Ren meditation should turn semi-invisible');
+
+  const renRig = buildHeroRig3D('ren');
+  for (let i = 0; i < 60; i++) {
+    updateHeroRig3D(renRig, { ...basePlayer, characterId: 'ren', tickCount: 900 + i }, 1 / 60);
+  }
+  assert.ok((renRig.stealthOpacity ?? 1) < 0.4);
+  assert.ok(renRig.materials[0].opacity < 0.5, 'Ren meshes should become translucent during meditation');
+  assert.ok((renRig.faceRig?.eyelidL.scale.y ?? 0) > 0.95, 'Ren closes eyes when meditating');
+  assert.equal(renRig.faceRig?.irisL.visible, false, 'Ren iris hidden when eyes are closed');
+
+  // Maya: levitates upward off the floor with eyes closed
+  const mayaRig = buildHeroRig3D('maya');
+  updateHeroRig3D(mayaRig, { ...basePlayer, characterId: 'maya', idleTicks: 0 }, 1 / 60);
+  const mayaIdleHipsY = mayaRig.hips.position.y;
+  for (let i = 0; i < 60; i++) {
+    updateHeroRig3D(mayaRig, { ...basePlayer, characterId: 'maya', tickCount: 900 + i }, 1 / 60);
+  }
+  assert.ok(mayaRig.hips.position.y > mayaIdleHipsY + 0.35, 'Maya should levitate higher during meditation');
+  assert.ok((mayaRig.faceRig?.eyelidL.scale.y ?? 0) > 0.95, 'Maya closes eyes when meditating');
+
+  // Leon: ignites calmly with deep breathing and closed eyes
+  const leonRig = buildHeroRig3D('leon');
+  for (let i = 0; i < 60; i++) {
+    updateHeroRig3D(leonRig, { ...basePlayer, characterId: 'leon', tickCount: 900 + i }, 1 / 60);
+  }
+  assert.ok(leonRig.flameAuraMesh?.visible, 'Leon flame aura should ignite calmly in meditation');
+  assert.ok((leonRig.faceRig?.eyelidL.scale.y ?? 0) > 0.95, 'Leon closes eyes while breathing deeply in meditation');
+});
+
+test('facial rig expresses combat emotions accurately and skips cleanly on external rigs without faceRig', () => {
+  const angryFace = resolveHeroFaceState('leon', 'attack3', {
+    comboStep: 2,
+    slashing: true,
+    slashTimer: 8,
+    hp: 100,
+    tickCount: 12,
+  });
+  assert.equal(angryFace.expression, 'shout');
+  assert.ok(angryFace.mouthOpen > 0.6);
+  assert.ok(angryFace.browTiltL < -0.2);
+
+  const determinedFace = resolveHeroFaceState('ren', 'attack1', {
+    comboStep: 0,
+    slashing: true,
+    slashTimer: 4,
+    hp: 100,
+    tickCount: 20,
+  });
+  assert.equal(determinedFace.expression, 'angry');
+
+  const rig = buildHeroRig3D('maya');
+  assert.ok(rig.faceRig, 'Built-in example models should include FaceRig3D');
+  for (let i = 0; i < 20; i++) {
+    updateHeroRig3D(
+      rig,
+      {
+        characterId: 'maya',
+        pose: 'attack3',
+        vx: 0,
+        vy: 0,
+        facing: 1,
+        onWall: 0,
+        grounded: true,
+        isDashing: false,
+        isSliding: false,
+        isFlying: false,
+        slashing: true,
+        slashTimer: 10,
+        comboStep: 2,
+        invulnTimer: 0,
+        gstTimer: 0,
+        atkTimer: 0,
+        flameTimer: 0,
+        stunTimer: 0,
+        hp: 100,
+        tickCount: 40 + i,
+        idleTicks: 0,
+      },
+      1 / 60
+    );
+  }
+  assert.ok((rig.faceRig?.mouthMesh.scale.y ?? 0) > 1.2, 'Shout/combat attack3 should open mouth scale');
+
+  // Simulate future external custom 3D model without facial meshes
+  delete rig.faceRig;
+  assert.doesNotThrow(() => {
+    updateHeroRig3D(
+      rig,
+      {
+        characterId: 'maya',
+        pose: 'idle',
+        vx: 0,
+        vy: 0,
+        facing: 1,
+        onWall: 0,
+        grounded: true,
+        isDashing: false,
+        isSliding: false,
+        isFlying: false,
+        slashing: false,
+        slashTimer: 0,
+        comboStep: 0,
+        invulnTimer: 0,
+        gstTimer: 0,
+        atkTimer: 0,
+        flameTimer: 0,
+        stunTimer: 0,
+        hp: 100,
+        tickCount: 120,
+        idleTicks: 400,
+      },
+      1 / 60
+    );
+  });
+});
+
+test('idle variations wait 150 ticks before triggering and meditation waits 720 ticks', () => {
+  assert.equal(IDLE_VARIATION_START_TICKS, 150);
+  assert.equal(MEDITATION_START_TICKS, 720);
+
+  const outEarlyA = createNeutralKeyPose();
+  const outEarlyB = createNeutralKeyPose();
+  const outReady = createNeutralKeyPose();
+  const earlyA = evaluateHeroIdleChoreography('leon', 1, 100, outEarlyA);
+  const earlyB = evaluateHeroIdleChoreography('leon', IDLE_VARIATION_START_TICKS - 1, 100, outEarlyB);
+  assert.equal(earlyA.segmentName, earlyB.segmentName);
+  assert.equal(earlyB.meditationFactor, 0);
+
+  const variedSegments = new Set<string>();
+  for (let t = IDLE_VARIATION_START_TICKS; t <= IDLE_VARIATION_START_TICKS + 260; t += 20) {
+    variedSegments.add(evaluateHeroIdleChoreography('leon', t, 100, outReady).segmentName);
+  }
+  assert.ok(variedSegments.size >= 2, 'Personality idle segments should cycle once idleTicks >= IDLE_VARIATION_START_TICKS');
+
+  const preMed = evaluateHeroIdleChoreography('ren', MEDITATION_START_TICKS, 600, outReady);
+  assert.equal(preMed.meditationFactor, 0);
+
+  const inMed = evaluateHeroIdleChoreography('ren', MEDITATION_START_TICKS + 60, 780, outReady);
+  assert.ok(inMed.meditationFactor > 0 && inMed.meditationFactor <= 0.6);
+});
+

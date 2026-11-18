@@ -25,17 +25,24 @@ export function withComplex(source:SubstageDefinition):SubstageDefinition{
   ...(source.boss?{boss:{...source.boss,x:source.boss.x+shift}}:{}),
  };
  const floor=(x:number,y:number,w:number,h=20,type:Platform['type']='solid',extra:Partial<Platform>={})=>area.platforms.push({x,y,w,h,type,...extra});
- if(source.id===4){floor(-100,f,1100,280);floor(1000,f+40,120,240,'acid');floor(1120,f,shift-1020+200,280);}else floor(-100,f,shift+200,280);
+ if(source.id===4){floor(-100,f,1100,280);floor(1000,f+40,80,240,'acid');floor(1080,f,shift-1020+240,280);}else floor(-100,f,shift+200,280);
  if(source.id===7)floor(1800,f-100,16,100,'laser_gate');
  if(source.id===3)floor(1000,f-800,160,18,'moving',{moveAxis:'y',moveRange:40,moveSpeed:.025});
  const rooms=[{id:'oeste',x:700,w:1300},{id:'central',x:2500,w:1300},{id:'leste',x:4300,w:1300}];
  for(const room of rooms){floor(room.x,f-300,room.w);floor(room.x,f-600,room.w);floor(room.x,f-1160,room.w,24);}
- // Shafts connect different floors, with staggered landings and optional precision routes.
+ // Shafts connect different floors cleanly without headroom traps (every step <= 78px, clearance >= 62px).
  for(const x of [400,2100,3900,5700]){
-  floor(x,f-100,160);floor(x+150,f-200,170);floor(x,f-400,160);floor(x+150,f-500,170);
+  floor(x-110,f-78,100,16);floor(x,f-100,x===5700?95:130);floor(x===5700?x+55:x+80,f-178,x===5700?55:70,16);floor(x===5700?x+115:x+155,f-200,x===5700?200:170);
+  floor(x,f-400,x===5700?95:130);floor(x===5700?x+55:x+80,f-478,x===5700?55:70,16);floor(x===5700?x+115:x+155,f-500,x===5700?200:170);
  }
- for(const x of [2170,3970]){floor(x,f-300,180);floor(x,f-600,180);}
- floor(5700,f-300,180);floor(5700,f-600,180);
+ floor(615,f-278,75,16);floor(615,f-578,75,16);floor(570,f-378,120,16);
+ for(const x of [2170,3970]){
+  floor(x,f-300,180);floor(x,f-600,180);
+  floor(x-95,f-278,90,16);floor(x+185,f-278,90,16);
+  floor(x-80,f-578,75,16);floor(x+215,f-578,85,16);floor(x+110,f-378,70,16);
+ }
+ floor(5760,f-300,120);floor(5760,f-600,120);
+ floor(5675,f-278,80,16);floor(5675,f-578,80,16);floor(5605,f-378,90,16);
  // Skill/secret wings: wall-grip tower, suspended flight island, sealed breakable chamber.
  floor(1520,f-1040,20,340,'wall');floor(1700,f-940,20,340,'wall');
  floor(1720,f-940,400);floor(2460,f-940,1440);
@@ -45,8 +52,8 @@ export function withComplex(source:SubstageDefinition):SubstageDefinition{
  floor(3800,f-1140,20,200,'wall',{gateId:'atalho-cinetico'});
  floor(4300,f-600,20,300,'wall',{gateId:'linha'});
  floor(5880,f-1160,20,1160,'wall',{gateId:'complexo'});
- // Optional universal cache: a real off-route ascent, not a chest sitting along the main corridor.
- for(const [x,y]of [[500,f-700],[320,f-800],[80,f-900]])floor(x,y,180);
+ // Optional universal cache: a real off-route ascent with full headroom clearance.
+ for(const [x,y,w,h]of [[645,f-678,85,16],[500,f-700,140,20],[465,f-778,85,16],[320,f-800,140,20],[245,f-878,85,16],[80,f-900,160,20]] as const)floor(x,y,w,h);
  const originalChest=area.props.find(p=>p.kind==='chest');if(originalChest){originalChest.x=110;originalChest.y=f-944;}
  let propId=Math.max(0,...area.props.map(p=>p.id))+1;
  for(const [x,y,dropType]of [[3850,f-984,'secret_a'],[2370,f-1364,'full_heal'],[3500,f-44,'secret_b'],[2160,f-644,'psy']] as const)

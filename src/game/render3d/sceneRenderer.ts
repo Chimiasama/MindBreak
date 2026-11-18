@@ -833,10 +833,17 @@ export class WorldRenderer3D {
       }
 
       // Maya Flight Halo
-      this.heroFlightHalo.visible = pl.isFlying;
-      if (pl.isFlying) {
-        this.heroFlightHalo.position.set(worldX(pl.x + pl.w / 2), worldY(pl.y + pl.h / 2), -0.2);
-        this.heroFlightHalo.scale.setScalar(1 + Math.sin(state.tickCount * 0.28) * 0.1);
+      const mayaMed = pl.characterId === 'maya' ? (activeHero.meditationFactor ?? 0) : 0;
+      this.heroFlightHalo.visible = pl.isFlying || mayaMed > 0.2;
+      if (this.heroFlightHalo.visible) {
+        const medLiftPx = mayaMed * 16;
+        this.heroFlightHalo.position.set(worldX(pl.x + pl.w / 2), worldY(pl.y + pl.h / 2 - medLiftPx), -0.2);
+        this.heroFlightHalo.rotation.z = state.tickCount * (pl.isFlying ? 0.06 : 0.025);
+        this.heroFlightHalo.scale.setScalar(
+          pl.isFlying
+            ? 1 + Math.sin(state.tickCount * 0.28) * 0.1
+            : 0.72 + mayaMed * 0.35 + Math.sin(state.tickCount * 0.08) * 0.05
+        );
       }
     }
 
