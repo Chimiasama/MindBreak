@@ -1,9 +1,11 @@
 import { AudioSettings } from './components/AudioSettings';
+import { GameplaySettings } from './components/GameplaySettings';
 import { registerPlugin } from '@capacitor/core';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
+  Gamepad2,
   Heart,
   Pause,
   Play,
@@ -25,6 +27,15 @@ import { STAGES } from './game/stages';
 import { ALLOW_TEST_CHARACTER_SWITCH } from './game/rules';
 import { KeyboardState, KEY_BINDINGS } from './game/input';
 import { CharacterId, GameState, HudSnapshot, SectorTransitionInfo } from './game/types';
+import {
+  ActiveInputSource,
+  readUiPreferences,
+  resetUiPreferences,
+  resolveShakeMultiplier,
+  shouldShowTouchControls,
+  UiPreferences,
+  writeUiPreferences,
+} from './game/uiPreferences';
 import { CAMPAIGN, getSubstage } from './game/campaign';
 import type { CampaignSave } from './game/campaign/save';
 
@@ -62,6 +73,13 @@ export default function App() {
   const [resumeAvailable, setResumeAvailable] = useState(false);
   const [legacyMode, setLegacyMode] = useState(false);
   const [activeSectorTransition, setActiveSectorTransition] = useState<SectorTransitionInfo | null>(null);
+  const [uiPrefs, setUiPrefs] = useState<UiPreferences>(() => readUiPreferences());
+  const uiPrefsRef = useRef(uiPrefs);
+  uiPrefsRef.current = uiPrefs;
+  const [lastInputSource, setLastInputSource] = useState<ActiveInputSource | null>(null);
+  const hasTouchCapability =
+    typeof window !== 'undefined' &&
+    ('ontouchstart' in window || (typeof navigator !== 'undefined' && (navigator.maxTouchPoints ?? 0) > 0));
 
   const [hud, setHud] = useState<HudSnapshot>({
     substageId: '1A',
@@ -183,6 +201,9 @@ export default function App() {
         setGameState((current) =>
           current === 'PLAYING' ? 'PAUSED' : current === 'PAUSED' ? 'PLAYING' : current);
       },
+      onInputSource: (source) => {
+        setLastInputSource(source);
+      },
       onHudUpdate: (snapshot) => {
         setHud(snapshot);
         setContinueChar(snapshot.characterId);
@@ -192,6 +213,10 @@ export default function App() {
       onGameOver: handleGameOver,
     });
     engine.attach3DContainer(mount3dRef.current);
+    engine.setVisualAccessibility({
+      shakeScale: resolveShakeMultiplier(uiPrefsRef.current.shakeIntensity),
+      reducedFlashes: uiPrefsRef.current.reducedFlashes,
+    });
     engineRef.current = engine;
 
     const handleResize = () => {
@@ -205,6 +230,24 @@ export default function App() {
       engine.dispose();
     };
   }, [handleContinueCountdown, handleGameOver, handleStageClear]);
+
+  useEffect(() => {
+    engineRef.current?.setVisualAccessibility({
+      shakeScale: resolveShakeMultiplier(uiPrefs.shakeIntensity),
+      reducedFlashes: uiPrefs.reducedFlashes,
+    });
+  }, [uiPrefs.shakeIntensity, uiPrefs.reducedFlashes]);
+
+  useEffect(() => {
+    if (gameState !== 'PLAYING') return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') {
+        setLastInputSource('touch');
+      }
+    };
+    window.addEventListener('pointerdown', onPointerDown, { passive: true });
+    return () => window.removeEventListener('pointerdown', onPointerDown);
+  }, [gameState]);
 
   useEffect(() => {
     engineRef.current?.setPaused(backConfirmation || gameState !== 'PLAYING');
@@ -475,10 +518,23 @@ export default function App() {
             ? 'A'
             : 'B';
 
+  const handleUiPrefsChange = useCallback((next: UiPreferences) => {
+    setUiPrefs(writeUiPreferences(next));
+  }, []);
+
+  const handleUiPrefsReset = useCallback(() => {
+    setUiPrefs(resetUiPreferences());
+  }, []);
+
   const currentStageDef = STAGES.find((s) => s.id === selectedStageId) ?? STAGES[0];
   const currentChapter = CAMPAIGN.find((stage) => stage.id === selectedStageId)!;
   const psyReady = hud.psyEnergy >= 95;
   const hpLow = hud.maxHp > 0 && hud.hp / hud.maxHp < 0.25;
+  const showTouchOverlay = shouldShowTouchControls(
+    uiPrefs.touchMode,
+    lastInputSource,
+    hasTouchCapability
+  );
 
   return (
     <div className="relative h-full w-full bg-[#070510] text-slate-100 font-sans overflow-hidden">
@@ -557,14 +613,16 @@ export default function App() {
                 >
                   <div
                     className={`h-full transition-all duration-100 ${
-                      psyReady ? 'bg-pink-500 animate-pulse' : 'bg-purple-500'
+                      psyReady ? (uiPrefs.reducedFlashes ? 'bg-pink-500' : 'bg-pink-500 animate-pulse') : 'bg-purple-500'
                     }`}
                     style={{ width: `${Math.max(0, (hud.psyEnergy / hud.maxPsy) * 100)}%` }}
                   />
                 </div>
                 <span
                   className={`font-mono text-[10px] font-bold tabular-nums whitespace-nowrap ${
-                    psyReady ? 'hud-overdrive-pulse tracking-wider text-pink-300' : 'text-purple-300'
+                    psyReady
+                      ? `${uiPrefs.reducedFlashes ? '' : 'hud-overdrive-pulse '}tracking-wider text-pink-300`
+                      : 'text-purple-300'
                   }`}
                 >
                   {psyReady ? 'OVERDRIVE PRONTO' : `FOCO ${hud.psyEnergy}%`}
@@ -637,6 +695,23 @@ export default function App() {
             {/* Progression score remains internal; show stage and gameplay controls only. */}
             <div className="pointer-events-auto flex flex-col items-end gap-1.5 shrink-0">
               <div className="flex items-center gap-1.5">
+                {gameState === 'PLAYING' && !showTouchOverlay && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (uiPrefs.touchMode === 'hidden') {
+                        handleUiPrefsChange({ ...uiPrefs, touchMode: 'always' });
+                      } else {
+                        setLastInputSource('touch');
+                      }
+                    }}
+                    aria-label="Mostrar controles de toque"
+                    title="Mostrar controles de toque"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-900/85 text-cyan-300 hover:border-cyan-400 transition"
+                  >
+                    <Gamepad2 className="h-4 w-4" />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={toggleMute}
@@ -779,11 +854,15 @@ export default function App() {
           )}
 
           {/* Touch Controls on Active Play */}
-          {gameState === 'PLAYING' && (
+          {gameState === 'PLAYING' && showTouchOverlay && (
             <TouchControls
               characterId={hud.characterId}
               psyReady={psyReady}
+              psyEnergy={hud.psyEnergy}
               isFlying={!!hud.isFlying}
+              scale={uiPrefs.touchScale}
+              opacity={uiPrefs.touchOpacity}
+              bottomOffset={uiPrefs.touchBottomOffset}
               onKey={(k, pressed) => engineRef.current?.setKey(k, pressed, 'touch')}
               onJump={() => engineRef.current?.queueAction('jump', 'touch')}
               onDropDown={() => engineRef.current?.triggerDropDown()}
@@ -835,7 +914,14 @@ export default function App() {
               </div>
             </div>
 
-            <AudioSettings />
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <AudioSettings />
+              <GameplaySettings
+                preferences={uiPrefs}
+                onChange={handleUiPrefsChange}
+                onReset={handleUiPrefsReset}
+              />
+            </div>
             {storedCampaign.status !== 'missing' && (
               <section aria-label="Campanha salva" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-700/60 bg-slate-900 p-4">
                 <div>
@@ -914,15 +1000,15 @@ export default function App() {
 
                 <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
                   <div className="font-display text-base font-bold text-cyan-300">
-                    Controles (Toque Android, Teclado ou Gamepad Bluetooth)
+                    Controles (Toque, Teclado ou Controle Bluetooth)
                   </div>
-                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-slate-300 sm:grid-cols-3">
-                    <div><strong>DualShock 4:</strong> ✕ pulo · □ golpe · ○ dash · △ PSY · L1 assist · Options pausa</div>
-                    <div><strong>Mover / Escalar:</strong> ◀ ▲ ▶ / A W D</div>
-                    <div><strong>Pulo / Wall-Kick / Vault:</strong> PULO / Espaço</div>
-                    <div><strong>Rasteira Lança-Ar:</strong> ▼ + DASH (S+K)</div>
-                    <div><strong>Corte / Deflect 2X:</strong> GOLPE / J ou Z</div>
-                    <div><strong>Telecinese / Overdrive:</strong> PSY / L ou C</div>
+                  <div className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1.5 text-xs text-slate-300 sm:grid-cols-2">
+                    <div><strong>Controle (DualShock 4):</strong> ✕ pulo · □ golpe · ○ dash · △ PSY/ULTRA · L1 assist · Options pausa</div>
+                    <div><strong>Mover / Acessos:</strong> ◀ ▲ ▶ / A W D (▲ usa portas e terminais)</div>
+                    <div><strong>Pulo e Mobilidade:</strong> PULO / Espaço · <em>Ren:</em> encoste na parede pressionando contra ela + PULO (Wall-Jump) · <em>Maya:</em> 2º toque mantido no ar (Voo 8 direções) · <em>Leon:</em> salto firme único</div>
+                    <div><strong>Deslize / Rasteira:</strong> ▼ + DASH (S + K)</div>
+                    <div><strong>Golpe / Rebater tiros:</strong> GOLPE / J ou Z</div>
+                    <div><strong>Poder Psíquico / Overdrive:</strong> PSY (25 Foco) ou ULTRA (100 Foco) / L ou C</div>
                     <div><strong>Assistente:</strong> ASSIST / U ou V{ALLOW_TEST_CHARACTER_SWITCH && ' · Troca de teste: Tab'}</div>
                   </div>
                 </div>
@@ -1149,7 +1235,17 @@ export default function App() {
                 'Você completou todas as 8 fases e derrotou a Nexus!'}
             </p>
 
-            {gameState === 'PAUSED' && <AudioSettings />}
+            {gameState === 'PAUSED' && (
+              <>
+                <AudioSettings />
+                <GameplaySettings
+                  preferences={uiPrefs}
+                  onChange={handleUiPrefsChange}
+                  onReset={handleUiPrefsReset}
+                  compact
+                />
+              </>
+            )}
             <div className="mt-6 flex flex-col gap-3">
               {gameState === 'PAUSED' && (
                 <button

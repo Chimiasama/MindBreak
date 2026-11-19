@@ -26,23 +26,22 @@ export function withComplex(source:SubstageDefinition):SubstageDefinition{
  };
  const floor=(x:number,y:number,w:number,h=20,type:Platform['type']='solid',extra:Partial<Platform>={})=>area.platforms.push({x,y,w,h,type,...extra});
  if(source.id===4){floor(-100,f,1100,280);floor(1000,f+40,80,240,'acid');floor(1080,f,shift-1020+240,280);}else floor(-100,f,shift+200,280);
- if(source.id===7)floor(1800,f-100,16,100,'laser_gate');
+ if(source.id===7)floor(1800,f-70,16,70,'laser_gate');
  if(source.id===3)floor(1000,f-800,160,18,'moving',{moveAxis:'y',moveRange:40,moveSpeed:.025});
  const rooms=[{id:'oeste',x:700,w:1300},{id:'central',x:2500,w:1300},{id:'leste',x:4300,w:1300}];
  for(const room of rooms){floor(room.x,f-300,room.w);floor(room.x,f-600,room.w);floor(room.x,f-1160,room.w,24);}
  // Shafts connect different floors cleanly without headroom traps (every step <= 78px, clearance >= 62px).
  for(const x of [400,2100,3900,5700]){
-  floor(x-110,f-78,100,16);floor(x,f-100,x===5700?95:130);floor(x===5700?x+55:x+80,f-178,x===5700?55:70,16);floor(x===5700?x+115:x+155,f-200,x===5700?200:170);
-  floor(x,f-400,x===5700?95:130);floor(x===5700?x+55:x+80,f-478,x===5700?55:70,16);floor(x===5700?x+115:x+155,f-500,x===5700?200:170);
+  floor(x-110,f-78,100,16);floor(x,f-100,x===5700?95:130);floor(x===5700?x+55:x+80,f-178,x===5700?55:70,16);floor(x===5700?x+115:x+155,f-200,x===5700?165:145);
+  floor(x,f-400,x===5700?95:130);floor(x===5700?x+55:x+80,f-478,x===5700?55:70,16);floor(x===5700?x+115:x+155,f-500,x===5700?165:145);
  }
  floor(615,f-278,75,16);floor(615,f-578,75,16);floor(570,f-378,120,16);
  for(const x of [2170,3970]){
   floor(x,f-300,180);floor(x,f-600,180);
-  floor(x-95,f-278,90,16);floor(x+185,f-278,90,16);
-  floor(x-80,f-578,75,16);floor(x+215,f-578,85,16);floor(x+110,f-378,70,16);
+  floor(x-95,f-278,90,16);floor(x+240,f-278,55,16);
+  floor(x-80,f-578,75,16);floor(x+240,f-578,55,16);floor(x+110,f-378,70,16);
  }
- floor(5760,f-300,120);floor(5760,f-600,120);
- floor(5675,f-278,80,16);floor(5675,f-578,80,16);floor(5605,f-378,90,16);
+ floor(5650,f-278,150,16);floor(5650,f-578,150,16);floor(5605,f-378,90,16);
  // Skill/secret wings: wall-grip tower, suspended flight island, sealed breakable chamber.
  floor(1520,f-1040,20,340,'wall');floor(1700,f-940,20,340,'wall');
  floor(1720,f-940,400);floor(2460,f-940,1440);

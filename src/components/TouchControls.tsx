@@ -76,7 +76,11 @@ export function resolveStickSample(
 interface TouchControlsProps {
   characterId: CharacterId;
   psyReady: boolean;
+  psyEnergy?: number;
   isFlying?: boolean;
+  scale?: number;
+  opacity?: number;
+  bottomOffset?: number;
   onKey: (key: 'left' | 'right' | 'up' | 'down' | 'jumpHeld', pressed: boolean) => void;
   onJump: () => void;
   onDropDown: () => void;
@@ -90,7 +94,11 @@ interface TouchControlsProps {
 export const TouchControls: React.FC<TouchControlsProps> = ({
   characterId,
   psyReady,
+  psyEnergy = 100,
   isFlying = false,
+  scale = 1,
+  opacity = 0.9,
+  bottomOffset = 0,
   onKey,
   onJump,
   onDropDown,
@@ -116,10 +124,12 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
   const onInteractRef = useRef(onInteract);
   const onDropDownRef = useRef(onDropDown);
   const allowUpDiagonalRef = useRef(isFlying);
+  const scaleRef = useRef(scale);
   onKeyRef.current = onKey;
   onInteractRef.current = onInteract;
   onDropDownRef.current = onDropDown;
   allowUpDiagonalRef.current = isFlying;
+  scaleRef.current = Math.max(0.5, scale);
 
   const [stickState, setStickState] = useState<{
     active: boolean;
@@ -151,12 +161,14 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
       if (!el) return;
       lastPointerPosRef.current = { x: clientX, y: clientY };
       const rect = el.getBoundingClientRect();
+      const safeScale = scaleRef.current;
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
-      const maxRadius = Math.max(32, rect.width * 0.34);
+      const unscaledWidth = el.offsetWidth || rect.width / safeScale;
+      const maxRadius = Math.max(32, unscaledWidth * 0.34);
       const sample = resolveStickSample(
-        clientX - centerX,
-        clientY - centerY,
+        (clientX - centerX) / safeScale,
+        (clientY - centerY) / safeScale,
         maxRadius,
         allowUpDiagonalRef.current
       );
@@ -272,12 +284,17 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
   });
 
   const { active, x, y, dirs } = stickState;
+  const psyAvailable = psyEnergy >= 25;
+  const safeOffset = Math.max(0, Math.round(bottomOffset));
+  const safeScale = Math.max(0.8, Math.min(1.25, scale));
+  const safeOpacity = Math.max(0.45, Math.min(1, opacity));
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex items-end justify-between px-3 sm:px-6"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex items-end justify-between px-3 sm:px-6 transition-opacity duration-150"
       style={{
-        paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+        opacity: safeOpacity,
+        paddingBottom: `calc(max(1.5rem, env(safe-area-inset-bottom)) + ${safeOffset}px)`,
         paddingLeft: 'max(1.5rem, env(safe-area-inset-left))',
         paddingRight: 'max(1.5rem, env(safe-area-inset-right))',
       }}
@@ -294,6 +311,10 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
         }
         onPointerDown={handleStickPointerDown}
         onContextMenu={(e) => e.preventDefault()}
+        style={{
+          transform: `scale(${safeScale})`,
+          transformOrigin: 'bottom left',
+        }}
         className={`pointer-events-auto relative flex h-32 w-32 sm:h-36 sm:w-36 items-center justify-center rounded-full border-2 bg-slate-950/85 shadow-[0_8px_28px_rgba(2,6,23,0.85)] touch-game-control touch-none select-none transition-colors duration-150 ${
           active ? 'border-cyan-400/90 ring-2 ring-cyan-400/25' : 'border-cyan-500/55'
         }`}
@@ -343,6 +364,10 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
       {/* Right Thumb: Ergonomic Arcade 2x2 + Assist Bar */}
       <div
         onContextMenu={(e) => e.preventDefault()}
+        style={{
+          transform: `scale(${safeScale})`,
+          transformOrigin: 'bottom right',
+        }}
         className="pointer-events-auto grid grid-cols-2 gap-2 touch-game-control select-none"
       >
         <button
@@ -356,15 +381,18 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
 
         <button
           type="button"
-          aria-label="Poder Psíquico ou Overdrive"
+          aria-label={psyReady ? 'Overdrive pronto (100 foco)' : 'Poder Psíquico (custa 25 foco)'}
           {...bindTap(onPsy)}
-          className={`flex h-13 w-14 items-center justify-center rounded-xl border-2 font-display text-xs font-bold shadow-lg active:scale-90 ${
+          className={`flex h-13 w-14 flex-col items-center justify-center rounded-xl border-2 font-display leading-none shadow-lg active:scale-90 ${
             psyReady
               ? 'border-fuchsia-400 bg-fuchsia-600/85 text-white active:bg-fuchsia-500'
-              : 'border-purple-500/80 bg-slate-950/80 text-purple-200 active:bg-purple-500/40'
+              : psyAvailable
+                ? 'border-purple-500/80 bg-slate-950/80 text-purple-200 active:bg-purple-500/40'
+                : 'border-slate-700/80 bg-slate-950/65 text-slate-400'
           }`}
         >
-          {psyReady ? 'ULTRA' : 'PSY'}
+          <span className="text-xs font-bold">{psyReady ? 'ULTRA' : 'PSY'}</span>
+          <span className="mt-0.5 font-mono text-[9px] opacity-85">{psyReady ? '100' : '25'}</span>
         </button>
 
         <button

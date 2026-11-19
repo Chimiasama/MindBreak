@@ -405,9 +405,9 @@ test('Leon has neither wall-jump nor Psy double-jump, retaining only Air Step pi
   engine.stop();
 });
 
-test('Legacy Stages 1-6 remain clear of <56px headroom traps and maintain single-jump Leon progression', async () => {
+test('Legacy Stages 1-8 remain clear of <56px headroom traps and maintain single-jump Leon progression', async () => {
   const { STAGES } = await import('../src/game/stages');
-  for (let idx = 0; idx < 6; idx++) {
+  for (let idx = 0; idx < 8; idx++) {
     const stage = STAGES[idx];
     for (let i = 0; i < stage.platforms.length; i++) {
       const a = stage.platforms[i];

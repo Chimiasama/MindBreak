@@ -9,6 +9,7 @@ export const PWAInstallButton: React.FC = () => {
   if (isInstalled) return null;
 
   if (isInstallable) {
+    const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
     return (
       <button
         type="button"
@@ -16,7 +17,7 @@ export const PWAInstallButton: React.FC = () => {
         className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-lg bg-cyan-500 text-slate-950 font-semibold text-sm hover:bg-cyan-400 active:scale-95 transition whitespace-nowrap shrink-0"
       >
         <Download className="w-4 h-4" />
-        Instalar no Android
+        {isAndroid ? 'Instalar no Android' : 'Instalar aplicativo'}
       </button>
     );
   }

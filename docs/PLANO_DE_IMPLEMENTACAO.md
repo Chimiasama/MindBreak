@@ -333,3 +333,43 @@ Chefes, transformações, contrato de estado e prévias em [ARTE_DOS_CHEFES.md](
 3. Manter 26 mapas, áudio do incremento 19 e três protagonistas pintados e vistas independentes até o 28, com continuidade/anatomia obrigatórias. Maya só voa ao soltar/apertar novamente PULO no ar e manter. Não voltar ao espelhamento ao revisar os demais personagens. Depois da revisão visual 28, retomar o playtest da exploração 26: ler `PADRAO_DE_FASES.md` e o atlas. Rotas geométricas dos 23 complexos passaram nos três heróis; retomar playtest com combate, orientação/tempo, recursos e individualização dos mecanismos, além dos ensaios Android. O trem continua linear e não há retorno entre capítulos. Refinamento das animações/cut-ins/ambientes e fase 8 permanecem previstos, sem gerar APK ou disparar Actions automaticamente.
 4. Atualizar status somente com evidência. Antes de avançar para cada lote de subfases, validar o lote anterior.
 5. Não confundir a publicação do ambiente de desenvolvimento com a publicação do jogo, commits remotos, GitHub Actions ou APK.
+
+---
+
+## 12. Adendo da Transformação do Projeto (Motor 2.5D, Mecânicas e Fases 1–8)
+
+Este adendo complementa — sem apagar nem sobrescrever — o histórico original das Fases 1 a 11 (consolidado até o Incremento 28). Ele registra a virada estrutural do projeto para apresentação **2.5D em Three.js/WebGL**, o refinamento das mecânicas de movimentação/heróis e o encerramento completo da auditoria geométrica das Fases 1 a 8, definindo o roteiro atualizado a partir daqui.
+
+### 12.1 O que já foi concluído
+
+#### Base concluída até o Incremento 28 (Plano original)
+- **Fases 1 a 4 (Base técnica, Combate/IA, Campanha 26 setores e Save v1):** loop determinístico de 60 Hz, colisão com varredura, 11 arquétipos inimigos + torretas + 8 chefes com duas fases, 26 setores interconectados em 8 capítulos, redes de exploração com portões/mecanismos e persistência local v1 com backup/recuperação.
+- **Fase 5 (Android/Capacitor — preparação):** projeto Android, safe areas, bloqueio paisagem, botão Voltar com confirmação e workflow manual de APK (ensaios físicos no aparelho e DualShock 4 continuam como validação própria em dispositivo).
+- **Fase 6 (Áudio):** mixer Web Audio de 4 canais (`master`, `music`, `sfx`, `voice`) com preferências persistidas, 19 trilhas musicais e 30 efeitos sonoros.
+- **Fase 7 (Base 2D):** sprites direcionais pintados de Ren, Maya e Leon e primeira passagem dos 12 inimigos e 8 chefes.
+
+#### Transformação concluída no Incremento 29 (Motor 2.5D + Mecânicas + Fases 1–8)
+- **Motor visual 2.5D (Three.js/WebGL):** construção do renderizador 2.5D em `src/game/render3d/` (cenários volumétricos, iluminação dinâmica, rigs 3D cel-shaded para heróis/inimigos/chefes e prévia 3D interativa na tela inicial), preservando o motor físico 60 Hz e a camada 2D de sobreposição de efeitos/HUD.
+- **Animação 60 fps, personalidade em repouso e expressões faciais:** interpolação esquelética a 60 fps (`spriteInterpolation.ts`), coreografia de repouso e meditação com temporização ajustada (2,5 s para postura de espera / 12 s para meditação em `idleChoreography.ts`) e rig facial reativo a combate/dano/vitória, com detecção segura para ignorar animação facial em futuros bonecos 3D externos sem `faceRig`.
+- **Wall-Jump direcional e identidade de mobilidade dos heróis:**
+  - **Ren:** único herói com **Wall-Jump** (acionado estritamente ao pressionar a direção contra a parede + PULO; o dash ajuda a alcançar paredes distantes sem acionar chutes de parede) e **Pulo Psy** duplo.
+  - **Maya:** salto normal no 1º toque e **Voo em 8 direções** no 2º toque aéreo mantido + **Pulo Psy**.
+  - **Leon:** salto firme único (sem pulo psy nem wall-jump), mantendo superarmadura, quebra de escudos/paredes e aproveitamento do pickup temporário de salto (`JMP`).
+- **Auditoria e conclusão das Fases 1 a 8 (26 setores + 8 mapas originais):** revisão completa de geometria, elevações, tetos baixos (`>= 56 px` de vão livre), posicionamento de inimigos/pickups e travessia validada com física real para **Leon** (salto único e sem plataformas móveis), **Ren** e **Maya**.
+
+### 12.2 Roteiro atualizado a partir daqui (para onde vamos)
+
+1. **Incremento 30 (Em execução) — Fase 8.1, 8.2.0.2–8.2.0.3 e 1.5.0.5 — Interface, Controles Touch Configuráveis, Acessibilidade Visual e Revisão Editorial:**
+   - Painel de opções de controles e acessibilidade no Menu Inicial e na Pausa, com persistência local independente do save da campanha.
+   - Modo de visibilidade dos controles na tela (**Automático** ao detectar teclado/controle Bluetooth com retorno imediato no primeiro toque, **Sempre visíveis** ou **Ocultos** com botão rápido de restauração).
+   - Customização de **escala (80%–125%)**, **opacidade (45%–100%)** e **altura inferior (0–48 px)** dos controles touch + botão de **Restaurar padrão**, preservando safe areas.
+   - Acessibilidade visual integrada ao motor 2D/2.5D: controle de **tremor de câmera** (`Completo`, `Reduzido`, `Desligado`) e **redução de flashes** (raios da tempestade, clarões de overdrive e piscadas bruscas).
+   - Revisão editorial em português de controles, habilidades dos heróis (Wall-Jump direcional do Ren, voo da Maya, salto único do Leon), custos de ação (`PSY 25`, `ULTRA 100`), metadados 2.5D e rótulo de instalação por plataforma.
+2. **Incremento 31 — Fase 7 (2.5D) — Pipeline de Modelos 3D Externos (GLB/GLTF) e Enriquecimento de Cenários por Bioma (7.3):**
+   - Carregador de modelos 3D externos (GLB/GLTF) com vínculo de animações/escala/orientação e fallback automático para os rigs procedurais atuais, preparando a entrada dos bonecos 3D personalizados.
+   - Diferenciação arquitetônica, iluminação e props 2.5D dedicados para cada um dos 8 biomas (Distrito, Monotrilho, Canteiro, Fábrica, Financeiro, Museu, Blacksite e Torre Orbital), mantendo colisão separada da decoração.
+3. **Incremento 32 — Fase 2.2.0.3 e 7.2.0.3 — Especiais Distintos, Cut-ins 2.5D e Balanceamento Final de Combate:**
+   - Aprofundar a identidade mecânica e visual dos Overdrives/Especiais, cut-ins de impacto sincronizados com hitstop/áudio e ajuste fino de ritmo de combate e economia de recursos nas 8 fases.
+4. **Incremento 33 — Fase 2.1.0.3, 9.2 e 9.3 — Perfis `test` vs `release`, Otimização/Profiling 2.5D e Checklist Final Android / DualShock 4:**
+   - Separação estrita de perfil `release` (desligando troca livre e mapas de teste), culling/pools no renderizador 2.5D, medição de FPS/memória e fechamento do checklist de entrega (campanha 26/26, 3 heróis, 8 chefes, toque, DualShock 4, saves, som e acessibilidade), sem disparar GitHub Actions nem gerar APK automaticamente.
+

@@ -120,6 +120,7 @@ interface ScarfNode {
 export interface EngineCallbacks {
   onSaveRequest?: () => void;
   onPauseRequest?: () => void;
+  onInputSource?: (source: InputSource) => void;
   onHudUpdate: (hud: HudSnapshot) => void;
   onStageClear: (stageId: number, score: number) => void;
   onContinueCountdown: (stageId: number, score: number) => void;
@@ -294,6 +295,9 @@ export class GameEngine {
   private camera = { x: 0, y: 0 };
   private get viewport() { return viewportFor(this.canvas.width, this.canvas.height); }
   private shakeAmount = 0;
+  private shakeScale = 1;
+  private reducedFlashes = false;
+  private lastReportedInputSource: InputSource | null = null;
   private superCutinTimer = 0;
   private superLabel = '';
   private dimensionalSlashes: { x1: number; y1: number; x2: number; y2: number }[] = [];
@@ -372,6 +376,21 @@ export class GameEngine {
       this.renderer3d.dispose();
       this.renderer3d = null;
     }
+  }
+
+  setVisualAccessibility(options: { shakeScale: number; reducedFlashes: boolean }) {
+    this.shakeScale = Number.isFinite(options.shakeScale)
+      ? Math.max(0, Math.min(1, options.shakeScale))
+      : 1;
+    this.reducedFlashes = Boolean(options.reducedFlashes);
+    if (this.shakeScale <= 0) this.shakeAmount = 0;
+    if (this.reducedFlashes) this.lightningAlpha = 0;
+  }
+
+  private reportInputSource(source: InputSource) {
+    if (this.lastReportedInputSource === source) return;
+    this.lastReportedInputSource = source;
+    this.callbacks.onInputSource?.(source);
   }
 
   private initAmbient() {
@@ -941,6 +960,7 @@ export class GameEngine {
   }
 
   setKey(key: InputKey, pressed: boolean, source: InputSource = 'keyboard') {
+    if (pressed) this.reportInputSource(source);
     if (pressed && !this.canAct()) return;
     this.input.set(source, key, pressed);
     if (key === 'jumpHeld' && !this.keys.jumpHeld) {
@@ -950,6 +970,7 @@ export class GameEngine {
   }
 
   queueAction(action: GameAction, source: InputSource = 'keyboard') {
+    this.reportInputSource(source);
     if (!this.canAct()) return;
     if (action === 'jump') this.input.set(source, 'jumpHeld', true);
     this.input.enqueue(action, source);
@@ -971,32 +992,40 @@ export class GameEngine {
 
     const ax = pad.axes[0] ?? 0;
     const ay = pad.axes[1] ?? 0;
-    this.input.set('gamepad', 'left', ax < -0.35 || !!pad.buttons[14]?.pressed);
-    this.input.set('gamepad', 'right', ax > 0.35 || !!pad.buttons[15]?.pressed);
+    const left = ax < -0.35 || !!pad.buttons[14]?.pressed;
+    const right = ax > 0.35 || !!pad.buttons[15]?.pressed;
     const up = ay < -0.45 || !!pad.buttons[12]?.pressed;
+    const down = ay > 0.45 || !!pad.buttons[13]?.pressed;
+    const jumpBtn = !!pad.buttons[0]?.pressed;
+    const atkBtn = !!pad.buttons[2]?.pressed;
+    const dashBtn = !!pad.buttons[1]?.pressed || !!pad.buttons[5]?.pressed;
+    const psyBtn = !!pad.buttons[3]?.pressed;
+    const assistBtn = !!pad.buttons[4]?.pressed;
+
+    if (left || right || up || down || jumpBtn || atkBtn || dashBtn || psyBtn || assistBtn) {
+      this.reportInputSource('gamepad');
+    }
+
+    this.input.set('gamepad', 'left', left);
+    this.input.set('gamepad', 'right', right);
     this.input.set('gamepad', 'up', up);
     if (up && !this.lastGamepadUp) this.queueAction('interact', 'gamepad');
     this.lastGamepadUp = up;
-    this.input.set('gamepad', 'down', ay > 0.45 || !!pad.buttons[13]?.pressed);
+    this.input.set('gamepad', 'down', down);
 
-    const jumpBtn = !!pad.buttons[0]?.pressed;
     this.input.set('gamepad', 'jumpHeld', jumpBtn);
     if (jumpBtn && !this.lastGamepadJump) this.queueAction('jump', 'gamepad');
     this.lastGamepadJump = jumpBtn;
 
-    const atkBtn = !!pad.buttons[2]?.pressed;
     if (atkBtn && !this.lastGamepadAttack) this.queueAction('attack', 'gamepad');
     this.lastGamepadAttack = atkBtn;
 
-    const dashBtn = !!pad.buttons[1]?.pressed || !!pad.buttons[5]?.pressed;
     if (dashBtn && !this.lastGamepadDash) this.queueAction('dash', 'gamepad');
     this.lastGamepadDash = dashBtn;
 
-    const psyBtn = !!pad.buttons[3]?.pressed;
     if (psyBtn && !this.lastGamepadPsy) this.queueAction('psy', 'gamepad');
     this.lastGamepadPsy = psyBtn;
 
-    const assistBtn = !!pad.buttons[4]?.pressed;
     if (assistBtn && !this.lastGamepadAssist) this.queueAction('assist', 'gamepad');
     this.lastGamepadAssist = assistBtn;
   }
@@ -1807,7 +1836,8 @@ export class GameEngine {
   }
 
   private screenShake(val: number) {
-    this.shakeAmount = Math.max(this.shakeAmount, val);
+    if (this.shakeScale <= 0) return;
+    this.shakeAmount = Math.max(this.shakeAmount, val * this.shakeScale);
   }
 
   // =========================================================================
@@ -1951,8 +1981,12 @@ export class GameEngine {
 
     // Stage 3: Storm lightning flash
     if (this.stage.palette.weather === 'storm') {
-      if (this.lightningAlpha > 0) this.lightningAlpha *= 0.88;
-      if (Math.random() < 0.004) this.lightningAlpha = 0.65;
+      if (this.reducedFlashes) {
+        this.lightningAlpha = 0;
+      } else {
+        if (this.lightningAlpha > 0) this.lightningAlpha *= 0.88;
+        if (Math.random() < 0.004) this.lightningAlpha = 0.65;
+      }
     }
 
     if (this.sectorTransition) {
@@ -3249,7 +3283,7 @@ export class GameEngine {
     }
 
     if (this.lowCeilingActive && this.lowCeilingX > this.camera.x + this.viewport.width - 20) {
-      const blink = Math.floor(this.tickCount / 4) % 2 === 0;
+      const blink = this.reducedFlashes ? false : Math.floor(this.tickCount / 4) % 2 === 0;
       const screenY = Math.max(70, Math.min(h - 90,
         ((this.lowCeilingKind === 'sweeper' ? 620 : 540) - this.camera.y) * this.viewport.zoom));
       ctx.fillStyle = blink ? (this.lowCeilingKind === 'sweeper' ? '#ef4444' : '#facc15') : '#0f172a';
@@ -3396,7 +3430,7 @@ export class GameEngine {
     }
 
     if (this.lowCeilingActive && this.lowCeilingX > this.camera.x + this.viewport.width - 20) {
-      const blink = Math.floor(this.tickCount / 4) % 2 === 0;
+      const blink = this.reducedFlashes ? false : Math.floor(this.tickCount / 4) % 2 === 0;
       const screenY = Math.max(70, Math.min(h - 90,
         ((this.lowCeilingKind === 'sweeper' ? 620 : 540) - this.camera.y) * this.viewport.zoom));
       ctx.fillStyle = blink ? (this.lowCeilingKind === 'sweeper' ? '#ef4444' : '#facc15') : '#0f172a';
