@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { CHARACTER_ORDER, CHARACTERS } from '../game/characters';
 import { MOVEMENT_PROFILES } from '../game/movement';
 import { HERO_CLIPS, type HeroPose } from '../game/heroAnimation';
@@ -174,10 +173,6 @@ export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
       mount.appendChild(renderer.domElement);
 
       const scene = new THREE.Scene();
-      const pmrem = new THREE.PMREMGenerator(renderer);
-      const envRT = pmrem.fromScene(new RoomEnvironment(), 0.04);
-      scene.environment = envRT.texture;
-      pmrem.dispose();
 
       const camera = new THREE.PerspectiveCamera(28, 1, 0.2, 40);
       camera.position.set(0, 1.12, 4.9);
@@ -206,17 +201,24 @@ export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
       ring.position.y = 0.01;
       scene.add(ring);
 
-      const rigs = {
-        ren: buildHeroRig3D('ren'),
-        maya: buildHeroRig3D('maya'),
-        leon: buildHeroRig3D('leon'),
-      };
+      const rigs: Partial<Record<CharacterId, ReturnType<typeof buildHeroRig3D>>> = {};
       const turntable = new THREE.Group();
       scene.add(turntable);
-      for (const r of Object.values(rigs)) {
-        r.root.visible = false;
-        turntable.add(r.root);
-      }
+      const ensureRig = (id: CharacterId) => {
+        let rig = rigs[id];
+        if (!rig) {
+          rig = buildHeroRig3D(id);
+          rigs[id] = rig;
+          turntable.add(rig.root);
+        }
+        return rig;
+      };
+
+      const onContextLost = (event: Event) => {
+        event.preventDefault();
+        setWebglFallback(true);
+      };
+      renderer.domElement.addEventListener('webglcontextlost', onContextLost, false);
 
       const reducedMotion =
         typeof window !== 'undefined' &&
@@ -237,10 +239,11 @@ export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
         const activeId = selectedHeroRef.current;
         const resolved = resolvePose(activeId, poseKindRef.current, elapsedTicks);
         const activePose = resolved.pose;
+        const r = ensureRig(activeId);
         for (const id of CHARACTER_ORDER) {
-          rigs[id].root.visible = id === activeId;
+          const existing = rigs[id];
+          if (existing) existing.root.visible = id === activeId;
         }
-        const r = rigs[activeId];
         const localTick = activePose.startsWith('attack') ? elapsedTicks % 18 : elapsedTicks;
         const sample = sampleSpriteClipAt(activePose, localTick);
         updateHeroRig3D(
@@ -295,14 +298,14 @@ export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
         }
       };
 
-      renderLoop(lastTs);
+      rafId = window.requestAnimationFrame(renderLoop);
 
       return () => {
         alive = false;
         if (rafId) window.cancelAnimationFrame(rafId);
         if (timerId) window.clearTimeout(timerId);
+        renderer.domElement.removeEventListener('webglcontextlost', onContextLost, false);
         disposeMaterialTree(scene);
-        envRT.dispose();
         renderer.dispose();
         if (renderer.domElement.parentElement === mount) {
           mount.removeChild(renderer.domElement);

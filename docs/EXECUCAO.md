@@ -397,3 +397,33 @@ Montador usa medidas fixas de altura/baseline em `tools/painted-layout.json`, se
 Chromium horizontal verificou 330 combinações de quadro/direção dos três heróis, movimento por entradas e 24 casos adicionais de repouso/corrida/golpe/recuperação, sem erros JavaScript. Toque real nos handlers do aplicativo: primeiro salto mantido retornou ao chão com foco 100/nenhum tick de voo; segundo toque mantido ativou voo e consumiu foco; soltura cancelou. Teclado equivalente aprovado; controle verificado por polling simulado nos testes, não DualShock físico. Galeria documental carregou 12 pranchas e zoom. Estado/cenário preparados para isolar os ensaios, não campanha manual completa.
 
 **445 testes da suíte geral final aprovados**, além de TypeScript, builds web/assets Android e Capacitor sync verificados; os seis WebP copiados para Android conferem por SHA-256. Arte/anatomia revisadas visualmente: testes de pixels não comprovam coerência semântica nem substituem aceite do usuário. Nenhuma Action executada ou APK gerado. Mapas, sons, recompensas e regra de troca de teste/continue preservados.
+
+---
+
+## Adendo — Incremento 29 — Transformação 2.5D, Animações, Wall-Jump Direcional, Divisão de Heróis e Auditoria Fases 1–8
+
+Registrado em continuidade ao histórico até o Incremento 28 (sem apagar nenhum registro anterior), consolidando a virada estrutural do jogo:
+
+- **Motor visual 2.5D (Three.js/WebGL):** integrado `src/game/render3d/` (renderizador volumétrico com iluminação dinâmica, rigs 3D cel-shaded para heróis/inimigos/chefes, cenários em profundidade e prévia 3D interativa no menu), preservando física determinística de 60 Hz e sobreposição 2D de efeitos/HUD.
+- **Interpolação 60 fps, repouso com personalidade e expressões faciais:** adicionados `spriteInterpolation.ts` e `idleChoreography.ts` com tempos calibrados (postura de espera após 2,5 s / 150 ticks e meditação após 12 s / 720 ticks) e rig facial reativo com fallback seguro para futuros modelos 3D externos sem `faceRig`.
+- **Wall-Jump direcional e diferenciação de mobilidade:** Wall-Jump passou a exigir pressão direcional contra a parede + PULO (exclusivo do Ren; dash apenas auxilia alcance sem acionar chutes de parede). Leon foi ajustado para salto firme único (sem pulo psy nem wall-jump, preservando superarmadura, quebra-escudo/paredes e pickup temporário de salto). Maya mantém voo direcional no 2º toque aéreo mantido + Pulo Psy.
+- **Revisão completa das Fases 1 a 8:** auditados e corrigidos todos os 26 setores da campanha (`1A–1D`, `2A–2C`, `3A–3C`, `4A–4C`, `5A–5C`, `6A–6C`, `7A–7C`, `8A–8D`) e os 8 mapas originais, removendo armadilhas de teto baixo (`< 56 px`), sobreposições inimigo-terreno e garantindo travessia física real com Leon (salto único e sem plataformas móveis), Ren e Maya.
+
+## Incremento 30 — Controles Touch Configuráveis, Acessibilidade Visual, Revisão Editorial e Estabilidade de Inicialização
+
+Executado como primeiro passo do novo roteiro no Adendo do plano (Fase 8.1, 8.2.0.2–8.2.0.3 e 1.5.0.5):
+
+- **Preferências persistidas de interface e acessibilidade (`src/game/uiPreferences.ts`, `src/components/GameplaySettings.tsx`):** painel recolhível no Menu Inicial e na Pausa com persistência em `localStorage` (`mindbreak.ui.v1`), sanitização de faixas, fallback seguro e botão `Restaurar padrão`.
+- **Controles na tela configuráveis (`src/components/TouchControls.tsx`, `src/App.tsx`):**
+  - Modos de exibição **Automático** (oculta ao detectar teclado ou controle Bluetooth e restaura imediatamente no primeiro toque na tela), **Sempre** e **Ocultos** (com ícone de restauração rápida no topo do HUD para nunca travar o jogador).
+  - Ajustes de **tamanho (80%–125%)**, **opacidade (45%–100%)** e **altura inferior (0–48 px)** somados às safe areas, mantendo o rastreamento 1:1 da alavanca analógica em qualquer escala.
+  - Exibição explícita do custo no botão psíquico (`PSY 25` / `ULTRA 100`).
+- **Acessibilidade visual integrada ao motor 2D/2.5D (`src/game/engine.ts`):** controle de **tremor de câmera** (`Completo`, `Reduzido` 40%, `Desligado` 0%) e opção **Reduzir flashes de luz** (suprime relâmpagos da tempestade na Fase 3, piscadas de alertas de perigo no monotrilho e animação pulsante do Overdrive no HUD).
+- **Revisão editorial e metadados:** guia de controles no menu atualizado para refletir o Wall-Jump direcional do Ren, o voo no 2º toque da Maya, o salto único do Leon e custos de Foco; rótulo do botão de instalação ajustado por plataforma (`Instalar no Android` vs `Instalar aplicativo`); descrições sincronizadas para 2.5D em `index.html`, `metadata.json` e manifesto PWA.
+- **Correção de tela branca e alívio na inicialização do preview:**
+  - Encerrado processo travado da suíte exaustiva de rotas que consumia 98% da CPU do servidor de desenvolvimento.
+  - Desativado Service Worker de desenvolvimento (`devOptions.enabled`) quando `DISABLE_HMR=true` (preservando PWA completo no build de produção).
+  - Inicialização tardia do renderizador 2.5D da fase (`WorldRenderer3D` montado apenas ao sair do Menu Inicial e liberado ao voltar ao menu), mantendo no máximo um contexto WebGL ativo por vez; removido `PMREMGenerator`/`RoomEnvironment` redundante da prévia cel-shaded (`HeroPreviewPanel`) e aplicado cache em `detectSoftwareWebGL()`.
+  - Proteção contra saves antigos com checkpoints ausentes em `getSavedCheckpointLabel` e `AppErrorBoundary` no ponto de entrada (`src/main.tsx`).
+- **Validação:** **223 testes** da suíte principal aprovados (`0` falhas, incluindo 5 novos testes em `tests/ui-preferences.test.ts` e 9 em `tests/touch-controls.test.ts`), `tsc --noEmit` aprovado sem erros, build de produção compilado com sucesso e crawl completo de 76 módulos no servidor dev sem erros (`0`). Nenhuma GitHub Action executada ou APK gerado.
+

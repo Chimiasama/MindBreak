@@ -10,18 +10,26 @@ export function worldY(y: number): number {
   return -y * WORLD_UNIT;
 }
 
+let cachedSoftwareWebGL: boolean | null = null;
+
 export function detectSoftwareWebGL(): boolean {
+  if (cachedSoftwareWebGL !== null) return cachedSoftwareWebGL;
   if (typeof document === 'undefined') return true;
   try {
     const probe = document.createElement('canvas');
     const gl = probe.getContext('webgl2') || probe.getContext('webgl');
-    if (!gl) return true;
+    if (!gl) {
+      cachedSoftwareWebGL = true;
+      return true;
+    }
     const ext = gl.getExtension('WEBGL_debug_renderer_info');
     const param = ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER;
     const gpu = String(gl.getParameter(param) ?? '');
     gl.getExtension('WEBGL_lose_context')?.loseContext();
-    return /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(gpu);
+    cachedSoftwareWebGL = /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(gpu);
+    return cachedSoftwareWebGL;
   } catch {
+    cachedSoftwareWebGL = true;
     return true;
   }
 }

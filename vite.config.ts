@@ -5,10 +5,49 @@ import {defineConfig} from 'vite';
 import {VitePWA} from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
+  const disableDevSw = process.env.DISABLE_HMR === 'true';
   return {
     plugins: [
       react(),
       tailwindcss(),
+      ...(disableDevSw
+        ? [
+            {
+              name: 'cleanup-stale-dev-sw',
+              configureServer(server: {
+                middlewares: {
+                  use: (
+                    fn: (
+                      req: { url?: string },
+                      res: {
+                        setHeader: (name: string, value: string) => void;
+                        end: (body: string) => void;
+                      },
+                      next: () => void
+                    ) => void
+                  ) => void;
+                };
+              }) {
+                server.middlewares.use((req, res, next) => {
+                  if (req.url && /^\/(dev-sw|sw)\.js(\?|$)/.test(req.url)) {
+                    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+                    res.setHeader('Cache-Control', 'no-store');
+                    res.end(
+                      "self.addEventListener('install',()=>self.skipWaiting());" +
+                        "self.addEventListener('activate',e=>e.waitUntil(" +
+                        "caches.keys().then(ks=>Promise.all(ks.map(k=>caches.delete(k))))" +
+                        ".then(()=>self.registration.unregister())" +
+                        '.then(()=>self.clients.matchAll())' +
+                        '.then(cs=>cs.forEach(c=>c.navigate(c.url)))));'
+                    );
+                    return;
+                  }
+                  next();
+                });
+              },
+            },
+          ]
+        : []),
       VitePWA({
         // Android packages its assets locally; a web service worker must not replace them.
         disable: process.env.BUILD_TARGET === 'android',
@@ -18,7 +57,7 @@ export default defineConfig(() => {
           id: '/',
           name: 'MIND//BREAK: Kinetic Rebels',
           short_name: 'MIND//BREAK',
-          description: '2D Psychic Beat em Up and Strider-style acrobatic action game across 8 urban shounen manga stages.',
+          description: 'Beat em Up 2.5D psíquico com ação acrobática em 8 fases urbanas para Web e Android.',
           theme_color: '#090714',
           background_color: '#090714',
           display: 'standalone',
@@ -51,7 +90,7 @@ export default defineConfig(() => {
           maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         },
         devOptions: {
-          enabled: true,
+          enabled: process.env.DISABLE_HMR !== 'true',
           type: 'module',
         },
       }),

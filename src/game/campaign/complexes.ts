@@ -39,7 +39,7 @@ export function withComplex(source:SubstageDefinition):SubstageDefinition{
  for(const x of [2170,3970]){
   floor(x,f-300,180);floor(x,f-600,180);
   floor(x-95,f-278,90,16);floor(x+240,f-278,55,16);
-  floor(x-80,f-578,75,16);floor(x+240,f-578,55,16);floor(x+110,f-378,70,16);
+  floor(x-80,f-578,75,16);floor(x+240,f-578,55,16);floor(x+75,f-378,105,16);
  }
  floor(5650,f-278,150,16);floor(5650,f-578,150,16);floor(5605,f-378,90,16);
  // Skill/secret wings: wall-grip tower, suspended flight island, sealed breakable chamber.

@@ -215,17 +215,17 @@ export function navigate(engine:GameEngine,s:any,goal:{x:number;y:number;w:numbe
  if(s.player.x>=c.width&&goal.x>=c.width){step(goal);return metrics;}
  const hubs:Record<string,{x:number;y:number;w:number;h:number}>={E:point(140,0),WL:point(1400,0),WM:point(1400,300),WH:point(1400,600),CL:point(2900,0),CM:point(2900,300),CH:point(3200,600),EL:point(5000,0),EM:point(5000,300),EH:point(5000,600),END:{x:c.width+80,y:f-56,w:80,h:56}};
  const edges:{a:string;b:string;via:[number,number][];gate?:string}[]=[
- {a:'E',b:'WL',via:[]},{a:'E',b:'WM',via:[[400,100],[550,200],[750,300]]},
- {a:'WL',b:'WM',via:[[750,0],[400,100],[550,200],[750,300]]},
- {a:'WM',b:'WH',via:[[750,300],[400,400],[550,500],[750,600]]},
- {a:'WL',b:'CL',via:[]},{a:'CL',b:'CM',via:[[2100,100],[2300,200],[2550,300]]},
+ {a:'E',b:'WL',via:[]},{a:'E',b:'WM',via:[[290,78],[400,100],[480,178],[555,200],[615,278],[750,300]]},
+ {a:'WL',b:'WM',via:[[750,0],[290,78],[400,100],[480,178],[555,200],[615,278],[750,300]]},
+ {a:'WM',b:'WH',via:[[750,300],[570,378],[400,400],[480,478],[555,500],[615,578],[750,600]]},
+ {a:'WL',b:'CL',via:[]},{a:'CL',b:'CM',via:[[1990,78],[2100,100],[2180,178],[2255,200],[2410,278],[2550,300]]},
  {a:'WM',b:'CM',via:[[1850,300],[2170,300],[2550,300]]},
  {a:'WH',b:'CH',via:[[1850,600],[2170,600],[2550,600]],gate:'atalho-voo'},
- {a:'CM',b:'CH',via:[[3650,300],[3900,400],[4050,500],[3700,600]]},
+ {a:'CM',b:'CH',via:[[3650,300],[3970,300],[4045,378],[3900,400],[3980,478],[4055,500],[3890,578],[3700,600]]},
  {a:'CM',b:'EM',via:[[3650,300],[3970,300],[4350,300]],gate:'linha'},
  {a:'CH',b:'EH',via:[[3700,600],[3970,600],[4350,600]]},
- {a:'EM',b:'EH',via:[[5500,300],[5700,400],[5850,500],[5500,600]]},
- {a:'EL',b:'EM',via:[[5500,0],[5700,100],[5850,200],[5500,300]]},
+ {a:'EM',b:'EH',via:[[5500,300],[5605,378],[5700,400],[5755,478],[5815,500],[5650,578],[5500,600]]},
+ {a:'EL',b:'EM',via:[[5500,0],[5590,78],[5700,100],[5755,178],[5815,200],[5650,278],[5500,300]]},
  {a:'EL',b:'END',via:[],gate:'complexo'},
  ];
  const closest=(g:any)=>Object.keys(hubs).sort((a,b)=>Math.abs(hubs[a].x-g.x)+Math.abs(hubs[a].y-g.y)*2-Math.abs(hubs[b].x-g.x)-Math.abs(hubs[b].y-g.y)*2)[0];
@@ -237,6 +237,6 @@ export function navigate(engine:GameEngine,s:any,goal:{x:number;y:number;w:numbe
  if(!seen.has(target))throw Error(`No authored regional connection ${start} → ${target}`);
  const path:typeof back extends Map<any,infer T>?T[]:never=[];let cursor=target;while(cursor!==start){const e=back.get(cursor)!;path.unshift(e);cursor=e.from;}
  for(const e of path){for(const[x,y]of e.reverse?[...e.edge.via].reverse():e.edge.via)step(point(x,y));step(hubs[e.reverse?e.edge.a:e.edge.b]);}
- if(cache){step(point(500,700));step(point(320,800));}
+ if(cache){step(point(720,600));step(point(645,678));step(point(500,700));step(point(465,778));step(point(320,800));step(point(245,878));}
  step(goal);return metrics;
 }

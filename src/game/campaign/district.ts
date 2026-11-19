@@ -116,7 +116,7 @@ export const DISTRICT: SubstageDefinition[] = [
       plat(2130, 580, 110, 18),
       plat(2260, 500, 110, 18),
       plat(4240, 580, 130, 18),
-      plat(4120, 500, 130, 18),
+      plat(4120, 500, 210, 18),
       plat(4120, 340, 130, 18),
       plat(4220, 260, 120, 18),
       // Camada 4 — Ilha Aérea de Maya (y=-280)

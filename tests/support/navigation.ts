@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { CHARACTERS } from '../../src/game/characters';
 import { overlaps } from '../../src/game/collision';
 import type { GameEngine } from '../../src/game/engine';
 interface Move { x: number; jump: number }
@@ -94,27 +95,44 @@ export function navigate(engine: GameEngine, state: any, goal: { x: number; y: n
       else wallTargets.add(w.x + w.w - 16);
     }
     for (const x of destinations) if (Math.abs(x - current.p.x) < 320) wallTargets.add(x);
-    for (const x of destinations) {
-      if (Math.abs(x - current.p.x) < 8 || x < 10 || x > state.stage.boundsWidth - 40 || Math.abs(x-current.p.x)>640) continue;
-      for (const jump of [-1, 0, 12, 22]) {
+    const heroProfile = CHARACTERS[state.characterId as keyof typeof CHARACTERS];
+    const jumpTimings = heroProfile?.canPsyJump ? [-1, 0, 12, 22] : [-1, 0];
+    const dedupedDestinations: number[] = [];
+    const seenDestBuckets = new Set<number>();
+    const addDest = (x: number) => {
+      if (Math.abs(x - current.p.x) < 8 || x < 10 || x > state.stage.boundsWidth - 40 || Math.abs(x - current.p.x) > 640) return;
+      const bucket = Math.round(x / 12);
+      if (seenDestBuckets.has(bucket)) return;
+      seenDestBuckets.add(bucket);
+      dedupedDestinations.push(x);
+    };
+    addDest(goal.x);
+    for (const x of [...destinations].sort((a, b) => Math.abs(a - goal.x) - Math.abs(b - goal.x))) addDest(x);
+    for (const x of dedupedDestinations) {
+      for (const jump of jumpTimings) {
         const move = { x, jump }, result = run(current.p, move);
         if (!result) continue;
+        if (isGoal(result.p)) { answer = [...current.path, move]; break; }
         const cost = current.cost + result.samples.length * 4 + (jump >= 0 ? 10 : 0);
         if ((visited.get(key(result.p)) ?? Infinity) <= cost || (pending.get(key(result.p)) ?? Infinity) <= cost) continue;
         pending.set(key(result.p), cost);
         open.push({ p: result.p, path: [...current.path, move], cost });
       }
+      if (answer) break;
     }
-    if (goal.y + goal.h < current.p.y + current.p.h - 30 && wallTargets.size > 0) {
+    if (answer) break;
+    if (heroProfile?.canWallJump && goal.y + goal.h < current.p.y + current.p.h - 30 && wallTargets.size > 0) {
       for (const x of wallTargets) {
         if (x < 10 || x > state.stage.boundsWidth - 40 || Math.abs(x - current.p.x) < 8) continue;
         const move = { x, jump: 0, wallKick: true }, result = run(current.p, move);
         if (!result) continue;
+        if (isGoal(result.p)) { answer = [...current.path, move]; break; }
         const cost = current.cost + result.samples.length * 4 + 8;
         if ((visited.get(key(result.p)) ?? Infinity) <= cost || (pending.get(key(result.p)) ?? Infinity) <= cost) continue;
         pending.set(key(result.p), cost);
         open.push({ p: result.p, path: [...current.path, move], cost });
       }
+      if (answer) break;
     }
   }
   restore(original);

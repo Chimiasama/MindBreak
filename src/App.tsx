@@ -40,8 +40,11 @@ import { CAMPAIGN, getSubstage } from './game/campaign';
 import type { CampaignSave } from './game/campaign/save';
 
 function getSavedCheckpointLabel(save: CampaignSave) {
-  const area = save.areas.find((area) => area.id === save.current)!;
-  return getSubstage(save.current).checkpoints.find((point) => point.id === area.checkpoint)!.label;
+  const area = save.areas.find((area) => area.id === save.current);
+  const checkpoint = area
+    ? getSubstage(save.current)?.checkpoints.find((point) => point.id === area.checkpoint)
+    : undefined;
+  return checkpoint?.label ?? 'Início do setor';
 }
 
 const GameShell = registerPlugin<{ exitApp(): Promise<void> }>('GameShell');
@@ -212,7 +215,6 @@ export default function App() {
       onContinueCountdown: handleContinueCountdown,
       onGameOver: handleGameOver,
     });
-    engine.attach3DContainer(mount3dRef.current);
     engine.setVisualAccessibility({
       shakeScale: resolveShakeMultiplier(uiPrefsRef.current.shakeIntensity),
       reducedFlashes: uiPrefsRef.current.reducedFlashes,
@@ -230,6 +232,20 @@ export default function App() {
       engine.dispose();
     };
   }, [handleContinueCountdown, handleGameOver, handleStageClear]);
+
+  // Keep only one WebGL context active at a time: attach the full 2.5D stage
+  // renderer when playing and release it while TITLE_MENU shows HeroPreviewPanel.
+  const isGameplayView = gameState !== 'TITLE_MENU';
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    if (isGameplayView) {
+      engine.attach3DContainer(mount3dRef.current);
+      engine.resize(window.innerWidth, window.innerHeight);
+    } else {
+      engine.attach3DContainer(null);
+    }
+  }, [isGameplayView]);
 
   useEffect(() => {
     engineRef.current?.setVisualAccessibility({
@@ -527,7 +543,7 @@ export default function App() {
   }, []);
 
   const currentStageDef = STAGES.find((s) => s.id === selectedStageId) ?? STAGES[0];
-  const currentChapter = CAMPAIGN.find((stage) => stage.id === selectedStageId)!;
+  const currentChapter = CAMPAIGN.find((stage) => stage.id === selectedStageId) ?? CAMPAIGN[0];
   const psyReady = hud.psyEnergy >= 95;
   const hpLow = hud.maxHp > 0 && hud.hp / hud.maxHp < 0.25;
   const showTouchOverlay = shouldShowTouchControls(
@@ -927,7 +943,7 @@ export default function App() {
                 <div>
                   <h2 className="font-bold">{'save' in storedCampaign ? `Progresso salvo · Setor ${storedCampaign.save.current}` : 'Progresso salvo indisponível'}</h2>
                   <p className="mt-1 text-sm text-slate-300">
-                    {'save' in storedCampaign ? `${CHARACTERS[storedCampaign.save.player.characterId].name} · ${getSavedCheckpointLabel(storedCampaign.save)}` :
+                    {'save' in storedCampaign ? `${CHARACTERS[storedCampaign.save.player.characterId]?.name ?? 'Ren'} · ${getSavedCheckpointLabel(storedCampaign.save)}` :
                       storedCampaign.status === 'incompatible' ? 'Este progresso pertence a uma versão diferente da campanha.' :
                       storedCampaign.status === 'unavailable' ? 'O armazenamento está indisponível. Você ainda pode jogar nesta sessão.' :
                       'Não foi possível ler o progresso. Você pode apagá-lo ou começar outra partida.'}
