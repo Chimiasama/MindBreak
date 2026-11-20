@@ -2,11 +2,13 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../../src/game/characters';
 import { overlaps } from '../../src/game/collision';
 import type { GameEngine } from '../../src/game/engine';
-interface Move { x: number; jump: number }
+interface Move { x: number; jump: number; steerDelay?:number }
 interface Node { p: any; path: Move[]; cost: number }
 /** Plan using real engine ticks, then replay the selected controls. No coordinate edits on the accepted route. */
-export function navigate(engine: GameEngine, state: any, goal: { x: number; y: number; w: number; h: number }) {
+export function navigate(engine: GameEngine, state: any, goal: { x: number; y: number; w: number; h: number },extended=false) {
   const original = { ...state.player };
+  const heroProfile = CHARACTERS[state.characterId as keyof typeof CHARACTERS];
+  const singleJump = extended&&!heroProfile.canPsyJump;
   const terrain = state.platforms.map((p: any) => ({ ...p }));
   const isGoal = (p: any) => p.grounded && overlaps(p, goal);
   if (isGoal(original)) return { jumps: 0, left: 0, right: 0 };
@@ -28,7 +30,7 @@ export function navigate(engine: GameEngine, state: any, goal: { x: number; y: n
     let still = 0, lastX = state.player.x;
     for (let t = 0; t < 190; t++) {
       const p = state.player;
-      let targetX = move.x;
+      let targetX = t<(move.steerDelay??0)?p.x:move.x;
       if (move.wallKick && p.onWall !== 0 && !p.grounded) {
         if (p.onWall !== p.lastWallSide && p.y + p.h > goal.y + 12) engine.queueAction('jump');
       }
@@ -53,6 +55,9 @@ export function navigate(engine: GameEngine, state: any, goal: { x: number; y: n
       state.hitstop = 0; state.update(); samples.push({ x: p.x, y: p.y });
       if (terrain.some((q: any) => (q.type === 'acid' || q.type === 'laser_gate') && overlaps(p, q))) failed = true;
       if (failed || p.hp <= 0 || p.y > state.stage.boundsBottom || state.paused) return null;
+      // Hanging is a stable physical state too. Split a long pipe crossing here;
+      // the next input action can continue along it, drop, or vault with PULO.
+      if(extended&&p.hangingCeiling&&t>3&&Math.abs(move.x-p.x)<20)return{p:{...p},samples};
       if (Math.abs(p.x - lastX) < 0.1) still++; else still = 0;
       lastX = p.x;
       if (p.grounded && t > (move.jump >= 0 ? move.jump + 5 : 3) && (Math.abs(move.x - p.x) < 7 || still > 8))
@@ -60,7 +65,7 @@ export function navigate(engine: GameEngine, state: any, goal: { x: number; y: n
     }
     return null;
   }
-  const key = (p: any) => `${Math.round(p.x / 24)}:${Math.round(p.y / 12)}`;
+  const key = (p: any) => `${Math.round(p.x / 24)}:${Math.round(p.y / 12)}:${p.hangingCeiling?'hang':'floor'}`;
   const heuristic = (p: any) => Math.abs(p.x - goal.x) + Math.abs(p.y - goal.y) * 1.3;
   const open: Node[] = [{ p: original, path: [], cost: 0 }], visited = new Map<string, number>();
   const pending = new Map<string, number>([[key(original), 0]]);
@@ -86,8 +91,16 @@ export function navigate(engine: GameEngine, state: any, goal: { x: number; y: n
       const rise = current.p.y + current.p.h - p.y;
       if (rise > 380 / state.stage.gravityScale || rise < -500 || p.w < 45) continue;
       const a = p.x + 6, b = p.x + p.w - current.p.w - 6;
-      for (const x of [a, b, Math.max(a, Math.min(b, goal.x))])
+      const edges=singleJump&&rise>=0&&rise<=110?[p.x-current.p.w/2+2,p.x+p.w-current.p.w/2-2]:[];
+      for (const x of [a, b, Math.max(a, Math.min(b, goal.x)),...edges])
         if (x >= 10 && x < state.stage.boundsWidth - 40 && Math.abs(x - current.p.x) < 540) destinations.add(x);
+      // A solid step also needs takeoff space beside its edge. Landing points alone
+      // cannot discover a single jump back over a low overhang: the head hits its
+      // underside before the feet clear the top. These remain real input moves.
+      if(singleJump&&rise>0&&rise<=110){
+        for(const x of [p.x-current.p.w-48,p.x+p.w+48])
+          if(x>=10&&x<state.stage.boundsWidth-40&&Math.abs(x-current.p.x)<320)destinations.add(x);
+      }
     }
     const wallTargets = new Set<number>();
     for (const w of solids) if (w.type === 'wall' && Math.abs(w.x - current.p.x) < 360) {
@@ -95,7 +108,6 @@ export function navigate(engine: GameEngine, state: any, goal: { x: number; y: n
       else wallTargets.add(w.x + w.w - 16);
     }
     for (const x of destinations) if (Math.abs(x - current.p.x) < 320) wallTargets.add(x);
-    const heroProfile = CHARACTERS[state.characterId as keyof typeof CHARACTERS];
     const jumpTimings = heroProfile?.canPsyJump ? [-1, 0, 12, 22] : [-1, 0];
     const dedupedDestinations: number[] = [];
     const seenDestBuckets = new Set<number>();
@@ -110,13 +122,16 @@ export function navigate(engine: GameEngine, state: any, goal: { x: number; y: n
     for (const x of [...destinations].sort((a, b) => Math.abs(a - goal.x) - Math.abs(b - goal.x))) addDest(x);
     for (const x of dedupedDestinations) {
       for (const jump of jumpTimings) {
-        const move = { x, jump }, result = run(current.p, move);
+       for(const steerDelay of singleJump&&jump===0?[0,6]:[0]){
+        const move = { x, jump,steerDelay }, result = run(current.p, move);
         if (!result) continue;
         if (isGoal(result.p)) { answer = [...current.path, move]; break; }
         const cost = current.cost + result.samples.length * 4 + (jump >= 0 ? 10 : 0);
         if ((visited.get(key(result.p)) ?? Infinity) <= cost || (pending.get(key(result.p)) ?? Infinity) <= cost) continue;
         pending.set(key(result.p), cost);
         open.push({ p: result.p, path: [...current.path, move], cost });
+       }
+       if(answer)break;
       }
       if (answer) break;
     }
@@ -136,6 +151,13 @@ export function navigate(engine: GameEngine, state: any, goal: { x: number; y: n
     }
   }
   restore(original);
+  // Keep the small, fast search for ordinary legs; retry failed legs with edge
+  // takeoffs, vertical-first jumps and intermediate hanging states. Both searches
+  // have the same bounds and must replay the final route through real inputs.
+  if(!answer&&!extended){
+    state.damagePlayer=damage;state.recoverPlayer=rescue;
+    return navigate(engine,state,goal,true);
+  }
   if (!answer && process.env.NAV_DEBUG) console.log('nearest',seenPoints.sort((a,b)=>heuristic(a)-heuristic(b)).slice(0,8).map(p=>[p.x,p.y]));
   assert.ok(answer, `no route (visited ${visited.size}, open ${open.length}) in ${state.stage.substageId} from (${original.x},${original.y}) to (${goal.x},${goal.y})`);
   const metrics = { jumps: 0, left: 0, right: 0 };

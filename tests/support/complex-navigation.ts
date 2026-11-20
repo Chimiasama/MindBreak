@@ -212,6 +212,15 @@ export function navigate(engine:GameEngine,s:any,goal:{x:number;y:number;w:numbe
  const scale=c.width/6000,f=c.floor,metrics={jumps:0,left:0,right:0};
  const step=(g:{x:number;y:number;w:number;h:number})=>{const m=local(engine,s,g);metrics.jumps+=m.jumps;metrics.left+=m.left;metrics.right+=m.right;};
  const point=(x:number,level:number)=>({x:x*scale+8,y:f-level-56,w:100,h:56});
+ // Leon returns to the reactor valve around the lower service-stair loop;
+ // forcing the direct high-catwalk jump loses the valid single-jump route.
+ // These are regional hints, as in the district graph, never position edits.
+ if(s.characterId==='leon'&&s.stage.substageId==='4C'&&'id' in goal&&goal.id==='setor-comando'&&s.player.x>c.width+1200){
+  step({x:c.width+810,y:f-56,w:70,h:56});
+  step({x:c.width+440,y:f-141,w:70,h:56});
+  step({x:c.width+580,y:f-201,w:50,h:56});
+  step(goal);return metrics;
+ }
  if(s.player.x>=c.width&&goal.x>=c.width){step(goal);return metrics;}
  const hubs:Record<string,{x:number;y:number;w:number;h:number}>={E:point(140,0),WL:point(1400,0),WM:point(1400,300),WH:point(1400,600),CL:point(2900,0),CM:point(2900,300),CH:point(3200,600),EL:point(5000,0),EM:point(5000,300),EH:point(5000,600),END:{x:c.width+80,y:f-56,w:80,h:56}};
  const edges:{a:string;b:string;via:[number,number][];gate?:string}[]=[

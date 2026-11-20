@@ -53,6 +53,8 @@ Geometria validada não equivale a campanha vencida, arte aprovada ou 60 fps com
 
 Plano único consolidado; Ren .blend/.glb e carregamento no menu/partida implementados. 333 testes direcionados e builds/sync aprovados; evidências e limitações em [REN_3D.md](REN_3D.md) e EXECUCAO.md. Aceite artístico do usuário e desempenho no aparelho pendentes. O incremento 31 completo continua parcial; demais heróis, chefes e biomas não foram antecipados.
 
+A correção 31B trata as sete falhas exaustivas de Leon encontradas pela Action: apoio de manutenção ampliado e busca de comandos de borda/salto/cano corrigida. Mantidos todos os testes de percurso. Execução geral: 488/489; caso final de Leon/4C corrigido e reaprovado isoladamente (1/1). Evidência e limites em EXECUCAO.md.
+
 ### 2.4 Critério de saída deste lote
 
 Plano unificado; Ren em arquivo real .blend/.glb; carregamento no app e menu; continuidade revisada; nenhuma alteração involuntária de física; testes pertinentes, TypeScript, build web, assets Android e sync quando aplicável. Registrar desempenho medido no navegador separadamente de Android real. Nunca declarar modelo final aprovado pelo usuário sem seu aceite.

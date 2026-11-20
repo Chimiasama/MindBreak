@@ -35,7 +35,10 @@ export function withComplex(source:SubstageDefinition):SubstageDefinition{
   floor(x-110,f-78,100,16);floor(x,f-100,x===5700?95:130);floor(x===5700?x+55:x+80,f-178,x===5700?55:70,16);floor(x===5700?x+115:x+155,f-200,x===5700?165:145);
   floor(x,f-400,x===5700?95:130);floor(x===5700?x+55:x+80,f-478,x===5700?55:70,16);floor(x===5700?x+115:x+155,f-500,x===5700?165:145);
  }
- floor(615,f-278,75,16);floor(615,f-578,75,16);floor(570,f-378,120,16);
+ floor(615,f-278,75,16);floor(615,f-578,75,16);
+ // Connect the upper maintenance turn to its landing: Leon must not need a
+ // frame-perfect coyote jump out from below the overlapping solid steps.
+ floor(530,f-378,160,16);
  for(const x of [2170,3970]){
   floor(x,f-300,180);floor(x,f-600,180);
   floor(x-95,f-278,90,16);floor(x+240,f-278,55,16);
