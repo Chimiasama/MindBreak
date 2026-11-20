@@ -5,6 +5,7 @@ import { MOVEMENT_PROFILES } from '../game/movement';
 import { HERO_CLIPS, type HeroPose } from '../game/heroAnimation';
 import { drawHeroFrame, prepareHeroArtwork } from '../game/heroArtwork';
 import { buildHeroRig3D, updateHeroRig3D } from '../game/render3d/characterRig3d';
+import {loadRenModel,createRenModelInstance} from '../game/render3d/renModel';
 import {
   IDLE_VARIATION_START_TICKS,
   MEDITATION_RAMP_TICKS,
@@ -207,7 +208,7 @@ export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
       const ensureRig = (id: CharacterId) => {
         let rig = rigs[id];
         if (!rig) {
-          rig = buildHeroRig3D(id);
+          rig = (id==='ren'?createRenModelInstance():null) ?? buildHeroRig3D(id);
           rigs[id] = rig;
           turntable.add(rig.root);
         }
@@ -225,6 +226,12 @@ export const HeroPreviewPanel: React.FC<HeroPreviewPanelProps> = ({
         window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
       let alive = true;
+      void loadRenModel().then(ready=>{
+        if(!alive||!ready)return;
+        const previous=rigs.ren;
+        if(previous){turntable.remove(previous.root);disposeMaterialTree(previous.root);delete rigs.ren;}
+        if(reducedMotion)renderLoop(performance.now());
+      });
       let rafId = 0;
       let timerId = 0;
       let elapsedTicks = 0;

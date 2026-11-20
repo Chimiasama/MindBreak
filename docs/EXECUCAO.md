@@ -1,5 +1,7 @@
 # Registro de execução
 
+> Histórico e evidências. O único roteiro ativo é [PLANO_DE_IMPLEMENTACAO.md](PLANO_DE_IMPLEMENTACAO.md), consolidado em 20/11/2026. Pendências e próximos passos descritos em incrementos antigos são históricos, não filas concorrentes.
+
 ## Incremento 1 — 13/11/2026
 
 Referência: `PLANO_DE_IMPLEMENTACAO.md`, fases 1, 2.1 e 9.1.
@@ -427,3 +429,11 @@ Executado como primeiro passo do novo roteiro no Adendo do plano (Fase 8.1, 8.2.
   - Proteção contra saves antigos com checkpoints ausentes em `getSavedCheckpointLabel` e `AppErrorBoundary` no ponto de entrada (`src/main.tsx`).
 - **Validação:** **223 testes** da suíte principal aprovados (`0` falhas, incluindo 5 novos testes em `tests/ui-preferences.test.ts` e 9 em `tests/touch-controls.test.ts`), `tsc --noEmit` aprovado sem erros, build de produção compilado com sucesso e crawl completo de 76 módulos no servidor dev sem erros (`0`). Nenhuma GitHub Action executada ou APK gerado.
 
+
+## Incremento 31A — plano único e Ren autoral cel shading
+
+Unificado o plano original com a apresentação 2.5D e os incrementos 29–33 em PLANO_DE_IMPLEMENTACAO.md. Reafirmadas jogabilidade distinta de Ren/Maya/Leon, exploração ampla confinada ao capítulo e rota obrigatória acessível a Leon com salto único. AGENTS.md recupera o contrato permanente de continuidade/anatomia adaptado a volumes 3D. O incremento 31 completo permanece parcial: Maya, Leon, chefes e biomas continuam pendentes.
+
+Criado Ren intermediário a partir da referência pintada, em .blend e GLB skinned real: 12.946 triângulos, 7.712 vértices, 13 juntas, 13 materiais e 541.112 bytes. Jaqueta/cabelo/rosto/roupa moldados, equipamentos e fixações, bolsa única à direita, duas pontas de cachecol, botas e dedos. Toon/contorno aplicados no runtime; expressões faciais e animação independente dos dedos ainda não implementadas. Integração no menu e na partida com instâncias independentes e fallback procedural. Os estados existentes continuam dirigindo o esqueleto; arte não altera física/combate/mapas.
+
+333 testes direcionados aprovados; TypeScript, build web, assets Android e Capacitor sync aprovados. Chromium: 18 estados, vistas, skin no renderer real e falha de carregamento com fallback. Comparado SHA-256 do GLB Android com a fonte. Não repetidos os três arquivos exaustivos exploration-routes-*; campanha integral, controle físico e profiling Android seguem pendentes. Nenhuma Action ou APK. Contrato e limites em REN_3D.md; próximo trabalho apenas conforme o plano único, não por novo adendo.

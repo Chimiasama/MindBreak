@@ -1154,7 +1154,7 @@ export function updateHeroRig3D(rig: HumanoidRigParts, input: HeroRigInput, dt: 
   let target: SkeletonKeyPose;
   let idleMeta: IdleChoreographyResult | null = null;
 
-  if (input.pose === 'idle' && rig.faceRig) {
+  if (input.pose === 'idle' && (rig.faceRig || rig.root.userData.externalCharacter==='ren-cel-v1')) {
     // Hero rich varied idle choreography + long-idle meditation
     idleMeta = evaluateHeroIdleChoreography(
       input.characterId,
@@ -1204,6 +1204,14 @@ export function updateHeroRig3D(rig: HumanoidRigParts, input: HeroRigInput, dt: 
   }
 
   applyKeyPoseToRig(rig, input.pose, target, safeDt, input.tickCount, speed, input.vy, input, idleMeta);
+
+  if(rig.root.userData.externalCharacter==='ren-cel-v1'){
+    for(const [index,name] of ['scarfA','scarfB'].entries()){
+      const bone=rig.root.getObjectByName(name);if(!bone)continue;
+      bone.rotation.x=Math.sin(input.tickCount*.08+index)*(.03+Math.min(speed,7)*.009);
+      bone.rotation.z=Math.sin(input.tickCount*.06+index*.8)*.06;
+    }
+  }
 
   // Expressive face state resolution & damping (gracefully skipped if rig has no faceRig)
   const faceState = resolveHeroFaceState(

@@ -1,0 +1,1114 @@
+{
+  "version": 1,
+  "asset": "src/assets/models/ren-cel-v1.glb",
+  "source": "tools/ren3d/build_ren.py",
+  "sourceSha256": "7f14a68f9033a5779eb9bbc0469de34f900dd79454ae31b9cab249fc0d168acc",
+  "reference": "docs/arte/ren3d/referencia-ren.png",
+  "blend": "docs/arte/ren3d/ren-cel-v1.blend",
+  "sha256": "61a84858034efd8809d63543da046ddff0046e99487bb2ff4f6261582c1d4db6",
+  "bytes": 541112,
+  "triangles": 12946,
+  "vertices": 7712,
+  "materials": 13,
+  "joints": [
+    "hips",
+    "torso",
+    "head",
+    "shoulderL",
+    "elbowL",
+    "shoulderR",
+    "elbowR",
+    "hipL",
+    "kneeL",
+    "hipR",
+    "kneeR",
+    "scarfA",
+    "scarfB"
+  ],
+  "meshPrimitives": 13,
+  "parts": [
+    {
+      "name": "Jacket_Sculpted",
+      "material": "jacket",
+      "bone": "torso",
+      "vertices": 224,
+      "triangles": 444
+    },
+    {
+      "name": "Jacket_Lapel",
+      "material": "edge",
+      "bone": "torso",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Chest_Overlapping_Panel",
+      "material": "jacket",
+      "bone": "torso",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Tailored_Seam",
+      "material": "edge",
+      "bone": "torso",
+      "vertices": 24,
+      "triangles": 44
+    },
+    {
+      "name": "Jacket_Hip_Tail",
+      "material": "jacket",
+      "bone": "hips",
+      "vertices": 11,
+      "triangles": 15
+    },
+    {
+      "name": "Jacket_Lapel",
+      "material": "edge",
+      "bone": "torso",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Chest_Overlapping_Panel",
+      "material": "jacket",
+      "bone": "torso",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Tailored_Seam",
+      "material": "edge",
+      "bone": "torso",
+      "vertices": 24,
+      "triangles": 44
+    },
+    {
+      "name": "Jacket_Hip_Tail",
+      "material": "jacket",
+      "bone": "hips",
+      "vertices": 11,
+      "triangles": 15
+    },
+    {
+      "name": "Neck_Anatomy",
+      "material": "skin",
+      "bone": "head",
+      "vertices": 60,
+      "triangles": 116
+    },
+    {
+      "name": "Collar_Back",
+      "material": "leather",
+      "bone": "torso",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Harness_Front",
+      "material": "leather",
+      "bone": "torso",
+      "vertices": 8,
+      "triangles": 6
+    },
+    {
+      "name": "Harness_Buckle",
+      "material": "metal",
+      "bone": "torso",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Harness_Buckle",
+      "material": "metal",
+      "bone": "torso",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Harness_Back",
+      "material": "leather",
+      "bone": "torso",
+      "vertices": 8,
+      "triangles": 6
+    },
+    {
+      "name": "Harness_Buckle",
+      "material": "metal",
+      "bone": "torso",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Harness_Buckle",
+      "material": "metal",
+      "bone": "torso",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Waist_Belt",
+      "material": "leather",
+      "bone": "hips",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Belt_Buckle",
+      "material": "metal",
+      "bone": "hips",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Belt_Loop",
+      "material": "edge",
+      "bone": "hips",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Belt_Loop",
+      "material": "edge",
+      "bone": "hips",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Pelvis_Cloth",
+      "material": "pants",
+      "bone": "hips",
+      "vertices": 96,
+      "triangles": 188
+    },
+    {
+      "name": "Trouser_hipL",
+      "material": "pants",
+      "bone": "hipL",
+      "vertices": 180,
+      "triangles": 356
+    },
+    {
+      "name": "Cloth_Fold",
+      "material": "edge",
+      "bone": "hipL",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Cloth_Fold",
+      "material": "edge",
+      "bone": "hipL",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Cloth_Fold",
+      "material": "edge",
+      "bone": "kneeL",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Knee_Reinforcement",
+      "material": "leather",
+      "bone": "kneeL",
+      "vertices": 13,
+      "triangles": 18
+    },
+    {
+      "name": "Boot_Sculpted",
+      "material": "leather",
+      "bone": "kneeL",
+      "vertices": 168,
+      "triangles": 332
+    },
+    {
+      "name": "Boot_Toe_Plate",
+      "material": "metal",
+      "bone": "kneeL",
+      "vertices": 60,
+      "triangles": 116
+    },
+    {
+      "name": "Boot_Sole",
+      "material": "edge",
+      "bone": "kneeL",
+      "vertices": 72,
+      "triangles": 140
+    },
+    {
+      "name": "Boot_Cuff",
+      "material": "metal",
+      "bone": "kneeL",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Boot_Lace",
+      "material": "metal",
+      "bone": "kneeL",
+      "vertices": 12,
+      "triangles": 20
+    },
+    {
+      "name": "Boot_Lace",
+      "material": "metal",
+      "bone": "kneeL",
+      "vertices": 12,
+      "triangles": 20
+    },
+    {
+      "name": "Boot_Lace",
+      "material": "metal",
+      "bone": "kneeL",
+      "vertices": 12,
+      "triangles": 20
+    },
+    {
+      "name": "Boot_Lace",
+      "material": "metal",
+      "bone": "kneeL",
+      "vertices": 12,
+      "triangles": 20
+    },
+    {
+      "name": "Boot_Lace",
+      "material": "metal",
+      "bone": "kneeL",
+      "vertices": 12,
+      "triangles": 20
+    },
+    {
+      "name": "Heel_Seam",
+      "material": "edge",
+      "bone": "kneeL",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Trouser_hipR",
+      "material": "pants",
+      "bone": "hipR",
+      "vertices": 180,
+      "triangles": 356
+    },
+    {
+      "name": "Cloth_Fold",
+      "material": "edge",
+      "bone": "hipR",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Cloth_Fold",
+      "material": "edge",
+      "bone": "hipR",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Cloth_Fold",
+      "material": "edge",
+      "bone": "kneeR",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Knee_Reinforcement",
+      "material": "leather",
+      "bone": "kneeR",
+      "vertices": 13,
+      "triangles": 18
+    },
+    {
+      "name": "Boot_Sculpted",
+      "material": "leather",
+      "bone": "kneeR",
+      "vertices": 168,
+      "triangles": 332
+    },
+    {
+      "name": "Boot_Toe_Plate",
+      "material": "metal",
+      "bone": "kneeR",
+      "vertices": 60,
+      "triangles": 116
+    },
+    {
+      "name": "Boot_Sole",
+      "material": "edge",
+      "bone": "kneeR",
+      "vertices": 72,
+      "triangles": 140
+    },
+    {
+      "name": "Boot_Cuff",
+      "material": "metal",
+      "bone": "kneeR",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Boot_Lace",
+      "material": "metal",
+      "bone": "kneeR",
+      "vertices": 12,
+      "triangles": 20
+    },
+    {
+      "name": "Boot_Lace",
+      "material": "metal",
+      "bone": "kneeR",
+      "vertices": 12,
+      "triangles": 20
+    },
+    {
+      "name": "Boot_Lace",
+      "material": "metal",
+      "bone": "kneeR",
+      "vertices": 12,
+      "triangles": 20
+    },
+    {
+      "name": "Boot_Lace",
+      "material": "metal",
+      "bone": "kneeR",
+      "vertices": 12,
+      "triangles": 20
+    },
+    {
+      "name": "Boot_Lace",
+      "material": "metal",
+      "bone": "kneeR",
+      "vertices": 12,
+      "triangles": 20
+    },
+    {
+      "name": "Heel_Seam",
+      "material": "edge",
+      "bone": "kneeR",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Right_Thigh_Wrapping_Strap",
+      "material": "leather",
+      "bone": "hipR",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Right_Thigh_Wrapping_Strap",
+      "material": "leather",
+      "bone": "hipR",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Right_Thigh_Pouch_Outer",
+      "material": "leather",
+      "bone": "hipR",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Right_Pouch_Volume",
+      "material": "jacket",
+      "bone": "hipR",
+      "vertices": 64,
+      "triangles": 124
+    },
+    {
+      "name": "Right_Strap_Metal_Clasp",
+      "material": "metal",
+      "bone": "hipR",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Right_Strap_Metal_Clasp",
+      "material": "metal",
+      "bone": "hipR",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Jacket_Sleeve_shoulderL",
+      "material": "jacket",
+      "bone": "shoulderL",
+      "vertices": 100,
+      "triangles": 196
+    },
+    {
+      "name": "Rolled_Sleeve_Cuff",
+      "material": "edge",
+      "bone": "shoulderL",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Forearm_elbowL",
+      "material": "skin",
+      "bone": "elbowL",
+      "vertices": 100,
+      "triangles": 196
+    },
+    {
+      "name": "Wrist_Wrap",
+      "material": "leather",
+      "bone": "elbowL",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Wrist_Wrap",
+      "material": "leather",
+      "bone": "elbowL",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Wrist_Wrap",
+      "material": "leather",
+      "bone": "elbowL",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Glove_Palm",
+      "material": "leather",
+      "bone": "elbowL",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Finger_Anatomy",
+      "material": "skin",
+      "bone": "elbowL",
+      "vertices": 24,
+      "triangles": 44
+    },
+    {
+      "name": "Fingerless_Glove",
+      "material": "leather",
+      "bone": "elbowL",
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "Finger_Anatomy",
+      "material": "skin",
+      "bone": "elbowL",
+      "vertices": 24,
+      "triangles": 44
+    },
+    {
+      "name": "Fingerless_Glove",
+      "material": "leather",
+      "bone": "elbowL",
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "Finger_Anatomy",
+      "material": "skin",
+      "bone": "elbowL",
+      "vertices": 24,
+      "triangles": 44
+    },
+    {
+      "name": "Fingerless_Glove",
+      "material": "leather",
+      "bone": "elbowL",
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "Finger_Anatomy",
+      "material": "skin",
+      "bone": "elbowL",
+      "vertices": 24,
+      "triangles": 44
+    },
+    {
+      "name": "Fingerless_Glove",
+      "material": "leather",
+      "bone": "elbowL",
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "Thumb",
+      "material": "skin",
+      "bone": "elbowL",
+      "vertices": 30,
+      "triangles": 56
+    },
+    {
+      "name": "Glove_Back_Plate",
+      "material": "edge",
+      "bone": "elbowL",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Jacket_Sleeve_shoulderR",
+      "material": "jacket",
+      "bone": "shoulderR",
+      "vertices": 100,
+      "triangles": 196
+    },
+    {
+      "name": "Rolled_Sleeve_Cuff",
+      "material": "edge",
+      "bone": "shoulderR",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Forearm_elbowR",
+      "material": "skin",
+      "bone": "elbowR",
+      "vertices": 100,
+      "triangles": 196
+    },
+    {
+      "name": "Wrist_Wrap",
+      "material": "leather",
+      "bone": "elbowR",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Wrist_Wrap",
+      "material": "leather",
+      "bone": "elbowR",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Wrist_Wrap",
+      "material": "leather",
+      "bone": "elbowR",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Glove_Palm",
+      "material": "leather",
+      "bone": "elbowR",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Finger_Anatomy",
+      "material": "skin",
+      "bone": "elbowR",
+      "vertices": 24,
+      "triangles": 44
+    },
+    {
+      "name": "Fingerless_Glove",
+      "material": "leather",
+      "bone": "elbowR",
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "Finger_Anatomy",
+      "material": "skin",
+      "bone": "elbowR",
+      "vertices": 24,
+      "triangles": 44
+    },
+    {
+      "name": "Fingerless_Glove",
+      "material": "leather",
+      "bone": "elbowR",
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "Finger_Anatomy",
+      "material": "skin",
+      "bone": "elbowR",
+      "vertices": 24,
+      "triangles": 44
+    },
+    {
+      "name": "Fingerless_Glove",
+      "material": "leather",
+      "bone": "elbowR",
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "Finger_Anatomy",
+      "material": "skin",
+      "bone": "elbowR",
+      "vertices": 24,
+      "triangles": 44
+    },
+    {
+      "name": "Fingerless_Glove",
+      "material": "leather",
+      "bone": "elbowR",
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "Thumb",
+      "material": "skin",
+      "bone": "elbowR",
+      "vertices": 30,
+      "triangles": 56
+    },
+    {
+      "name": "Glove_Back_Plate",
+      "material": "edge",
+      "bone": "elbowR",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Right_Shoulder_Layer",
+      "material": "edge",
+      "bone": "shoulderR",
+      "vertices": 13,
+      "triangles": 18
+    },
+    {
+      "name": "Armor_Magenta_Seam",
+      "material": "scarfLight",
+      "bone": "shoulderR",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Right_Shoulder_Layer",
+      "material": "leather",
+      "bone": "shoulderR",
+      "vertices": 13,
+      "triangles": 18
+    },
+    {
+      "name": "Armor_Magenta_Seam",
+      "material": "scarfLight",
+      "bone": "shoulderR",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Right_Shoulder_Layer",
+      "material": "edge",
+      "bone": "shoulderR",
+      "vertices": 13,
+      "triangles": 18
+    },
+    {
+      "name": "Armor_Magenta_Seam",
+      "material": "scarfLight",
+      "bone": "shoulderR",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Head_Sculpt",
+      "material": "skin",
+      "bone": "head",
+      "vertices": 256,
+      "triangles": 508
+    },
+    {
+      "name": "Nose",
+      "material": "skin",
+      "bone": "head",
+      "vertices": 6,
+      "triangles": 6
+    },
+    {
+      "name": "Nose_Shadow",
+      "material": "skinShade",
+      "bone": "head",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Mouth_Line",
+      "material": "skinShade",
+      "bone": "head",
+      "vertices": 24,
+      "triangles": 44
+    },
+    {
+      "name": "Lower_Lip",
+      "material": "skin",
+      "bone": "head",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Ear",
+      "material": "skin",
+      "bone": "head",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Ear_Inner",
+      "material": "skinShade",
+      "bone": "head",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Eye_Almond",
+      "material": "eye",
+      "bone": "head",
+      "vertices": 11,
+      "triangles": 15
+    },
+    {
+      "name": "Iris",
+      "material": "cyan",
+      "bone": "head",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Eye_Liner",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Eyebrow",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Ear",
+      "material": "skin",
+      "bone": "head",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Ear_Inner",
+      "material": "skinShade",
+      "bone": "head",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Eye_Almond",
+      "material": "eye",
+      "bone": "head",
+      "vertices": 11,
+      "triangles": 15
+    },
+    {
+      "name": "Iris",
+      "material": "cyan",
+      "bone": "head",
+      "vertices": 9,
+      "triangles": 12
+    },
+    {
+      "name": "Eye_Liner",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Eyebrow",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 18,
+      "triangles": 32
+    },
+    {
+      "name": "Hair_Crown",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 112,
+      "triangles": 220
+    },
+    {
+      "name": "Swept_Hair_Lock",
+      "material": "hairLight",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Swept_Hair_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Swept_Hair_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Swept_Hair_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Swept_Hair_Lock",
+      "material": "hairLight",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Swept_Hair_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Swept_Hair_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Swept_Hair_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Swept_Hair_Lock",
+      "material": "hairLight",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Swept_Hair_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Swept_Hair_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Fringe_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Fringe_Lock",
+      "material": "hairLight",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Fringe_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Fringe_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Fringe_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Fringe_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Fringe_Lock",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 104,
+      "triangles": 192
+    },
+    {
+      "name": "Side_Hair",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 72,
+      "triangles": 128
+    },
+    {
+      "name": "Side_Hair",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 72,
+      "triangles": 128
+    },
+    {
+      "name": "Side_Hair",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 72,
+      "triangles": 128
+    },
+    {
+      "name": "Side_Hair",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 72,
+      "triangles": 128
+    },
+    {
+      "name": "Side_Hair",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 72,
+      "triangles": 128
+    },
+    {
+      "name": "Side_Hair",
+      "material": "hair",
+      "bone": "head",
+      "vertices": 72,
+      "triangles": 128
+    },
+    {
+      "name": "Visor_Strap",
+      "material": "leather",
+      "bone": "head",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Visor_Lens",
+      "material": "cyan",
+      "bone": "head",
+      "vertices": 26,
+      "triangles": 24
+    },
+    {
+      "name": "Visor_Top_Rim",
+      "material": "metal",
+      "bone": "head",
+      "vertices": 78,
+      "triangles": 152
+    },
+    {
+      "name": "Scarf_Wrap",
+      "material": "scarf",
+      "bone": "torso",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Scarf_Wrap",
+      "material": "scarfLight",
+      "bone": "torso",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Scarf_Wrap",
+      "material": "scarf",
+      "bone": "torso",
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "Scarf_Tail",
+      "material": "scarf",
+      "bone": "scarfA",
+      "vertices": 12,
+      "triangles": 10
+    },
+    {
+      "name": "Scarf_Selvedge",
+      "material": "scarfLight",
+      "bone": "scarfA",
+      "vertices": 36,
+      "triangles": 68
+    },
+    {
+      "name": "Scarf_Tail",
+      "material": "scarf",
+      "bone": "scarfB",
+      "vertices": 12,
+      "triangles": 10
+    },
+    {
+      "name": "Scarf_Selvedge",
+      "material": "scarfLight",
+      "bone": "scarfB",
+      "vertices": 36,
+      "triangles": 68
+    },
+    {
+      "name": "Waist_Magenta_Tie",
+      "material": "scarf",
+      "bone": "hips",
+      "vertices": 6,
+      "triangles": 4
+    },
+    {
+      "name": "Waist_Magenta_Tie",
+      "material": "scarf",
+      "bone": "hips",
+      "vertices": 6,
+      "triangles": 4
+    },
+    {
+      "name": "Blade_Hilt",
+      "material": "leather",
+      "bone": "elbowR",
+      "vertices": 36,
+      "triangles": 68
+    },
+    {
+      "name": "Cypher_Plasma_Blade",
+      "material": "cyan",
+      "bone": "elbowR",
+      "vertices": 6,
+      "triangles": 6
+    }
+  ],
+  "limitations": [
+    "Intermediate cel-shaded model; not final artistic approval.",
+    "Animations use existing engine state interpolation; no authored facial blendshapes yet.",
+    "Device performance acceptance remains pending."
+  ]
+}

@@ -268,15 +268,20 @@ export function getProceduralTexture(
 }
 
 export function disposeMaterialTree(obj: THREE.Object3D): void {
+  const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>(),skeletons=new Set<THREE.Skeleton>();
   obj.traverse((child) => {
-    const mesh = child as THREE.Mesh;
-    if (mesh.geometry && !mesh.userData.sharedGeometry) {
+    const mesh = child as THREE.SkinnedMesh;
+    if(mesh.isSkinnedMesh&&mesh.skeleton&&!skeletons.has(mesh.skeleton)){
+      skeletons.add(mesh.skeleton);mesh.skeleton.dispose();
+    }
+    if (mesh.geometry && !mesh.userData.sharedGeometry&&!geometries.has(mesh.geometry)) {
+      geometries.add(mesh.geometry);
       mesh.geometry.dispose();
     }
     if (mesh.material && !mesh.userData.isOutline) {
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const m of mats) {
-        if (!m.userData?.sharedMaterial) m.dispose();
+        if (!m.userData?.sharedMaterial&&!materials.has(m)){materials.add(m);m.dispose();}
       }
     }
   });

@@ -6,8 +6,11 @@
 - [Salvamento da campanha](SALVAMENTO.md): formato versionado, retomada, recuperação e limites.
 - [APK Android e Action manual](ANDROID_APK.md): construção, download, instalação, versões e limites da validação.
 - [Campanha e subfases](CAMPANHA_E_SUBFASES.md): mapas disponíveis, portas, checkpoints e preservação de estado nesta sessão.
+- [Ren 3D cel shading](REN_3D.md): modelo intermediário, Blender/GLB, integração, prévias e limites.
 - [Plano técnico de implantação](PLANO_DE_IMPLEMENTACAO.md): requisitos, etapas numeradas, estratégia para 26 subfases, respawn, áudio, arte e Android/GitHub Actions.
 - [Registro de execução](EXECUCAO.md): mudanças implementadas, verificações, limitações e próximo incremento.
 - [Diagnóstico técnico inicial](DOCUMENTO_TECNICO.md): análise da base original, anterior às correções de jogabilidade registradas no plano.
+
+PLANO_DE_IMPLEMENTACAO.md é o único roteiro ativo; contratos de sistemas e o registro de execução não criam planos concorrentes.
 
 Os estados do plano distinguem trabalho implementado de propostas pendentes. O diagnóstico inicial fica preservado como referência histórica; não representa sozinho o estado atual do código.

@@ -1,375 +1,120 @@
-# Plano técnico de implantação — MIND//BREAK
+# Plano único de execução — MIND//BREAK
 
-Data inicial: 13/11/2026. Documento de trabalho: atualizar os estados e registrar evidências em cada entrega. O diagnóstico anterior, `DOCUMENTO_TECNICO.md`, descreve a base anterior às implementações deste plano.
+Revisão consolidada: 20/11/2026. Este é o único roteiro ativo do projeto. Unifica o plano original, a transição 2.5D e os incrementos 29–33. O histórico e as evidências ficam em EXECUCAO.md; documentos de sistemas são contratos técnicos, não planos concorrentes. A análise inicial DOCUMENTO_TECNICO.md é histórica.
 
-## 0. Contrato, sequência e acompanhamento
+## 0. Requisitos permanentes e prioridades
 
-### 0.1 Requisitos definidos
+1. Jogabilidade dos três protagonistas e exploração são critérios de aceite de toda entrega. Arte não modifica alcance, colisão, dano, velocidade ou consumo para acomodar o desenho.
+2. Oito capítulos, 26 setores. Exploração com caminhos altos, médios e baixos, retornos, mecanismos, bloqueios persistentes, segredos e atalhos dentro do capítulo. Sem voltar do capítulo 6 para o 2. O trem é a exceção linear, com ação e obstáculos.
+3. A rota obrigatória deve funcionar com qualquer protagonista, inclusive Leon com salto único e sem pickup de salto ou plataforma móvel obrigatória. Rotas de Ren, Maya e Leon são vantagens opcionais, não chaves para completar a campanha.
+4. Troca livre continua como teste. Na versão final, após a escolha inicial, troca apenas no continue. Não trocar ao atravessar portas.
+5. Respawn após afastamento significativo; persistência recompensada com pontuação decrescente por spawn (1.000 → 500 → 50 → 0), sem pontuação no HUD. Não remover farm de vidas nem impor teto novo sem decisão de balanceamento.
+6. Android com Capacitor/WebView, paisagem, modo imersivo, safe areas, voltar com confirmação, toque e DualShock 4. Workflows exclusivamente workflow_dispatch. Não executar Actions nem gerar APK/AAB sem pedido expresso. Publicar código e recursos concluídos no GitHub.
+7. Saves devem funcionar na versão atual. Compatibilidade com versões anteriores não é prioridade nesta fase.
+8. Apresentação 2.5D em Three.js, simulação 2D a 60 Hz, entrada e colisão independentes do renderer. Multiplayer e migração para outra engine permanecem futuros.
+9. Arte cel shading/cartunesca/anime, proporções humanas e silhueta legível no jogo. Não confundir modelo intermediário com arte final aprovada.
+10. Continuidade obrigatória: mesmo inventário e lado anatômico em todas as poses; bolsas na coxa direita de Ren/Maya, joelheiras nas duas pernas do Leon, fixações e verso reais. Em 3D, girar o volume; não usar escala negativa para inverter acessórios. Anatomia sem membros extras, fundidos ou fragmentos. Deformidade somente intencional no design.
 
-- **0.1.0.1 — Jogabilidade primeiro:** estabilizar física, colisão, movimentação, combate e exploração; depois áudio; depois arte e acabamento. Antecipar o pacote Android de testes para validar a jogabilidade no aparelho antes de produzir toda a arte.
-- **0.1.0.2 — Troca de herói:** manter a troca livre funcionando somente como ferramenta de teste. Na experiência final, depois da escolha inicial, a troca só acontece no continue. Nunca trocar automaticamente na transição entre subfases. Assistências continuam existindo e não são troca de personagem.
-- **0.1.0.3 — Campanha:** manter oito fases principais, com **26 subfases como alvo inicial**, dentro da faixa aceita de 24–28. Elas precisam ter geometria, encontros e objetivos próprios; renomear os oito mapas não satisfaz o requisito.
-- **0.1.0.4 — Exploração:** inimigos comuns podem reaparecer depois de afastamento substancial e retorno. Sair um pouco da tela não deve causar respawn imediato. Chefes, recompensas únicas e emboscadas concluídas seguem regras separadas.
-- **0.1.0.5 — Android:** preservar React/Canvas/Web Audio e empacotar inicialmente com Capacitor. Isso executa o jogo em Android WebView, não converte o motor para Kotlin, Godot ou Unity.
-- **0.1.0.6 — Controle:** testar toque simultâneo e DualShock 4 conectado ao Android por Bluetooth e, quando disponível, USB. Mapeamento padrão da Gamepad API não substitui teste em aparelho real.
-- **0.1.0.7 — Actions e APK:** todos os workflows devem ter somente `workflow_dispatch`, sem push, pull_request, schedule, workflow_run ou gatilhos automáticos. Só gerar APK quando o usuário pedir expressamente. Alterações no código não autorizam uma geração de APK.
-- **0.1.0.8 — Futuro:** multiplayer e eventual migração de engine ficam previstos, fora do escopo ativo.
+## 1. Base atual e limites do aceite
 
-- **0.1.0.9 — Persistência recompensada:** o usuário aceita farm de vidas e prefere progressão inspirada em roguelites. Reaparição não deve zerar imediatamente a recompensa. Regra inicial adotada: 1.000 → 500 → 50 → 0 por derrota confirmada do mesmo spawn, sem teto adicional de vidas por fase.
-- **0.1.0.10 — Progressão oculta:** não mostrar pontos nem o limiar da próxima vida no HUD ou nas telas de conclusão; manter cálculo e concessão de vidas internos. A descoberta das regras pelo jogador é intencional.
-- **0.1.0.11 — Alternativas futuras:** limite separado por origem de vida (pontos, item encontrado, drop ocasional) foi sugerido como alternativa, não como obrigação. Não adicionar teto ou loteria sem balanceamento próprio; a implementação atual usa apenas a recompensa decrescente.
+| Sistema | Estado consolidado |
+|---|---|
+| Física, relógio, entradas e colisão varrida | Implementados; continuar regressões por protagonista |
+| Combate, IA, torretas e oito chefes em duas fases | Base implementada; balanceamento integral pendente |
+| 26 setores e exploração confinada ao capítulo | Implementados; ritmo, orientação e combate em campanha integral pendentes |
+| Save local e checkpoints | Implementados; validar versão atual |
+| Web Audio, temas e efeitos | Implementados; mixagem e escuta física pendentes |
+| Android e workflow manual | Preparados; ensaios físicos continuam separados |
+| Renderizador 2.5D e rigs procedurais | Implementados; modelos autorais e profiling pendentes |
+| Controles configuráveis e acessibilidade visual | Incremento 30 implementado; manter regressões |
+| Pinturas 2D anteriores | Referência e fallback; produção de novas folhas de sprites deixa de ser o fluxo principal |
 
-- **0.1.0.12 — Torretas e projéteis:** incluir torretas de parede/teto nos setores industriais e instalador vulnerável antes de concluir; torreta instalada mais resistente. Bloquear tiros comuns no terreno e declarar separadamente exceções de penetração/reflexão. Implementado no incremento 15; balanceamento físico pendente.
+Geometria validada não equivale a campanha vencida, arte aprovada ou 60 fps comprovados no Android. Animação interpolada não garante desempenho de 60 fps.
 
-- **0.1.0.13 — Saves durante desenvolvimento:** por orientação expressa do usuário, compatibilidade e preservação de saves entre versões não são requisitos nesta fase. Só ele instala o app e testa com instalação limpa. Alterações de mapas, modelos e formato podem invalidar saves sem migração; não investir em adaptadores, recuperação entre versões ou avisos de incompatibilidade a cada entrega. Reavaliar somente quando o usuário solicitar. Manter o salvamento funcional na versão corrente e a validação de dados para evitar falhas do app.
+## 2. Etapa ativa — incremento 31: Ren autoral e contrato de modelos
 
-- **0.1.0.14 — Revisão de exploração, entregue no incremento 18:** por teste do usuário, a maior parte dos setores permitia passar reto. Pausar novas músicas e exigir caminhos elevados, verificação de lugares, mudança de direção e retorno; o trem pode ser mais linear. Não tratar plataformas opcionais ou portas bidirecionais como prova suficiente de exploração. Padrão e revisão em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md). No incremento 19, o usuário autorizou retomar a produção sonora; o aceite físico permanece pendente em paralelo.
+### 2.1 Consolidação — executar primeiro
 
-### 0.2 Forma de implantar cada incremento
+- **31.1.1:** manter este documento como única fila; atualizar estados aqui e evidências em EXECUCAO.md. Não acrescentar outro roteiro por adendo.
+- **31.1.2:** preservar referências históricas de arte e registrar inventário anatômico. Reintroduzir diretrizes permanentes no AGENTS.md.
+- **31.1.3:** conferir commit remoto e preservar trabalho local anterior sem integrar a antiga revisão de sprites do Cipher por acidente.
 
-- **0.2.0.1:** manter mudanças pequenas por sistema, com testes do comportamento afetado; não misturar novos mapas, física e arte numa única entrega sem validação intermediária.
-- **0.2.0.2:** executar `npm test`, `npm run lint`, `npm run build` e smoke de navegador. Registrar o que foi testado em aparelho separadamente do que foi simulado.
-- **0.2.0.3:** manter compatibilidade dos oito mapas até migrar os dados; usar adaptadores/flags em vez de quebrar toda a campanha de uma vez.
-- **0.2.0.4:** marcar itens como IMPLEMENTADO, PARCIAL ou PENDENTE com evidência. Código escrito não equivale a APK distribuído, workflow executado ou teste físico concluído.
-- **0.2.0.5:** versionar mudanças antes de acionar CI remota; não publicar releases nem gerar APK sem pedido expresso. O usuário autorizou o envio das alterações de código e documentação ao GitHub.
+### 2.2 Primeiro modelo — Ren intermediário cel shading
 
-### 0.3 Estado e incrementos
+- **31.2.1:** partir do Ren pintado, não redesenhar sua identidade a partir do rig geométrico atual. Cabelo escuro em mechas moldadas, viseira ciano, cachecol magenta com pontas, jaqueta tática em camadas, harness, bolsa direita com duas tiras circundantes, luvas, calça e botas detalhadas.
+- **31.2.2:** construir fonte editável Blender e GLB com geometria própria, articulação e materiais nomeados. Corpo e roupa devem ter contornos moldados e proporções coerentes; detalhes não se limitam a caixas/cilindros sobrepostos.
+- **31.2.3:** cel shading aplicado no app com bandas de luz e contorno compatível com deformação; materiais Blender são fonte, não garantia de shader toon portátil no GLB.
+- **31.2.4:** fixar unidades, orientação, nomes dos ossos, baseline, pontos de arma e materiais. Reutilizar estados/tempos existentes; manter a engine responsável pelo deslocamento físico e pelos eventos de dano.
+- **31.2.5:** integrar carregamento assíncrono com fallback procedural, erro seguro e descarte de instâncias. Usar o mesmo modelo no menu e na partida. Não copiar recursos GPU sem controle de propriedade.
+- **31.2.6:** inspecionar frente, verso, ambas as direções e poses: repouso, corrida, salto, queda, parede, escalada, hang, vault, dash, slide, três golpes, dano, stun, especial, voo/fallback e morte. Modelo utilizável não implica que todos os clipes já tenham animação autoral final.
+- **31.2.7:** medir triângulos, materiais, chamadas de desenho e tamanho. Capturar prévias reproduzíveis do GLB efetivamente carregado, não usar uma pintura como evidência de modelo 3D.
 
-**Primeiro incremento implementado:** passo fixo, entradas por dispositivo, suspensão/limpeza de entrada, bloqueio de ações fora do jogo, cancelamento de transições antigas, pausa na derrota do chefe, colisão varrida do jogador, transporte por plataforma móvel, proteção inicial do impulso de wall-kick, troca de teste identificada e regra de build final documentada. Há testes de regressão versionados.
+### 2.3 Estado do primeiro lote — incremento 31A
 
-No incremento 1 não havia respawn. O incremento 2 acrescenta ações por tick, buffer/coyote, teclado por tecla física, colisão varrida de tiros/corpos, recuperação de sobreposição/esmagamento, regra de impacto por alvo, ajuste de PSY/armor e respawn exploratório nos oito mapas atuais. Também inclui pausa por gamepad e CI exclusivamente manual. Naquele marco, continuavam pendentes 26 mapas, salvamento, novo sistema musical, novos sprites e APK; não são apresentados como prontos.
+Plano único consolidado; Ren .blend/.glb e carregamento no menu/partida implementados. 333 testes direcionados e builds/sync aprovados; evidências e limitações em [REN_3D.md](REN_3D.md) e EXECUCAO.md. Aceite artístico do usuário e desempenho no aparelho pendentes. O incremento 31 completo continua parcial; demais heróis, chefes e biomas não foram antecipados.
 
-**Marco dos incrementos 7–8:** save local versão 1 e retomada por checkpoint implementados; campanha com 13 mapas (1A–1D, 2A–2C e seis adaptadores), contra a meta de 26. Android horizontal/imersivo e construção de APK manual já implementados nos incrementos 5–6. Música, arte nova, expansão dos demais capítulos e os itens de física marcados como pendentes continuam no plano.
+### 2.4 Critério de saída deste lote
 
-**Incrementos 9–10:** perfis de aceleração/frenagem versão 1 e varredura dos inimigos terrestres implementados; envelope de salto em corrida preservado e documentado em `MOVIMENTACAO_E_TERRENO.md`. O canteiro ganhou 3A–3C com subida de mil unidades, ida/volta verificada e Goliath-IV apenas no heliponto. Campanha nesse marco: 15 mapas; meta: 26. Continuavam pendentes ensaio físico, acabamento/chefes/IA completa e expansão das fases 4–8.
+Plano unificado; Ren em arquivo real .blend/.glb; carregamento no app e menu; continuidade revisada; nenhuma alteração involuntária de física; testes pertinentes, TypeScript, build web, assets Android e sync quando aplicável. Registrar desempenho medido no navegador separadamente de Android real. Nunca declarar modelo final aprovado pelo usuário sem seu aceite.
 
-**Marco dos incrementos 11–12:** IA dos onze inimigos comuns com estados explícitos, ataques preparados/recuperação, proteção contra stun encadeado e colisão de projéteis com terreno. Fábrica e financeiro expandidos em 4A–4C/5A–5C. Campanha com 19 mapas: 16 próprios e três adaptadores. Naquele marco, chefes/padrões finais e expansão das fases 6–8 estavam pendentes; música/arte vêm após a base de gameplay.
+## 3. Jogabilidade e exploração — trabalho contínuo antes de ampliar elenco/biomas
 
-**Estado atual após incrementos 13–14:** oito chefes com sequências próprias em duas fases, preparação/recuperação e gêmeos com dois corpos/vida compartilhada. Catálogo completo com **26 mapas próprios**, 130 inimigos iniciais, 77 checkpoints e 78 objetos. Rotas geométricas e retorno verificados para os três heróis; vitória/save verificados em integração. Balanceamento integral e físico, combos/especiais, áudio, arte e acessibilidade permanecem pendentes; catálogo completo não é release final.
+### 3.1 Contrato dos protagonistas
 
-**Incremento 16:** sequência de três golpes corrigida, janelas/buffer/recuperação e cobertura corpo a corpo. Infraestrutura sonora com quatro canais/volumes persistentes, scheduler pelo relógio de áudio, retomada de sequência e suspensão em background. 332 testes e Chromium aprovados; detalhes em [COMBOS_E_AUDIO.md](COMBOS_E_AUDIO.md). Próximo bloco autônomo: tema do distrito/chefe (6.2.0.1–2), mantendo pendentes ajustes de especiais/combate e aceites físicos. Não há tema final ou certificação Android/controle concluídos.
+| Herói | Identidade atual | Aceite obrigatório |
+|---|---|---|
+| Ren | Mais ágil, wall-jump direcional e pulo psy | Alternância de paredes legível, sem impulso fantasma ou dano através de terreno |
+| Maya | Salto no primeiro toque; segundo toque aéreo mantido ativa voo direcional; pulo psy | Soltar/interromper cancela voo; energia não o reativa sozinha; diagonais normalizadas |
+| Leon | Salto único, superarmadura, quebra de escudos/paredes e fogo | Percurso principal completo sem depender de habilidades alheias, pickup ou troca de teste |
 
-**Incremento 17:** primeiro par de temas composto e integrado: distrito/Cipher, variações e transições no compasso, prévias Ogg e ferramenta de exportação WAV. 338 testes, renderização offline e Chromium aprovados; ainda falta escuta em aparelho. [TRILHA_DISTRITO_E_CIPHER.md](TRILHA_DISTRITO_E_CIPHER.md). Próximo bloco: estender a composição aos capítulos 2–8 e seus chefes, mantendo os ajustes/aceites de combate e de áudio físico pendentes. Não antecipar multiplayer/migração nem gerar APK sem pedido.
+- **J.1:** testar mobilidade real por teclado, toque e gamepad; registrar custo, alcance, janelas e dificuldade separadamente do visual.
+- **J.2:** revisar salto, coyote, buffer, wall-jump, voo, plataformas, teto/cano, dash e rasteira depois de alterar geometria ou controles.
+- **J.3:** preservar combate por estado, preparação e recuperação, cobertura por terreno, reflexão e exceções explícitas de projéteis.
 
-**Incremento 18 — prioridade alterada pelo usuário:** composição adicional pausada. Revisados os 23 setores fora do trem: alas elevadas, guarda de painel, sinal/retorno, portão persistente e saída superior/confronto condicionado. Seis depósitos laterais e apoios adicionais; checkpoints/idas/retornos revalidados. 378 testes, incluindo 156 percursos de exploração/retorno/depósito dos três heróis, e Chromium aprovados. Padrão, mapas e limites em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md). Avaliação de acessos/dificuldade no celular e diversidade de mecanismos precedem retomar as demais músicas.
+### 3.2 Aceite exploratório por capítulo
 
-**Incremento 19 — áudio retomado por pedido do usuário:** catálogo de 19 partituras (oito fases/oito chefes/três fluxos) e 30 sinais, com prioridades e integração aos controles/portões do incremento 18. São 28 prévias Ogg para ouvir, estúdio e exportador reproduzível. 385 testes, renderização de samples e Chromium aprovados. [TRILHA_E_EFEITOS.md](TRILHA_E_EFEITOS.md). Estrutura exploratória conservada; próximos aceites incluem mixagem/latência no Android, ambiências/legados e, depois, arte conforme o plano.
+- **E.1:** percorrer rota obrigatória e retorno com cada herói; sem teleportar, abrir portões artificialmente ou usar troca de teste no percurso aceito.
+- **E.2:** separar ensaio geométrico com combate isolado de playtest com inimigos, objetos móveis, recursos e checkpoints ativos.
+- **E.3:** conferir que mecanismos exigem deslocamento e retorno, que cada portão sinaliza sua origem e que há orientação visual sem revelar todos os segredos.
+- **E.4:** conferir recompensa/retorno dos atalhos de habilidade e ausência de softlock após morte, troca no continue, save/reload e retorno entre setores.
+- **E.5:** individualizar redes por setor; a base modular compartilhada não substitui variedade de percursos. Não trocar exploração por um corredor ao enriquecer o cenário 3D.
+- **E.6:** trem: ritmo de ação, obstáculos e leitura antecipada; não impor labirinto por consistência artificial.
 
-## Fase 1 — Base de física, colisão e movimentação
+## 4. Continuação do incremento 31 — elenco e cenários
 
-### 1.1 Tempo de simulação — IMPLEMENTADO
+Executar após validar o contrato do primeiro modelo e as regressões de jogabilidade.
 
-- **1.1.0.1 — Implementação:** `src/game/simulation.ts` fornece acumulador com passo de 1000/60 ms. `GameEngine.start()` atualiza a simulação zero ou mais vezes por renderização. Manter os valores existentes por tick para preservar o ajuste original a 60 Hz.
-- **1.1.0.2 — Interrupções:** limitar recuperação a 100 ms/seis passos; limpar relógio ao pausar, carregar e parar. Não simular segundos de dano ao retornar de uma interrupção.
-- **1.1.0.3 — Aceite automatizado:** um segundo sintético em 30/60/120/144 Hz executa 60 passos; pausa no meio do catch-up encerra a atualização. O descarte de tempo em travamentos longos é intencional.
-- **1.1.0.4 — Evolução pendente:** medir frame pacing e acrescentar interpolação visual de câmera/personagens se os testes de 120 Hz mostrarem necessidade. A simulação fixa não torna o render automaticamente interpolado.
+- **31.3.1:** aplicar pipeline a Maya e Leon, com inventário próprio, sem copiar proporções/poses de Ren indiscriminadamente.
+- **31.3.2:** individualizar 12 arquétipos inimigos por silhueta, equipamento e postura.
+- **31.3.3:** revisar oito encontros de chefe e suas duas fases; conservar Goliath mecha, Arisawa/Cyber-T-Rex, gêmeos distintos e Entidade Zero cósmica. Modelos humanos genéricos são fallback, não identidade final desses chefes.
+- **31.4.1:** biomas distintos para distrito, trem, canteiro, fábrica, financeiro, museu, blacksite e torre. Colisão separada da decoração, chão/perigos/itens legíveis e profundidade sem falsas plataformas.
+- **31.4.2:** fazer um setor completo como referência e medir no aparelho antes de produzir 26 cenários definitivos.
 
-### 1.2 Estados e ciclo de vida — IMPLEMENTADO no primeiro incremento; unificação estrutural PENDENTE
+## 5. Incremento 32 — combate, especiais e acabamento
 
-- **1.2.0.1:** sincronizar pausa com estado de tela no App, parar gameplay na derrota do chefe e bloquear ações durante pausa/fim de partida.
-- **1.2.0.2:** guardar os temporizadores de transição e cancelá-los em `loadStage()` e `stop()`; impedir callback de uma partida antiga de completar outra.
-- **1.2.0.3:** limpar comandos ao pausar/carregar/continuar; pausar quando perder foco ou ocultar a página. Não retomar automaticamente ao voltar ao app.
-- **1.2.0.4:** posteriormente substituir os booleanos dispersos por máquina de estados única com transições explícitas: menu, introdução, jogo, pausa, morte, continue, conclusão e vitória. Adicionar evento de background/foreground do Capacitor na fase Android.
-- **1.2.0.5 — Aceite:** morte não dispara continue duplicado; chefe gera uma conclusão; reiniciar/voltar ao menu cancela eventos antigos; overlay nunca recebe dano de gameplay.
+- **32.1:** aprofundar especiais/overdrives próprios, consumo, telegraph e recuperação; preservar persistência recompensada.
+- **32.2:** cut-ins 2.5D sincronizados com hitstop, som e eventos reais da engine.
+- **32.3:** balancear capítulos com os três heróis; tempo de exploração, encontros obrigatórios, checkpoints, recompensas e vidas.
+- **32.4:** finalizar retratos, transições, textos, tutorial prático e mixagem. Fontes locais/licenças, redução de flashes/shake, contraste e legibilidade no celular continuam no escopo.
 
-### 1.3 Entrada e responsividade — IMPLEMENTADO no incremento 2; ensaio físico Android PENDENTE
+## 6. Incremento 33 — desempenho, perfis e Android
 
-- **1.3.0.1 — Implementado:** `src/game/input.ts` agrega teclado, toque e gamepad sem que controle ocioso apague as outras entradas. Desconexão limpa apenas a fonte gamepad; pulo touch captura ponteiro e limpa o estado ao perder captura.
-- **1.3.0.2 — Implementado:** centralizar ações discretas numa fila consumida no tick, com detecção de borda, prevenção de duplicação, identificador do ponteiro e tratamento de duas teclas equivalentes pressionadas simultaneamente.
-- **1.3.0.3 — Implementado:** adicionar coyote time inicial de 6 ticks e buffer de pulo de 6 ticks, configuráveis. Prioridade: vault, wall-kick, pulo no chão/coyote e salto aéreo. Buffer deve disparar uma vez, sem consumir salto duplo involuntário.
-- **1.3.0.4 — Aceite:** segurar movimento e pulo com dois dedos, arrastar para fora, cancelar toque, desconectar controle e perder foco não deixam comandos presos. Teclado, toque e gamepad devem produzir a mesma ação de gameplay.
+Profiling começa no Ren do incremento 31; esta etapa fecha o aceite.
 
-### 1.4 Colisão do jogador — PARCIAL
+- **33.1:** medir CPU/GPU, chamadas de desenho, memória/texturas, carregamento, áudio, aquecimento e bateria no aparelho de referência. Alvo: simulação 60 Hz e render estável, com perfil de qualidade documentado.
+- **33.2:** otimizar por evidência: culling, instancing/batching, materiais compartilhados, descarte de GLB/texturas, pools e limites de partículas/inimigos. Testar repetição menu → jogo → setor → menu e perda de contexto WebGL.
+- **33.3:** perfis test/release; troca livre e mapas de teste desligados em release; continue mantém escolha de herói.
+- **33.4:** validar offline/PWA e assets locais Android, paisagem/imersão/Voltar, pausa/background, save atual, toque simultâneo e DualShock 4 físico.
+- **33.5:** checklist 26 setores, três heróis, oito chefes, som, controles e acessibilidade. Assinatura, APK/AAB, release e loja são ações próprias, somente quando solicitadas.
 
-- **1.4.0.1 — Implementado:** extrair `moveAgainstSolids()` para `collision.ts`, escolher a face sólida mais próxima cruzada em X/Y e bloquear atravessamento de plataforma fina. Limitar velocidade de queda a 22 unidades/tick neste ajuste inicial.
-- **1.4.0.2 — Implementado:** acompanhar plataforma móvel de apoio e transportar o jogador pelo deslocamento dela. Preservar impulso externo do wall-kick por seis ticks antes de aceitar novamente o controle horizontal normal.
-- **1.4.0.3 — Implementado com testes; ajuste de esmagamento em aparelho PENDENTE:** tratar sobreposição inicial e esmagamento entre plataforma móvel/teto, verificar deslocamento de esteira contra paredes e revalidar checkpoint quando o piso seguro deixar de existir. Definir explicitamente dano/resgate em esmagamento; não teletransportar silenciosamente para dentro de sólidos.
-- **1.4.0.4 — Implementado para projéteis/corpos contra alvos e terreno dos inimigos:** aplicar varredura aos projéteis e corpos lançados, com colisão por segmento/tempo de impacto. A primeira versão alterou apenas sólidos contra o jogador; o incremento 2 adiciona varredura de projéteis/corpos contra alvos. O incremento 9 acrescenta varredura dos inimigos terrestres contra sólidos, incluindo stun, esteiras e apoio móvel.
-- **1.4.0.5 — Aceite:** queda rápida, dash contra parede, teto baixo, cantos, retorno de abismo, parede alternada, plataforma ascendente/descendente e esteiras não atravessam sólidos nem deixam o jogador preso. Rodar nas oito fases e três personagens.
+## 7. Validação e publicação de cada entrega
 
-### 1.5 Ajuste de movimento e câmera — PARCIAL: perfis/aceleração/câmera implementados; acabamento e ensaio físico pendentes
+1. Conferir diff, fontes e recursos efetivamente carregados. Testes de pixels/ossos não comprovam qualidade artística.
+2. Executar testes pertinentes, npm run lint, npm run build e smoke do navegador; ampliar para regressões de campanha conforme os sistemas alterados.
+3. Verificar build:android e android:sync para entregas de assets destinadas ao Android, sem rodar Gradle/APK.
+4. Identificar testes exaustivos não concluídos, limitações de ambiente e aceites físicos pendentes; não copiar contagens antigas como prova nova.
+5. Atualizar este plano e EXECUCAO.md, publicar commit no GitHub e conferir SHA remoto. Workflows continuam exclusivamente manuais.
 
-- **1.5.0.1 — Implementado no incremento 9:** reunir gravidade, aceleração, velocidade terminal, arrasto, controle aéreo e impulsos em perfis versionados, com unidades documentadas e referências ao passo de 60 Hz.
-- **1.5.0.2 — Implementado e medido no incremento 9:** definir aceleração/desaceleração em vez de atribuição instantânea de velocidade; conservar a agilidade arcade. Medir altura/distância de salto para Ren/Maya/Leon antes e depois.
-- **1.5.0.3 — Normalização e comando revisados no incremento 28; ajuste de foco em aparelho pendente:** primeiro toque de PULO dá salto normal, mesmo mantido; soltar/apertar novamente no ar e segurar ativa voo. Soltar/pousar/interromper descarta a intenção, sem reativação automática. Normalizar voo diagonal de Maya, revisar consumo/recarga de foco e garantir que cada rota principal continue acessível aos personagens sem voo.
-- **1.5.0.4 — Área de overdrive e viewport com altura lógica implementadas; ensaio físico pendente:** usar altura lógica de 540 unidades (aproximada no incremento 6, antes 900): a mesma proporção de tela mostra a mesma área do mundo em resoluções diferentes. No navegador, retrato mantém altura lógica e vê menos largura; Android fica bloqueado em horizontal; não comprimir um cenário inteiro em sprites minúsculos. A área do overdrive é independente da resolução. DPR e escala inteira ainda exigem acabamento visual.
-- **1.5.0.5 — Antecipação, limites e zona morta implementados; ajustes de shake/opções pendentes:** implementar look-ahead com limites por sala, antecipação vertical, zona morta e opção de intensidade do shake. Ajustar HUD/controles sem cobrir pontos de pouso.
-- **1.5.0.6 — Saída da fase:** suíte de regressão, trajetórias comparáveis entre taxas de render, todas as rotas críticas acessíveis e ensaio em Android antes de congelar números de balanceamento.
+## 8. Fora do escopo ativo
 
-## Fase 2 — Combate, vida e regras de personagem
-
-### 2.1 Troca e continue — PARCIAL
-
-- **2.1.0.1 — Implementado:** manter função de troca durante gameplay de teste, rotular botão/instrução e retirar o piso de 10 HP que curava ao trocar. Usar conversão conservadora por proporção, com mínimo de 1 para personagem vivo.
-- **2.1.0.2 — Implementado:** flag `VITE_TEST_CHARACTER_SWITCH=false` desabilita troca livre no botão, atalho e método do motor. Por padrão permanece habilitada nesta versão de testes, inclusive em build normal; portanto build normal ainda não é configuração final.
-- **2.1.0.3 — Pendente:** criar perfis explícitos de build `test` e `release`. Na release a flag deve ser false e o seletor inicial só escolhe quem começa; o personagem permanece em todas as subfases e só muda no continue.
-- **2.1.0.4 — Aceite:** testes de build final sem botão/Tab/troca direta; continue ainda permite os três heróis e assistências continuam disponíveis. Testar transição de fase, morte e reinício sem troca indevida.
-
-### 2.2 Impactos e recursos — PARCIAL
-
-- **2.2.0.1 — Implementado para rasteira e corpo lançado:** dar identificador único a cada ataque e registrar alvos atingidos; rasteira e corpo lançado não podem aplicar dano a cada frame salvo se classificados como dano periódico com intervalo definido.
-- **2.2.0.2 — Implementado no incremento 16; atlas final pendente:** sequência 0/1/2 com launcher no terceiro, janela de ligação de 24 ticks após recuperação e comando antecipado único nos últimos seis ticks. Impacto/som no início, efeito visual de 6/6/8 ticks e durações de 11/11/16 ticks; sem dano repetido durante o arco. Dano/stun/resgate interrompem, pausa limpa o buffer. Cobertura sólida também protege contra golpe/reflexão. Contrato em [COMBOS_E_AUDIO.md](COMBOS_E_AUDIO.md).
-- **2.2.0.3 — Custo/seleção de alvo corrigidos; especiais distintos pendentes:** padronizar PSY: custo mínimo correspondente à ação; diferenciar especiais dos heróis; fazer reflexão escolher atirador, chefe ou inimigo mais próximo conforme regra explícita.
-- **2.2.0.4 — Cooldown da armor corrigido; balanceamento geral pendente:** documentar HP, invulnerabilidade, armor e stun. Conferir Leon sem recuo mas com proteção adequada contra múltiplos projéteis simultâneos.
-- **2.2.0.5 — Aceite:** um ataque normal conta uma vez por alvo; WAV perfura mas não reaplica no mesmo alvo; telecinese não concede recompensa duplicada; combo e foco obedecem aos valores definidos.
-
-### 2.3 Inimigos e chefes — PARCIAL: estados e padrões implementados; balanceamento/aceite completo pendentes
-
-- **2.3.0.1 — Implementado nos incrementos 9/11:** separar IA em estados patrulha/alerta/ataque/recuperação/stun/morte; introduzir limites de perseguição e verificação de piso para não acumular inimigos em abismos.
-- **2.3.0.2 — Cooperação/telegrafia e proteção contra stun implementadas no incremento 11; balanceamento pendente:** conservar cooperação guarda/cão/atirador, com sinais legíveis e limites para stun encadeado.
-- **2.3.0.3 — Sequências próprias e gêmeos atingíveis implementados no incremento 13; balanceamento pendente:** individualizar os oito chefes com padrões, telegrafia e contra-ataques próprios; gêmeos devem ter regra clara de dois corpos/vida compartilhada. Arisawa e Vane deixam de usar somente especial genérico.
-- **2.3.0.4 — Aceite:** derrotar cada chefe com todos os personagens sem depender de bugs; fase 2 modifica o padrão com clareza; combates não geram softlock.
-
-### 2.4 Torretas industriais e contratos de projétil — IMPLEMENTADO; aceite físico pendente
-
-- **2.4.0.1:** suportes tipados e validados em paredes/tetos; corpos fora do sólido, sem gravidade/recuo; abertura, mira para o lado exposto, preparação e rajada de três tiros.
-- **2.4.0.2:** instalador com aproximação, preparação interrompível de 90 ticks, instalação única por aparição e fuga com colisão/chão seguro. Morte antes do evento não instala.
-- **2.4.0.3:** ativar filho autoral dormente pelo SpawnManager, com vida 180 contra 90 das fixas e 55 do instalador; bloquear sobreposição/duplicação, conservar origem/recompensas e permitir reposição por novo instalador.
-- **2.4.0.4:** codec aceita dormência somente para filhos previstos, conserva instalação/fuga e impede rajada surpresa ao restaurar. Mapas dos capítulos 4/7 recebem os encontros; saves incompatíveis são retidos.
-- **2.4.0.5:** varredura bloqueia tiros de ambos os lados no primeiro sólido; `piercing` de atores não atravessa paredes; `passesThroughWalls` exige opt-in e nenhum ataque atual o usa. `reflectable: false` no Olho Cósmico, com contorno branco; ainda bloqueado por parede.
-- **2.4.0.6:** 320 testes, TypeScript e smoke Chromium horizontal aprovados; testar dificuldade, sinais e controles em aparelho antes de congelar balanceamento. Contrato e implantação em [TORRETAS_E_PROJETEIS.md](TORRETAS_E_PROJETEIS.md). Seguir depois com ajustes de combate/segredos e áudio, sem ampliar a contagem de setores nem antecipar multiplayer/migração.
-
-## Fase 3 — Exploração e repopulação de inimigos
-
-### 3.1 Modelo de spawns — IMPLEMENTADO para os oito mapas atuais; namespaces e estado por subfase IMPLEMENTADOS no distrito
-
-- **3.1.0.1:** substituir vínculo entre inimigo vivo e array estático por `SpawnDefinition`: id estável, subfase/sala, posição de origem, tipo, perfil, grupo, política de respawn e recompensa.
-- **3.1.0.2:** manter `SpawnRuntime` separado: entidade ativa, contador de aparições, último instante de morte, afastamento acumulado e elegibilidade. IDs de entidade devem ser novos a cada aparição; spawnId permanece estável.
-- **3.1.0.3:** adaptar os inimigos existentes para spawns sem mudar inicialmente posições/atributos. Validar duplicidade de IDs e spawn dentro de paredes na carga.
-
-### 3.2 Política de afastamento — IMPLEMENTADO nos oito mapas; ajuste por grafo de salas PENDENTE
-
-- **3.2.0.1:** ponto inicial de ajuste: raio mínimo de preparação de 900 unidades, ampliado para cobrir a viewport; armar respawn somente após afastamento de pelo menos 1.800 unidades da origem por 5 segundos simulados e mínimo de 15 segundos desde a morte. Esses valores são protótipo, não balanceamento aprovado.
-- **3.2.0.2:** em mapas verticais usar distância 2D e/ou grafo de salas; em subfases menores usar mudança para uma sala distante, nunca um limiar inalcançável maior que o próprio mapa.
-- **3.2.0.3:** durante a exploração de um setor exibido, reaparecer apenas fora da área visível acrescida de margem de 240 unidades e fora do raio de segurança de 320 do jogador. Se não houver ponto seguro, adiar; não surgir sobre a cabeça do jogador.
-- **3.2.0.4:** não apagar nem duplicar inimigo ainda vivo ao sair da câmera. Aplicar teto inicial de 24 inimigos comuns ativos por subfase, com prioridade aos encontros obrigatórios e orçamento de atualização por distância.
-- **3.2.0.5 — Implementado na sessão:** guardar estado por subfase durante a sessão; atravessar uma porta de ida e volta não deve rearmar imediatamente tudo. Após ausência elegível, preparar o retorno antes de revelar o setor, sempre mantendo segurança, cooldown e população máxima.
-
-### 3.3 Exceções, recompensas e testes — IMPLEMENTADO; estado incluído no save persistente no incremento 7
-
-- **3.3.0.1:** chefes e inimigos de emboscada obrigatória não reaparecem após conclusão; inimigos ordinários podem reaparecer. Uma arena concluída não deve voltar a trancar o jogador.
-- **3.3.0.2:** baús secretos, cura garantida e objetos únicos persistem coletados. Derrotas confirmadas por origem dão inicialmente 1.000, 500, 50 e depois zero pontos. Acertos comuns/guard crush sem derrota não pontuam nem consomem a curva. Captura telecinética conta como uma derrota. Desaparecer sem derrota atribuída não consome recompensa. Não há teto de vidas por fase; pontos continuam concedendo 1-UP internamente, sem expor valores ao jogador. Itens únicos continuam protegidos contra duplicação. Esta regra substitui a política anterior de zero pontos para toda reaparição.
-- **3.3.0.3 — Aceite:** afastamento curto não repõe inimigo; afastamento grande/tempo suficiente e retorno repõem; pausa não conta tempo; mapa vertical funciona; nenhum respawn visível, duplicado, em parede ou em arena concluída.
-
-### 3.4 Percurso exploratório obrigatório — IMPLEMENTADO no incremento 18; aceite físico/dificuldade pendentes
-
-- **3.4.0.1:** entrada/observação → ala elevada/guarda/comando → retorno a outra ala → liberação → saída/confronto. Preservar recursos e desvios opcionais; trem permanece exceção linear.
-- **3.4.0.2:** 23 rotas autorais com tetos/patamares, controles dependentes, 23 guardas não repetíveis e 23 portões. Reposicionar saídas/checkpoints em rotas elevadas, manter ascensões de 3B/8C e acesso bidirecional entre setores.
-- **3.4.0.3:** seis depósitos laterais acessíveis sem acionar o circuito. O voo pode facilitar deslocamento, mas não substituir inspeções. Não obrigar limpar cada inimigo comum.
-- **3.4.0.4:** progresso persistente por tentativa, inclusive depois de morte/retorno/carregamento; validar comandos, dependências, guardas e portões. Nenhuma migração entre versões requerida.
-- **3.4.0.5:** substituir a aceitação de corredor por navegação física dos três heróis: 69 idas com objetivos, 69 retornos e 18 depósitos; sem voo, dano, teleporte ou assistência móvel. Trem conserva regressões próprias. Ensaios de combate separados.
-- **3.4.0.6 — Próximo aceite:** testar em aparelho com inimigos/móveis ativos; avaliar leitura do HUD, acessos, repetição do circuito, guardas deslocados e ritmo. Diversificar os mecanismos ambientais por tema. O usuário autorizou retomar áudio no incremento 19, sem encerrar os aceites físicos de estrutura. Fonte/diagramas em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md).
-
-## Fase 4 — Oito fases, 26 subfases
-
-Estado após o incremento 14: 26 mapas próprios, na distribuição 4+3+3+3+3+3+3+4. Não há adaptadores no catálogo de campanha. Os oito mapas originais ficam como ferramentas de teste. Ver `CAMPANHA_E_SUBFASES.md` para os contratos executáveis, regras de portas e limites da retomada em memória. O incremento 7 acrescenta save local versionado e restauração no checkpoint; detalhes em `SALVAMENTO.md`.
-
-### 4.1 Contratos de campanha — IMPLEMENTADO para os oito capítulos
-
-- **4.1.0.1:** criar `CampaignStage` (fase principal), `SubstageDefinition` (mapa jogável), `ExitDefinition` (ligação/condição), `CheckpointDefinition` e `CampaignProgress`. Usar identificadores como `1A`, não índices frágeis de array.
-- **4.1.0.2:** distinguir fim de sala/subfase de derrota de chefe/fim de fase. `loadSubstage()` recebe herói, HP, vidas, foco, pontos, buffs e estado persistente; reiniciar/checkpoint/continue têm contratos separados.
-- **4.1.0.3:** criar adaptador temporário dos oito `StageDefinition`; os mapas antigos continuam executáveis enquanto novas subfases são construídas. Não multiplicar artificialmente oito mapas iguais.
-- **4.1.0.4:** construir grafo com ida/volta onde fizer sentido, portas, requisitos e saídas explícitas; completar fase principal somente no objetivo final. Retorno de exploração não refaz chefe nem história final.
-
-### 4.2 Distribuição editorial — 26 mapas; revisão exploratória ampla no incremento 26, playtest integral pendente
-
-Os nomes são propostas de produção e podem ser refinados sem alterar o total. São 26 mapas distintos: 4+3+3+3+3+3+3+4.
-
-| Fase principal | Subfases previstas | Total | Encontro final |
-| --- | --- | ---: | --- |
-| 1 — Distrito | 1A Fuga do laboratório; 1B Telhados; 1C Esgotos; 1D Avenida bloqueada | 4 | Cipher-01 |
-| 2 — Monotrilho | 2A Vagões e embarque; 2B Cabos e manutenção; 2C Teto e pórticos | 3 | Valkyrie-7 |
-| 3 — Canteiro | 3A Fundação; 3B Guindastes e vigas; 3C Heliponto na tormenta | 3 | Goliath-IV |
-| 4 — Fábrica | 4A Tanques; 4B Esteiras; 4C Núcleo de descarte | 3 | Arisawa / Cyber-T-Rex |
-| 5 — Financeiro | 5A Boulevard; 5B Garagens e serviços; 5C Suíte executiva | 3 | Castor & Pólux |
-| 6 — Museu | 6A Galerias; 6B Jardins digitais; 6C Acervo restrito | 3 | Kusanagi |
-| 7 — Blacksite | 7A Docas; 7B Blocos de contenção; 7C Centro de comando | 3 | Comandante Vane |
-| 8 — Torre | 8A Base da torre; 8B Núcleo Zero; 8C Elevador orbital; 8D Estratosfera | 4 | Oswald / Entidade Zero |
-
-- **4.2.0.1 — Implementado como lote jogável inicial; acabamento/playtest de dificuldade pendentes:** desenvolver primeiro 1A–1D como amostra completa: deslocamento, exploração opcional, respawn, checkpoint e chefe. Validar com os três heróis antes de replicar padrões.
-- **4.2.0.2 — Fases 1–8 implementadas em lotes, concluído no incremento 14:** produzir fases 2/3; depois 4/5; depois 6/7; por fim 8. Cada lote entrega mapas com começo, retorno, segredo, checkpoint e objetivo, não apenas cenário vazio.
-- **4.2.0.3 — Revisão 26: redes amplas de três níveis em 23 setores; trem preservado; rotas comuns e exemplos de habilidade verificados:** mapear requisitos de salto/alcance por trecho; nenhuma rota obrigatória pode exigir voo exclusivo de Maya. Habilidades podem facilitar segredos, mas não bloquear campanha com outro herói.
-- **4.2.0.4 — Intro no primeiro setor/fecho no último implementados; revisão editorial pendente:** elaborar diálogos por entrada e evento, evitando repetir texto a cada retorno; reservar chefes para a última subfase e encontros intermediários onde contribuírem para ritmo.
-- **4.2.0.5 — Contagem/grafo/rotas geométricas verificados; campanha integral de combate pendente:** 26 IDs únicos alcançáveis; todos os caminhos principais sem softlock; conclusão da campanha validada com Ren/Maya/Leon; contagem 24–28 verificada por ferramenta de validação de dados.
-
-**4.2.0.6 — Implementado no incremento 26:** exploração confinada ao capítulo, sem portas de fase 6 para fase 2. Redes com alas/poços, mecanismos intermediários, retornos e atalhos persistentes; Ren tem percurso cinético, Maya ilha de voo, Leon parede rompível. Nenhuma habilidade exclusiva bloqueia a rota principal. Fábrica com 9.700–10.200 unidades por setor; 26 mapas, sem ampliar a contagem de setores. Contrato e limites em [PADRAO_DE_FASES.md](PADRAO_DE_FASES.md).
-
-### 4.3 Persistência e continuidade — IMPLEMENTADO no incremento 7; ensaio físico Android pendente
-
-- **4.3.0.1 — Implementado:** gravar progresso local versionado: campanha, subfase, herói, checkpoint, vidas, score, flags únicas e preferências. Salvar só em pontos consistentes, nunca no meio de uma resolução de colisão.
-- **4.3.0.2 — Validação implementada; compatibilidade entre versões fora do escopo atual:** validar dados na leitura para evitar falhas. Não desenvolver migrações nem preservar saves antigos durante os testes com instalação limpa, conforme 0.1.0.13. O mecanismo existente de backup/recuperação pode permanecer, sem ser requisito para novos formatos. APK e navegador podem ter armazenamentos separados; não prometer sincronização entre eles.
-- **4.3.0.3 — Validado em testes e Chromium; Android físico pendente:** fechar/reabrir restaura checkpoint válido; continue mantém regra de personagem; dados inválidos não derrubam o app; atualizações compatíveis preservam progresso.
-
-## Fase 5 — Android de testes e GitHub Actions
-
-Estado do incremento 5: Capacitor 8.6.2, projeto nativo e wrapper versionados; APK debug compilado e assinatura verificada localmente. A Action existente agora valida e gera APK somente por solicitação manual, com Ubuntu 26.04, Actions Node 24 e Java 21 explícitos. Detalhes em [ANDROID_APK.md](ANDROID_APK.md). Os itens de comportamento no aparelho de 5.1.0.3, assinatura estável definitiva e o aceite de 5.2.0.6 continuam pendentes. A troca livre de personagem permanece habilitada apenas como ferramenta de testes.
-
-### 5.1 Preparar pacote Android — PARCIAL: APK local validado; ensaio físico pendente
-
-- **5.1.0.1:** instalar versões compatíveis e fixadas de `@capacitor/core`, CLI e Android; criar configuração com `webDir: 'dist'` e appId provisório documentado antes da release. Verificar versões mínimas exigidas de Node/JDK/SDK na implementação, sem escolher combinações incompatíveis por suposição.
-- **5.1.0.2:** gerar projeto Android, versionar código nativo e wrapper Gradle, executar build web e `cap sync android`. Não apontar webDir para a raiz do repositório.
-- **5.1.0.3:** validar assets locais, inicialização do áudio após gesto, back Android, status/navigation bars, safe areas, rotação, background e restauração. No empacotamento, evitar service worker desatualizado substituindo assets internos.
-- **5.1.0.4:** produzir APK debug instalável. Para updates sem reinstalar, reutilizar a keystore debug pelo cache do GitHub (implementado); adotar keystore própria em secrets para estabilidade garantida posteriormente; keystore de produção nunca entra no Git.
-
-### 5.2 Pipeline de APK — IMPLEMENTADO; execução remota e instalação pendentes
-
-- **5.2.0.1:** adaptar `.github/workflows/manual-checks.yml` com `workflow_dispatch` como único gatilho. Não executar por push, pull request ou outro evento. Só acionar a geração após pedido expresso do usuário; nunca disponibilizar secrets a código não confiável.
-- **5.2.0.2:** sequência: checkout → Node/Bun fixados → instalação com lockfile congelado → testes → TypeScript → build web → sync Capacitor → Java/SDK compatíveis → `./gradlew assembleDebug` na pasta android → upload do APK e relatório.
-- **5.2.0.3:** criar artifact `MindBreak-APK-debug-<execução>` com `MindBreak-debug.apk`, SHA-256 e identificação do commit. Falha em teste ou Gradle deve falhar o job; upload deve exigir arquivo existente.
-- **5.2.0.4:** usar cache de pacotes/Gradle com chaves dos lockfiles e retenção inicialmente de 14 dias. Fixar versões das actions e dependências de build; ao consolidar CI, fixar actions por SHA revisado.
-- **5.2.0.5:** build de testes mantém troca livre sinalizada; futuro workflow release define `VITE_TEST_CHARACTER_SWITCH=false`. Acrescentar verificação automatizada de que release não expõe a ferramenta.
-- **5.2.0.6 — Aceite:** execução real no GitHub concluída, artifact baixado e APK instalado no aparelho. Workflow escrito/localmente validado não satisfaz sozinho esse aceite.
-
-### 5.3 Como baixar e instalar no celular
-
-- **5.3.0.1:** no navegador com acesso ao repositório: GitHub → Actions → execução concluída → Artifacts → baixar ZIP → extrair APK → abrir no Android → permitir instalação por aquela origem, se solicitado → instalar → abrir.
-- **5.3.0.2:** artifacts podem exigir login e expiram conforme retenção. Para download direto mais simples, uma etapa futura pode anexar APK a uma prerelease via `gh release upload`, com permissão `contents: write` e publicação deliberada. Não criar uma release pública automaticamente nesta etapa.
-- **5.3.0.3:** GitHub Actions na nuvem **não instala nem abre sozinho o jogo no celular pessoal**. Isso só é automatizável com dispositivo conectado/autorizado a um runner próprio e ADB, ou infraestrutura de device lab. Download e instalação manual atendem ao teste inicial sem essa complexidade.
-- **5.3.0.4:** mudança de assinatura pode exigir desinstalação e perder saves. Registrar versão e assinatura no guia de testes; builds release exigem assinatura e fluxo próprios.
-
-### 5.4 Matriz de teste Android / DualShock 4 — PENDENTE de aparelho
-
-- **5.4.0.1:** medir modelo Android, versão do sistema/WebView, resolução/orientação, FPS e build/commit. Conferir pausa por background, áudio, instalação e atualização.
-- **5.4.0.2:** parear DualShock 4 pelas configurações do Android; validar Gamepad API e `mapping`. Planejar cruz=pulo, quadrado=golpe, círculo=dash, triângulo=PSY, L1=assist e Options=pausa. Implementar fallback/remapeamento se o aparelho apresentar layout diferente.
-- **5.4.0.3 — Implementado no navegador; validação física pendente:** implementar pausa/retomada de gamepad fora do loop de simulação pausado; o polling atual não pode retomar uma pausa se simplesmente parar de ler o controle.
-- **5.4.0.4:** testar analógico/D-pad, diagonais, deadzone, botão mantido, reconexão e alternância toque/controle. Sem dispositivo conectado nesta máquina, não declarar DualShock 4 físico aprovado.
-
-## Fase 6 — Música, efeitos e resposta sonora
-
-### 6.1 Infraestrutura — PARCIAL: mixer, preferências e scheduler implementados; pipeline de arquivos/auditoria física pendentes
-
-- **6.1.0.1 — Implementado no incremento 16:** buses master/music/SFX/voz, sliders no menu/pausa, preferências globais locais e mute sem reiniciar a fase da música; suavização de ganho, compressor e teto de 48 fontes.
-- **6.1.0.2 — Implementado no incremento 16; aceite auditivo físico pendente:** look-ahead de 100 ms, preenchimento a cada 25 ms, notas no relógio do AudioContext; pausa preserva sequência, background cancela fontes/suspende contexto e retorno depende do usuário. Atrasos não disparam notas acumuladas.
-- **6.1.0.3 — Síntese local e origem documentadas; arquivos/pré-carregamento pendentes:** sons atuais são procedurais, sem novos recursos externos. Política para próximos loops/fontes e limites em [COMBOS_E_AUDIO.md](COMBOS_E_AUDIO.md); definir codec/orçamento com Android real antes do carregador de arquivos.
-
-### 6.2 Conteúdo musical — PENDENTE
-
-- **6.2.0.1 — Catálogo sintetizado implementado no incremento 19; acabamento/motivos dos heróis pendentes:** oito temas de fase, oito chefes e menu/game over/vitória; progressões, ganchos, ritmos e timbres próprios, variações de setor/tensão/fase 2 e transição no compasso. Metadados e prévias em [TRILHA_E_EFEITOS.md](TRILHA_E_EFEITOS.md).
-- **6.2.0.2 — Composições integradas; aceite auditivo físico pendente:** par distrito/Cipher do incremento 17 e demais sete pares/fluxos do incremento 19. Estúdio com exportação WAV e 28 Ogg de documentação; menu espera gesto, pausa/background preservam regras. Fanfarra legada de fase permanece. Validar volume/repetição/emenda no Android.
-- **6.2.0.3 — Parcial no incremento 19:** catálogo de 30 sinais para movimento, combo, impactos, tiros, exploração, alertas, poderes e interface; cooldowns, limite de 48 fontes e prioridades/reserva. Voz normal reduzida ao finalizador. Ambiências, revisão dos efeitos legados e gravação/dublagem continuam pendentes; mixagem sob carga ainda exige aparelho.
-- **6.2.0.4 — Aceite:** loops sem estalo perceptível, sem drift sob carga normal, volumes independentes, interrupções corretas, origem dos recursos documentada e avaliação auditiva no aparelho. Dublagem/gravação profissional fica como produção própria, sem prometer ferramenta indisponível.
-
-## Fase 7 — Arte, animação e cenários
-
-### 7.1 Direção e pipeline — PARCIAL (V2 anatômica, incremento 23)
-
-- **7.1.0.1 — Heróis implementados; tiles/ambientes pendentes:** registrar paletas, resolução base dos sprites, proporções, pivôs, tamanho de tiles, nomenclatura e política de escala inteira. Priorizar silhueta e contraste. Revisão 23 adota ilustração 2D com anatomia articulada e antialias; contratos atuais em `DIRECAO_VISUAL_V2.md`, superando a escala inteira/paleta restrita da V1.
-- **7.1.0.2 — Pipeline de heróis implementado:** criar atlas/spritesheets com metadados de animação: frame, duração, pivot, hurtbox, hitbox e eventos de som. Trocar frame por estado real, sem alterar colisão arbitrariamente ao trocar imagem.
-- **7.1.0.3:** arte gerada por imagem pode servir de conceito/recurso, mas será revisada quanto à consistência entre frames, transparência e tamanho. Manter arquivos fonte e exportações reproduzíveis.
-- **7.1.0.4 — Ren/Maya implementados no incremento 27; demais personagens nas próximas revisões:** usar imagens próprias para esquerda/direita, preservando o lado anatômico de acessórios. Seleção por direção, sem espelhar a pintura no runtime; manter pivôs, colisões e timings. Aplicar a regra a Leon, inimigos e chefes em seus lotes de arte. Fontes, atlas compactados, prévias e orçamento em [VISTAS_DIRECIONAIS.md](VISTAS_DIRECIONAIS.md).
-- **7.1.0.5 — Diretriz obrigatória, prioridade muito alta:** conservar corpo, inventário, lado anatômico, verso e fixação de cada detalhe em todas as vistas/poses. Duas joelheiras do Leon; bolsas na coxa direita de Ren/Maya, com tiras circundantes; pontas das faixas do Ren. Corpos humanos sem membros extras, deformações ou fragmentos de quadros vizinhos. Exceções apenas por design intencional, como zumbi. Revisar fontes e atlas efetivos, não declarar coerência apenas por testes. [CONTINUIDADE_VISUAL.md](CONTINUIDADE_VISUAL.md), também em `AGENTS.md`.
-
-Contrato, paletas, prévias reproduzíveis, orçamento e limites do fluxo de morte em [ARTE_E_ANIMACAO.md](ARTE_E_ANIMACAO.md).
-
-### 7.2 Personagens, inimigos e chefes — PARCIAL (três protagonistas pintados e revisão de continuidade 28)
-
-- **7.2.0.1 — Três heróis com pinturas integradas e vistas próprias; continuidade/anatomia revisadas no incremento 28; intermediários e aprovação em aparelho pendentes:** produzir heróis com idle, corrida, salto, queda, parede, escalada, hang, vault, dash, slide, combo, dano, stun, especial e morte; Maya inclui voo. Integrar um herói antes de produzir todas as variantes.
-- **7.2.0.2 — Primeira passagem dos 12 inimigos e oito chefes/duas fases integrada; revisão no aparelho pendente:** diferenciar doze arquétipos inimigos por silhueta/arma/postura, sem depender só de cor; depois desenhar os oito chefes e transformações.
-- **7.2.0.3:** criar cut-ins e retratos com coerência visual; sincronizar efeitos de impacto com hitstop, som e janela de dano.
-
-Silhuetas, estados, recortes, orçamento e prévias dos inimigos em [ARTE_DOS_INIMIGOS.md](ARTE_DOS_INIMIGOS.md).
-
-Chefes, transformações, contrato de estado e prévias em [ARTE_DOS_CHEFES.md](ARTE_DOS_CHEFES.md).
-
-### 7.3 Ambientes — PENDENTE
-
-- **7.3.0.1:** criar tiles e objetos para cada bioma principal, com variações de subfase; manter camada de colisão separada da decoração.
-- **7.3.0.2:** enriquecer parallax e props sem esconder chão, inimigos e pickups. Marcar perigos, passagens exploráveis e planos de profundidade.
-- **7.3.0.3 — Aceite:** fase 1 completa serve como padrão de arte; validar leitura no celular antes de completar 26 cenários. Fixar orçamento de atlas, partículas e tamanho de APK por lote.
-
-## Fase 8 — Interface, escrita, acessibilidade e progressão
-
-### 8.1 Interface e controles configuráveis — PENDENTE
-
-- **8.1.0.1:** separar opções, campanha, seleção livre de teste e continue. Ocultar controles touch quando houver preferência de teclado/gamepad, sem impedir retorno ao toque.
-- **8.1.0.2:** permitir tamanho, posição e opacidade dos botões; persistir layout e oferecer reset. Respeitar safe areas e testar retrato/paisagem.
-- **8.1.0.3:** padronizar HUD, alertas e tutorial prático; mostrar custo/disponibilidade de ações sem termos técnicos de implementação.
-
-### 8.2 Tipografia e conteúdo — PENDENTE
-
-- **8.2.0.1:** hospedar fontes localmente com licenças, carregar pesos realmente usados e atualizar cache offline. Definir tokens tipográficos também para canvas.
-- **8.2.0.2:** revisar português, tutorial, diálogos, descrição dos chefes/músicas e metadados; ajustar textos ao que está implementado. Definir `lang` coerente e corrigir rótulo de instalação por plataforma.
-- **8.2.0.3:** adicionar redução de flashes/shake, tamanho de texto e contraste; revisar bloqueio de zoom. Não prometer acessibilidade integral do canvas sem alternativas de interação adequadas.
-- **8.2.0.4 — Aceite:** preferências sobrevivem à atualização, textos cabem em telas pequenas, instalação e ações são compreensíveis e recursos funcionam offline após instalação validada.
-
-## Fase 9 — Engenharia, desempenho e distribuição final
-
-### 9.1 Modularização e testes — PARCIAL
-
-- **9.1.0.1 — Iniciado:** extrair relógio, entrada e colisão em módulos testáveis; adicionar testes versionados e comando `npm test` sem nova dependência de teste.
-- **9.1.0.2:** gradualmente separar combate, spawns/IA, câmera, render e áudio; preservar contratos e comportamento validado, sem reescrita integral de uma vez.
-- **9.1.0.3 — Workflow manual de qualidade criado; execução remota e demais suítes pendentes:** CI de qualidade exclusivamente manual, validação do grafo de campanha, testes de save e smoke de produção. Manter testes sintéticos separados de ensaios físicos Android.
-- **9.1.0.4:** remover dependências não usadas após confirmar build/instalação; fixar ferramenta no manifest; revisar licenças e vulnerabilidades sem alterar lockfile às cegas.
-
-### 9.2 Desempenho e integridade — PENDENTE
-
-- **9.2.0.1:** medir tempo de update/render, alocações, memória, Web Audio, carregamento e tamanho do APK em aparelho alvo. Meta inicial: 60 ticks/s com render estável em dispositivo de referência; documentar quando qualidade reduzida for necessária.
-- **9.2.0.2:** implementar descarte de desenho fora da câmera, cache de cenário, teto/pool de partículas e budgets de spawn; só otimizar gargalos medidos.
-- **9.2.0.3 — Implementado:** retirar histórico pessoal de `public/assets`, conferir lista completa do pacote e evitar inclusão de arquivos de desenvolvimento. Arquivar material pessoal fora da pasta pública sem descartá-lo sem preservação.
-- **9.2.0.4:** validar service worker/atualização no web e assets internos no Android, fontes offline, saves, recuperação de erro e diferença entre build test/release.
-
-### 9.3 Release — PENDENTE
-
-- **9.3.0.1:** criar checklist de campanha 26/26, heróis 3/3, chefes 8/8, toque, DualShock 4, saves, som, acessibilidade e desempenho.
-- **9.3.0.2:** definir appId definitivo, nome, ícone, versão, SDK alvo, assinatura, política de privacidade e canal de distribuição; gerar APK/AAB conforme destino.
-- **9.3.0.3:** release desliga troca livre e seletor de debug; continue mantém escolha de herói. Publicação em GitHub Releases ou loja é uma ação própria, posterior à geração/verificação do pacote.
-
-## Fase 10 — Itens futuros, fora do escopo ativo
-
-### 10.1 Multiplayer
-
-- **10.1.0.1:** avaliar cooperativo local e online separadamente, regras de câmera, ownership de entidades, determinismo, sincronização, servidor e latência. Não implementar rede junto com correção da física atual.
-- **10.1.0.2:** decidir escopo após campanha solo estável; definir autoridade, antitrapaça e custos antes de ranking competitivo ou multiplayer online.
-
-### 10.2 Migração de engine
-
-- **10.2.0.1:** somente reavaliar após profiling e requisitos nativos demonstrarem limitação concreta. Comparar manutenção, performance, ferramentas de nível, assets, Android, custo de portar física e regressões.
-- **10.2.0.2:** contratos de mapas/atlas/saves documentados facilitam eventual portabilidade, mas não justificam migrar agora. Capacitor não é essa migração.
-
-## 11. Como retomar o plano
-
-1. Ler este documento e o registro de execução.
-2. Verificar `git status`, preservar mudanças existentes e rodar a suíte da base.
-3. Manter 26 mapas, áudio do incremento 19 e três protagonistas pintados e vistas independentes até o 28, com continuidade/anatomia obrigatórias. Maya só voa ao soltar/apertar novamente PULO no ar e manter. Não voltar ao espelhamento ao revisar os demais personagens. Depois da revisão visual 28, retomar o playtest da exploração 26: ler `PADRAO_DE_FASES.md` e o atlas. Rotas geométricas dos 23 complexos passaram nos três heróis; retomar playtest com combate, orientação/tempo, recursos e individualização dos mecanismos, além dos ensaios Android. O trem continua linear e não há retorno entre capítulos. Refinamento das animações/cut-ins/ambientes e fase 8 permanecem previstos, sem gerar APK ou disparar Actions automaticamente.
-4. Atualizar status somente com evidência. Antes de avançar para cada lote de subfases, validar o lote anterior.
-5. Não confundir a publicação do ambiente de desenvolvimento com a publicação do jogo, commits remotos, GitHub Actions ou APK.
-
----
-
-## 12. Adendo da Transformação do Projeto (Motor 2.5D, Mecânicas e Fases 1–8)
-
-Este adendo complementa — sem apagar nem sobrescrever — o histórico original das Fases 1 a 11 (consolidado até o Incremento 28). Ele registra a virada estrutural do projeto para apresentação **2.5D em Three.js/WebGL**, o refinamento das mecânicas de movimentação/heróis e o encerramento completo da auditoria geométrica das Fases 1 a 8, definindo o roteiro atualizado a partir daqui.
-
-### 12.1 O que já foi concluído
-
-#### Base concluída até o Incremento 28 (Plano original)
-- **Fases 1 a 4 (Base técnica, Combate/IA, Campanha 26 setores e Save v1):** loop determinístico de 60 Hz, colisão com varredura, 11 arquétipos inimigos + torretas + 8 chefes com duas fases, 26 setores interconectados em 8 capítulos, redes de exploração com portões/mecanismos e persistência local v1 com backup/recuperação.
-- **Fase 5 (Android/Capacitor — preparação):** projeto Android, safe areas, bloqueio paisagem, botão Voltar com confirmação e workflow manual de APK (ensaios físicos no aparelho e DualShock 4 continuam como validação própria em dispositivo).
-- **Fase 6 (Áudio):** mixer Web Audio de 4 canais (`master`, `music`, `sfx`, `voice`) com preferências persistidas, 19 trilhas musicais e 30 efeitos sonoros.
-- **Fase 7 (Base 2D):** sprites direcionais pintados de Ren, Maya e Leon e primeira passagem dos 12 inimigos e 8 chefes.
-
-#### Transformação concluída no Incremento 29 (Motor 2.5D + Mecânicas + Fases 1–8)
-- **Motor visual 2.5D (Three.js/WebGL):** construção do renderizador 2.5D em `src/game/render3d/` (cenários volumétricos, iluminação dinâmica, rigs 3D cel-shaded para heróis/inimigos/chefes e prévia 3D interativa na tela inicial), preservando o motor físico 60 Hz e a camada 2D de sobreposição de efeitos/HUD.
-- **Animação 60 fps, personalidade em repouso e expressões faciais:** interpolação esquelética a 60 fps (`spriteInterpolation.ts`), coreografia de repouso e meditação com temporização ajustada (2,5 s para postura de espera / 12 s para meditação em `idleChoreography.ts`) e rig facial reativo a combate/dano/vitória, com detecção segura para ignorar animação facial em futuros bonecos 3D externos sem `faceRig`.
-- **Wall-Jump direcional e identidade de mobilidade dos heróis:**
-  - **Ren:** único herói com **Wall-Jump** (acionado estritamente ao pressionar a direção contra a parede + PULO; o dash ajuda a alcançar paredes distantes sem acionar chutes de parede) e **Pulo Psy** duplo.
-  - **Maya:** salto normal no 1º toque e **Voo em 8 direções** no 2º toque aéreo mantido + **Pulo Psy**.
-  - **Leon:** salto firme único (sem pulo psy nem wall-jump), mantendo superarmadura, quebra de escudos/paredes e aproveitamento do pickup temporário de salto (`JMP`).
-- **Auditoria e conclusão das Fases 1 a 8 (26 setores + 8 mapas originais):** revisão completa de geometria, elevações, tetos baixos (`>= 56 px` de vão livre), posicionamento de inimigos/pickups e travessia validada com física real para **Leon** (salto único e sem plataformas móveis), **Ren** e **Maya**.
-
-### 12.2 Roteiro atualizado a partir daqui (para onde vamos)
-
-1. **Incremento 30 (Em execução) — Fase 8.1, 8.2.0.2–8.2.0.3 e 1.5.0.5 — Interface, Controles Touch Configuráveis, Acessibilidade Visual e Revisão Editorial:**
-   - Painel de opções de controles e acessibilidade no Menu Inicial e na Pausa, com persistência local independente do save da campanha.
-   - Modo de visibilidade dos controles na tela (**Automático** ao detectar teclado/controle Bluetooth com retorno imediato no primeiro toque, **Sempre visíveis** ou **Ocultos** com botão rápido de restauração).
-   - Customização de **escala (80%–125%)**, **opacidade (45%–100%)** e **altura inferior (0–48 px)** dos controles touch + botão de **Restaurar padrão**, preservando safe areas.
-   - Acessibilidade visual integrada ao motor 2D/2.5D: controle de **tremor de câmera** (`Completo`, `Reduzido`, `Desligado`) e **redução de flashes** (raios da tempestade, clarões de overdrive e piscadas bruscas).
-   - Revisão editorial em português de controles, habilidades dos heróis (Wall-Jump direcional do Ren, voo da Maya, salto único do Leon), custos de ação (`PSY 25`, `ULTRA 100`), metadados 2.5D e rótulo de instalação por plataforma.
-2. **Incremento 31 — Fase 7 (2.5D) — Pipeline de Modelos 3D Externos (GLB/GLTF) e Enriquecimento de Cenários por Bioma (7.3):**
-   - Carregador de modelos 3D externos (GLB/GLTF) com vínculo de animações/escala/orientação e fallback automático para os rigs procedurais atuais, preparando a entrada dos bonecos 3D personalizados.
-   - Diferenciação arquitetônica, iluminação e props 2.5D dedicados para cada um dos 8 biomas (Distrito, Monotrilho, Canteiro, Fábrica, Financeiro, Museu, Blacksite e Torre Orbital), mantendo colisão separada da decoração.
-3. **Incremento 32 — Fase 2.2.0.3 e 7.2.0.3 — Especiais Distintos, Cut-ins 2.5D e Balanceamento Final de Combate:**
-   - Aprofundar a identidade mecânica e visual dos Overdrives/Especiais, cut-ins de impacto sincronizados com hitstop/áudio e ajuste fino de ritmo de combate e economia de recursos nas 8 fases.
-4. **Incremento 33 — Fase 2.1.0.3, 9.2 e 9.3 — Perfis `test` vs `release`, Otimização/Profiling 2.5D e Checklist Final Android / DualShock 4:**
-   - Separação estrita de perfil `release` (desligando troca livre e mapas de teste), culling/pools no renderizador 2.5D, medição de FPS/memória e fechamento do checklist de entrega (campanha 26/26, 3 heróis, 8 chefes, toque, DualShock 4, saves, som e acessibilidade), sem disparar GitHub Actions nem gerar APK automaticamente.
-
+Multiplayer, migração para outra engine e compatibilidade entre saves antigos. Reavaliar somente por requisito expresso ou evidência de limitação, sem desviar da campanha solo, dos três heróis e da exploração.

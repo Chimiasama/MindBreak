@@ -1,0 +1,32 @@
+<!doctype html><html lang="pt-BR"><meta charset="utf-8"><link rel="icon" href="/icon.svg"><title>Ren — modelo cel shading</title>
+<style>body{margin:0;background:#141d2d;color:#e6edf7;font:16px system-ui}header{padding:18px 26px}h1{margin:0 0 8px;font-size:24px}select,button{padding:7px;margin:4px;background:#27354b;color:white;border:1px solid #506685;border-radius:6px}canvas{display:block;max-width:100%;height:auto}p{margin:8px 0;color:#adc4dd}</style>
+<header><h1>Ren — modelo 3D intermediário · cel shading</h1><p>GLB real, superfícies moldadas, esqueleto e materiais do app. Arraste para girar.</p>
+<label>Pose <select id="pose"></select></label><label>Vista <select id="view"><option value="three">Três quartos</option><option value="front">Frente</option><option value="back">Costas</option><option value="right">Direita</option><option value="left">Esquerda</option></select></label><label><input id="animate" type="checkbox" checked> Animar</label><span id="status">Carregando…</span></header>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {loadRenModel,createRenModelInstance} from '/src/game/render3d/renModel.ts';
+import {updateHeroRig3D} from '/src/game/render3d/characterRig3d.ts';
+import {HERO_CLIPS} from '/src/game/heroAnimation.ts';
+if(!await loadRenModel())throw Error('Falha ao carregar o GLB do Ren');
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(1000,800);renderer.setPixelRatio(1);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;document.body.append(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#344258');
+scene.add(new THREE.HemisphereLight('#c7dcff','#35253a',2.0));
+const key=new THREE.DirectionalLight('#fff1dc',2.4);key.position.set(-3,5,4);scene.add(key);
+const rim=new THREE.DirectionalLight('#a0e8ff',1.4);rim.position.set(3,2,-3);scene.add(rim);
+const camera=new THREE.PerspectiveCamera(30,1000/800,.01,100);camera.position.set(2.7,1.65,4.1);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,.9,0);controls.update();
+const rig=createRenModelInstance();scene.add(rig.root);
+for(const name of Object.keys(HERO_CLIPS)){const o=document.createElement('option');o.value=o.textContent=name;document.querySelector('#pose').append(o);}
+let tick=0;
+function draw(pose=document.querySelector('#pose').value,time=tick){
+ for(let i=0;i<40;i++)updateHeroRig3D(rig,{characterId:'ren',pose,vx:pose==='run'?5:0,vy:pose==='jump'?-6:pose==='fall'?6:0,facing:1,onWall:pose==='wall'?1:0,grounded:!['jump','fall','flight','wall'].includes(pose),isDashing:pose==='dash',isSliding:pose==='slide',isFlying:false,slashing:pose.startsWith('attack'),slashTimer:8,comboStep:pose==='attack3'?2:pose==='attack2'?1:0,invulnTimer:0,gstTimer:0,atkTimer:0,flameTimer:0,stunTimer:0,hp:100,tickCount:time,elapsedTicks:time,idleTicks:0},1/60);
+ // Authoring turntable views, independent of gameplay facing.
+ rig.bodyPivot.rotation.y=0;scene.updateMatrixWorld(true);renderer.render(scene,camera);
+}
+function view(name){const positions={three:[2.7,1.65,4.1],front:[0,1.05,4.6],back:[0,1.05,-4.6],right:[4.6,1.05,.01],left:[-4.6,1.05,.01]};camera.position.fromArray(positions[name]);controls.target.set(0,.9,0);controls.update();draw();}
+document.querySelector('#view').onchange=e=>view(e.target.value);document.querySelector('#pose').onchange=()=>{tick=0;draw();};
+function loop(){if(document.querySelector('#animate').checked)tick+=.6;draw();requestAnimationFrame(loop);}loop();
+document.querySelector('#status').textContent='GLB carregado · 13 materiais · esqueleto por estado da engine';
+window.renModelStudio={rig,scene,camera,renderer,draw,view,ready:true};
+</script></html>

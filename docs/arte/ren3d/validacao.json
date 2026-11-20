@@ -1,0 +1,44 @@
+{
+  "browser": "Chromium",
+  "errors": [],
+  "poses": [
+    "idle",
+    "run",
+    "jump",
+    "fall",
+    "wall",
+    "climb",
+    "hang",
+    "vault",
+    "dash",
+    "slide",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hurt",
+    "stun",
+    "special",
+    "flight",
+    "death"
+  ],
+  "render": {
+    "frame": 181,
+    "calls": 26,
+    "triangles": 25892,
+    "points": 0,
+    "lines": 0
+  },
+  "model": "ren-cel-v1",
+  "engineCheck": {
+    "externalModel": "ren-cel-v1",
+    "renderPreservesPlayer": true,
+    "software": true,
+    "drawCalls": 132
+  },
+  "menuLoadsModel": true,
+  "fallback": {
+    "status": "error",
+    "fallback": true
+  },
+  "limits": "Prepared scene and procedural animation states; not full campaign, physical Android, or final artistic approval."
+}

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import {loadRenModel,createRenModelInstance} from './renModel';
 import type {
   BossRuntime,
   CeilingPipe,
@@ -372,6 +373,14 @@ export class WorldRenderer3D {
       this.actorsGroup.add(rig.root);
       this.heroRigs.set(heroId, rig);
     }
+
+    void loadRenModel().then(ready=>{
+      if(!ready||this.disposed)return;
+      const rig=createRenModelInstance();if(!rig)return;
+      const previous=this.heroRigs.get('ren');
+      if(previous){this.actorsGroup.remove(previous.root);disposeMaterialTree(previous.root);}
+      rig.root.visible=false;this.actorsGroup.add(rig.root);this.heroRigs.set('ren',rig);
+    });
 
     if (!this.isSoftwareGl) {
       this.renderer.compile(this.scene, this.camera);
